@@ -1,6 +1,7 @@
 package com.app.aml.multitenency;
 
 import com.aml.tenant.repository.TenantRepository;
+import com.app.aml.domain.exceptions.TenantNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -63,6 +64,6 @@ public class TenantSchemaResolver {
 
         return tenantRepository.findById(id)
                 .map(tenant -> tenant.getSchemaName())
-                .orElseThrow(() -> new IllegalArgumentException("Tenant ID not found in database: " + tenantId));
+                .orElseThrow(() -> new TenantNotFoundException(tenantId));
     }
 }
