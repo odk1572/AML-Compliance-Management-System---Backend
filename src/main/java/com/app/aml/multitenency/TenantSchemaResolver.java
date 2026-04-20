@@ -1,7 +1,10 @@
 package com.app.aml.multitenency;
 
-import com.aml.tenant.repository.TenantRepository;
+import com.app.aml.domain.enums.TenantStatus;
 import com.app.aml.domain.exceptions.TenantNotFoundException;
+import com.app.aml.domain.exceptions.TenantSuspendedException; // New Exception
+import com.app.aml.tenant.entity.Tenant;
+import com.app.aml.tenant.repository.TenantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -10,10 +13,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Resolves the physical PostgreSQL schema name for a given Tenant ID.
- * Uses an in-memory cache to prevent database hits on every request.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -21,31 +20,18 @@ public class TenantSchemaResolver {
 
     private final TenantRepository tenantRepository;
 
-    // Thread-safe map to store the resolved schemas.
-    // Key: tenantId (String), Value: schemaName (String)
+    // Cache to store the schema name.
+    // Key: tenantId, Value: schemaName
     private final Map<String, String> schemaCache = new ConcurrentHashMap<>();
 
-    /**
-     * Returns the schema name for the current tenant.
-     * If not found in cache, it queries the database and caches the result.
-     *
-     * @param tenantId The UUID of the tenant as a String
-     * @return The physical schema name (e.g., "tenant_001_schema")
-     */
     public String resolveSchema(String tenantId) {
-        if (tenantId == null) {
-            // If no tenant context is set, default to the common/platform schema
+        if (tenantId == null || tenantId.trim().isEmpty()) {
             return "common_schema";
         }
 
-        // computeIfAbsent is atomic: it only executes the fetch method if the key is missing.
-        return schemaCache.computeIfAbsent(tenantId, this::fetchSchemaFromDatabase);
+        return schemaCache.computeIfAbsent(tenantId, this::fetchAndValidateTenant);
     }
 
-    /**
-     * Removes a tenant from the cache.
-     * Must be called by the TenantService whenever a tenant's schema or status is updated.
-     */
     public void evict(String tenantId) {
         if (tenantId != null) {
             log.info("Evicting schema cache for tenantId: {}", tenantId);
@@ -54,16 +40,29 @@ public class TenantSchemaResolver {
     }
 
     /**
-     * Database fallback. Only executed on the first request for a specific tenant,
-     * or after an eviction.
+     * Fetches the tenant, but also validates that they are ACTIVE.
+     * This is the "gatekeeper" logic for the entire platform.
      */
-    private String fetchSchemaFromDatabase(String tenantId) {
-        log.debug("Cache miss. Fetching schema name from DB for tenantId: {}", tenantId);
+    private String fetchAndValidateTenant(String tenantId) {
+        log.debug("Cache miss. Validating tenant status in DB for: {}", tenantId);
 
-        UUID id = UUID.fromString(tenantId);
+        UUID id;
+        try {
+            id = UUID.fromString(tenantId);
+        } catch (IllegalArgumentException e) {
+            throw new TenantNotFoundException("Invalid Tenant ID format: " + tenantId);
+        }
 
-        return tenantRepository.findById(id)
-                .map(tenant -> tenant.getSchemaName())
+        Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new TenantNotFoundException(tenantId));
+
+        // SECURITY GATE: Prevent routing if the bank is SUSPENDED or DELETED
+        if (!TenantStatus.ACTIVE.name().equals(tenant.getStatus())) {
+            log.warn("Access denied for Tenant {}. Current status: {}",
+                    tenantId, tenant.getStatus());
+            throw new TenantSuspendedException("Tenant account is " + tenant.getStatus());
+        }
+
+        return tenant.getSchemaName();
     }
 }

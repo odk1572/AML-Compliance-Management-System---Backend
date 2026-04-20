@@ -1,98 +1,46 @@
 
--- ── 1. TENANT_SCENARIOS ──────────────────────────────────────
 CREATE TABLE tenant_scenarios (
-                                  id                  UUID            NOT NULL DEFAULT gen_random_uuid(),
+                                  id UUID PRIMARY KEY,
 
-    -- Cross-schema reference: common_schema.global_scenarios.id
-    -- NOT a FK — enforced by TenantScenarioService at service layer
-                                  global_scenario_id  UUID            NOT NULL,
+                                  global_scenario_id UUID NOT NULL REFERENCES common_schema.global_scenarios(id) ON DELETE RESTRICT,
 
-                                  status              VARCHAR(10)     NOT NULL DEFAULT 'ACTIVE',
+                                  status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+                                  sys_activated_by UUID REFERENCES tenant_users(id) ON DELETE SET NULL,
+                                  sys_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                  sys_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    -- Who activated this scenario (Bank Admin)
-                                  sys_activated_by    UUID            NOT NULL,
-
-    -- Audit timestamps
-                                  sys_created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-                                  sys_updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-
-    -- ── Constraints ──────────────────────────────────────────
-                                  CONSTRAINT pk_tenant_scenarios
-                                      PRIMARY KEY (id),
-
-    -- Each global scenario can only be activated once per tenant
-                                  CONSTRAINT uq_tenant_scenarios_global
-                                      UNIQUE (global_scenario_id),
-
-                                  CONSTRAINT chk_tenant_scenarios_status
-                                      CHECK (status IN ('ACTIVE', 'PAUSED')),
-
-                                  CONSTRAINT fk_tenant_scenarios_activated_by
-                                      FOREIGN KEY (sys_activated_by)
-                                          REFERENCES tenant_users (id)
+                                  CONSTRAINT uk_tenant_global_scenario UNIQUE (global_scenario_id)
 );
 
--- ── Indexes ───────────────────────────────────────────────────
--- RuleEvaluator loads all ACTIVE scenarios per tenant at batch start
-CREATE INDEX idx_tenant_scenarios_status
-    ON tenant_scenarios (status);
+CREATE TRIGGER trg_tenant_scenarios_updated_at
+    BEFORE UPDATE ON tenant_scenarios
+    FOR EACH ROW
+    EXECUTE FUNCTION update_sys_updated_at_column();
 
--- ── Comments ──────────────────────────────────────────────────
-COMMENT ON TABLE tenant_scenarios
-    IS 'Activated global scenarios for this tenant. PAUSED scenarios are excluded from batch rule evaluation.';
+CREATE INDEX idx_tenant_scenarios_status ON tenant_scenarios(status);
 
-COMMENT ON COLUMN tenant_scenarios.global_scenario_id
-    IS 'Cross-schema ref to common_schema.global_scenarios.id. No FK constraint — enforced at service layer.';
+CREATE TABLE tenant_rules (
+                              id UUID PRIMARY KEY,
+                              tenant_scenario_id UUID NOT NULL REFERENCES tenant_scenarios(id) ON DELETE CASCADE,
 
-COMMENT ON COLUMN tenant_scenarios.status
-    IS 'ACTIVE = included in rule engine. PAUSED = excluded. Pausing does not affect already-generated alerts.';
+                              global_rule_id UUID NOT NULL REFERENCES common_schema.global_rules(id) ON DELETE RESTRICT,
 
+                              rule_code VARCHAR(100) UNIQUE NOT NULL, -- e.g. BA-STR-001 (Bank custom code)
+                              rule_name VARCHAR(255) NOT NULL,        -- Bank custom name
+                              is_active BOOLEAN NOT NULL DEFAULT TRUE,
 
--- ── 2. TENANT_SCENARIO_RULES ──────────────────────────────────
-CREATE TABLE tenant_scenario_rules (
-                                       id                  UUID            NOT NULL DEFAULT gen_random_uuid(),
-
-    -- Parent scenario (within this tenant)
-                                       tenant_scenario_id  UUID            NOT NULL,
-
-    -- Cross-schema reference: common_schema.global_rules.id
-    -- NOT a FK — enforced by TenantScenarioService at service layer
-                                       global_rule_id      UUID            NOT NULL,
-
-    -- Granular toggle: FALSE suppresses this specific rule
-    -- within the scenario without pausing the whole scenario
-                                       is_active           BOOLEAN         NOT NULL DEFAULT TRUE,
-
-    -- Who last toggled this rule (Bank Admin or AML Admin)
-                                       toggled_by          UUID            NOT NULL,
-
-    -- Audit timestamps
-                                       sys_created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-                                       sys_updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-
-    -- ── Constraints ──────────────────────────────────────────
-                                       CONSTRAINT pk_tenant_scenario_rules
-                                           PRIMARY KEY (id),
-
-    -- A rule can only appear once per tenant scenario
-                                       CONSTRAINT uq_tenant_scenario_rule_pair
-                                           UNIQUE (tenant_scenario_id, global_rule_id),
-
-                                       CONSTRAINT fk_tsr_tenant_scenario
-                                           FOREIGN KEY (tenant_scenario_id)
-                                               REFERENCES tenant_scenarios (id),
-
-                                       CONSTRAINT fk_tsr_toggled_by
-                                           FOREIGN KEY (toggled_by)
-                                               REFERENCES tenant_users (id)
+                              sys_created_by UUID REFERENCES tenant_users(id) ON DELETE SET NULL,
+                              sys_is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+                              sys_deleted_at TIMESTAMP,
+                              sys_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                              sys_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- ── Indexes ───────────────────────────────────────────────────
--- RuleEvaluator filters is_active=TRUE when loading rules for a scenario
-CREATE INDEX idx_tsr_scenario_active
-    ON tenant_scenario_rules (tenant_scenario_id, is_active);
+CREATE TRIGGER trg_tenant_rules_updated_at
+    BEFORE UPDATE ON tenant_rules
+    FOR EACH ROW
+    EXECUTE FUNCTION update_sys_updated_at_column();
 
--- Lookup by global_rule_id: "is this rule active in any scenario for this tenant?"
-CREATE INDEX idx_tsr_global_rule
-    ON tenant_scenario_rules (global_rule_id)
-    WHERE is_active = TRUE;
+CREATE INDEX idx_tenant_rules_scenario_id ON tenant_rules(tenant_scenario_id);
+CREATE INDEX idx_tenant_rules_is_active ON tenant_rules(is_active);
+CREATE INDEX idx_tenant_rules_sys_is_deleted ON tenant_rules(sys_is_deleted);

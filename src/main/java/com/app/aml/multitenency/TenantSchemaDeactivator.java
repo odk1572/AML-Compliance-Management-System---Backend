@@ -46,6 +46,10 @@ public class TenantSchemaDeactivator {
         tenant.setStatus(TenantStatus.SUSPENDED.name());
         tenantRepository.save(tenant);
 
+        // CRITICAL MVP ADDITION: Flush the change to the common_schema immediately.
+        // This ensures the status is written to the DB before we switch schemas.
+        tenantRepository.flush();
+
         // Clear the cache so future requests don't accidentally resolve this tenant as active
         tenantSchemaResolver.evict(tenantId);
 
