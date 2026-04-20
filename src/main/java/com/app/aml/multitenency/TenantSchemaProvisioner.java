@@ -1,6 +1,7 @@
 package com.app.aml.multitenency;
 
 import com.app.aml.config.FlywayConfig;
+import com.app.aml.domain.exceptions.BusinessRuleException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,7 +75,7 @@ public class TenantSchemaProvisioner {
 
         // Only allow lowercase letters, numbers, and underscores. Max 63 characters.
         if (!schemaName.matches("^[a-z0-9_]{1,63}$")) {
-            throw new IllegalArgumentException(
+            throw new BusinessRuleException(
                     "Invalid schema name format. Must be alphanumeric/underscores and under 63 chars."
             );
         }

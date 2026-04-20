@@ -1,6 +1,7 @@
 package com.app.aml.multitenency;
 
 
+import com.app.aml.domain.enums.TenantStatus;
 import com.app.aml.tenant.entity.Tenant;
 import com.app.aml.tenant.repository.TenantRepository;
 import com.app.aml.security.repository.UserSessionRepository;
@@ -42,7 +43,7 @@ public class TenantSchemaDeactivator {
         Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Tenant not found in platform registry"));
 
-        tenant.setStatus("SUSPENDED");
+        tenant.setStatus(TenantStatus.SUSPENDED.name());
         tenantRepository.save(tenant);
 
         // Clear the cache so future requests don't accidentally resolve this tenant as active

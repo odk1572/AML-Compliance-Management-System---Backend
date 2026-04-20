@@ -1,0 +1,114 @@
+erDiagram
+    TRANSACTION_BATCHES {
+        uuid_v7 id PK
+        string batch_reference UK "BATCH-YYYYMMDD-XXXX"
+        uuid_v7 uploaded_by FK
+        string file_name
+        string file_hash_sha256 "dedup guard"
+        bigint file_size_bytes
+        string cloudinary_public_id "Cloudinary file identifier"
+        string cloudinary_secure_url "Direct URL to the uploaded CSV"
+        int total_records
+        string batch_status "PENDING / VALIDATING / PROCESSING / PROCESSED / FAILED"
+        jsonb failure_details
+        string spring_batch_job_id
+        timestamp processed_at
+        boolean sys_is_deleted
+        timestamp sys_deleted_at
+        timestamp sys_created_at
+        timestamp sys_updated_at
+    }
+
+    CUSTOMER_PROFILES {
+        uuid_v7 id PK
+        string account_number UK
+        string customer_name
+        string customer_type "INDIVIDUAL / CORPORATE / PEP"
+        string id_type
+        string id_number
+        string nationality
+        string country_of_residence
+        string risk_rating "CRITICAL / HIGH / MEDIUM / LOW"
+        int risk_score
+        boolean is_pep
+        boolean is_sanctioned
+        boolean is_dormant
+        uuid_v7 matched_watchlist_id FK "NULLABLE - Ref to COMMON_SCHEMA.GLOBAL_WATCHLISTS"
+        date account_opened_on
+        date last_activity_date
+        string kyc_status "VERIFIED / PENDING / EXPIRED"
+        string kyc_doc_cloudinary_public_id
+        string kyc_doc_cloudinary_url
+        boolean sys_is_deleted
+        timestamp sys_deleted_at
+        timestamp sys_created_at
+        timestamp sys_updated_at
+    }
+
+    TRANSACTIONS {
+        uuid_v7 id PK
+        uuid_v7 batch_id FK
+        uuid_v7 customer_id FK
+        string transaction_ref UK
+        string originator_account_no
+        string originator_name
+        string originator_bank_code
+        string originator_country
+        string beneficiary_account_no
+        string beneficiary_name
+        string beneficiary_bank_code
+        string beneficiary_country
+        decimal amount
+        string currency_code
+        string transaction_type "WIRE / SWIFT / ACH / INTERNAL / CASH"
+        string channel "ONLINE / BRANCH / ATM / API"
+        timestamp transaction_timestamp
+        string reference_note
+        string status "CLEAN / FLAGGED / UNDER_REVIEW"
+        timestamp sys_created_at "Immutable"
+    }
+
+    WATCHLIST_SCREENING_RESULTS {
+        uuid_v7 id PK
+        uuid_v7 transaction_id FK
+        uuid_v7 global_watchlist_id FK
+        string screened_name
+        string match_type "ORIGINATOR / BENEFICIARY"
+        string match_algorithm "JARO_WINKLER / EXACT / FUZZY"
+        decimal match_score "0.0 to 1.0"
+        string list_source "OFAC / UN / FATF"
+        string screening_result "HIT / POTENTIAL_HIT / CLEAR"
+        timestamp sys_created_at "Immutable"
+    }
+
+    ALERTS {
+        uuid_v7 id PK
+        uuid_v7 transaction_id FK
+        uuid_v7 global_scenario_id FK
+        uuid_v7 global_rule_id FK
+        uuid_v7 tenant_rule_version_id FK "NULLABLE - threshold override ref"
+        string alert_reference UK "ALT-YYYYMMDD-XXXXX"
+        string severity "HIGH / MEDIUM / LOW"
+        string status "NEW / DISMISSED / BUNDLED_TO_CASE / CLOSED_CONFIRMED / CLOSED_FALSE_POSITIVE"
+        string typology_triggered
+        decimal risk_score "computed 0-100"
+        timestamp sys_created_at
+        timestamp sys_updated_at
+    }
+
+    ALERT_EVIDENCE {
+        uuid_v7 id PK
+        uuid_v7 alert_id FK
+        uuid_v7 global_condition_id FK
+        uuid_v7 tenant_threshold_id FK "NULLABLE"
+        uuid_v7 data_dictionary_id FK "For auto-narratives"
+        string actual_evaluated_value "e.g. 15000"
+        timestamp sys_created_at "Immutable"
+    }
+
+%% RELATIONSHIPS
+    TRANSACTION_BATCHES ||--o{ TRANSACTIONS : "contains"
+    CUSTOMER_PROFILES ||--o{ TRANSACTIONS : "originates"
+    TRANSACTIONS ||--o{ WATCHLIST_SCREENING_RESULTS : "screened via"
+    TRANSACTIONS ||--o{ ALERTS : "generates"
+    ALERTS ||--o{ ALERT_EVIDENCE : "records breach values in"

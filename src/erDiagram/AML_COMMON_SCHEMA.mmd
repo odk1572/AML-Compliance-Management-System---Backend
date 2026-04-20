@@ -1,0 +1,161 @@
+erDiagram
+  TENANTS {
+    uuid_v7 id PK
+    string tenant_code UK "e.g. BANK_001"
+    string schema_name UK "tenant_001_schema"
+    string institution_name
+    string country_code
+    string regulatory_jurisdiction "FATF / FinCEN / FIU-IND"
+    string contact_email
+    string contact_phone
+    string address
+    string status "ACTIVE / SUSPENDED / DEPROVISIONED"
+    boolean sys_is_deleted
+    timestamp sys_deleted_at
+    uuid_v7 sys_deleted_by FK
+    uuid_v7 sys_created_by FK
+    timestamp sys_created_at
+    timestamp sys_updated_at
+  }
+  PLATFORM_USERS {
+    uuid_v7 id PK
+    string email UK
+    string password_hash
+    string full_name
+    string role "SUPER_ADMIN"
+    int failed_login_attempts
+    boolean is_locked
+    timestamp locked_at
+    timestamp last_login_at
+    string last_login_ip
+    boolean sys_is_deleted
+    timestamp sys_deleted_at
+    timestamp sys_created_at
+    timestamp sys_updated_at
+  }
+  DATA_DICTIONARY {
+    uuid_v7 id PK
+    string entity_name "e.g. TRANSACTION / CUSTOMER"
+    string attribute_name "e.g. amount / country_code"
+    string data_type "NUMERIC / STRING / BOOLEAN / DATE"
+    string value_cast_hint "Runtime cast hint for rule engine"
+    string description
+    boolean is_active
+    timestamp sys_updated_at
+  }
+  GLOBAL_SCENARIOS {
+    uuid_v7 id PK
+    string scenario_name UK
+    string category "Velocity / Geography / Round Amount"
+    string description
+    uuid_v7 created_by FK
+    boolean sys_is_deleted
+    timestamp sys_deleted_at
+    timestamp sys_created_at
+    timestamp sys_updated_at
+  }
+  GLOBAL_RULES {
+    uuid_v7 id PK
+    string rule_name
+    string condition_logic "AND / OR / CUSTOM e.g. 1 AND 2 OR 3"
+    string severity "CRITICAL / HIGH / MEDIUM / LOW"
+    int base_risk_score
+    boolean sys_is_deleted
+    timestamp sys_deleted_at
+    timestamp sys_created_at
+    timestamp sys_updated_at
+  }
+  GLOBAL_SCENARIO_RULES {
+    uuid_v7 id PK
+    uuid_v7 scenario_id FK
+    uuid_v7 rule_id FK
+    int priority_order
+    timestamp sys_created_at
+  }
+  GLOBAL_RULE_CONDITIONS {
+    uuid_v7 id PK
+    uuid_v7 rule_id FK
+    uuid_v7 attribute_id FK
+    int condition_sequence
+    string aggregation_function "NONE / SUM / COUNT / DISTINCT_COUNT"
+    string lookback_period "e.g. 24h / 30d NULL for real-time"
+    string operator "GREATER_THAN / EQUALS / IN"
+    string threshold_value "String representation"
+    string value_data_type "NUMERIC / STRING / BOOLEAN / DATE"
+    timestamp sys_created_at
+    timestamp sys_updated_at
+  }
+  GLOBAL_WATCHLISTS {
+    uuid_v7 id PK
+    string list_source "OFAC / UN / FATF / EU"
+    string primary_name
+    string entity_type "INDIVIDUAL / ENTITY / VESSEL / AIRCRAFT"
+    jsonb aliases
+    string imo_number "For Vessels"
+    string tail_number "For Aircraft"
+    string country_code
+    string risk_level "CRITICAL / HIGH / MEDIUM"
+    string sanction_type "SDN / CONSOLIDATED / PEP"
+    string reference_number
+    date listed_on
+    date delisted_on
+    boolean is_active
+    boolean sys_is_deleted
+    timestamp sys_deleted_at
+    timestamp sys_last_synced_at
+    timestamp sys_created_at
+    timestamp sys_updated_at
+  }
+  GEOGRAPHIC_RISK_RATINGS {
+    uuid_v7 id PK
+    string country_code UK
+    string country_name
+    string fatf_status "BLACKLIST / GREYLIST / COMPLIANT"
+    int basel_aml_index_score "0-10"
+    string risk_tier "CRITICAL / HIGH / MEDIUM / LOW"
+    text notes
+    boolean sys_is_deleted
+    timestamp sys_deleted_at
+    timestamp effective_from
+    timestamp sys_created_at
+    timestamp sys_updated_at
+  }
+  WATCHLIST_SYNC_JOBS {
+    uuid_v7 id PK
+    string list_source
+    string job_status "RUNNING / SUCCESS / FAILED"
+    int records_added
+    int records_updated
+    int records_removed
+    text error_message
+    uuid_v7 triggered_by FK
+    timestamp started_at
+    timestamp completed_at
+    timestamp sys_created_at
+    timestamp sys_updated_at
+  }
+  PLATFORM_AUDIT_LOG {
+    uuid_v7 id PK
+    uuid_v7 actor_id FK
+    string actor_role "SUPER_ADMIN"
+    uuid_v7 tenant_id FK
+    string schema_name
+    string action_category "AUTH / RULE / TENANT / WATCHLIST"
+    string action_performed
+    string target_entity_type
+    uuid_v7 target_entity_id
+    jsonb previous_state
+    jsonb new_state
+    string ip_address
+    string user_agent
+    timestamp sys_created_at "Immutable"
+  }
+  PLATFORM_USERS ||--o{ TENANTS : "provisions"
+  PLATFORM_USERS ||--o{ GLOBAL_SCENARIOS : "creates"
+  GLOBAL_SCENARIOS ||--o{ GLOBAL_SCENARIO_RULES : "contains"
+  GLOBAL_RULES ||--o{ GLOBAL_SCENARIO_RULES : "assigned to"
+  GLOBAL_RULES ||--o{ GLOBAL_RULE_CONDITIONS : "evaluates via"
+  DATA_DICTIONARY ||--o{ GLOBAL_RULE_CONDITIONS : "supplies variables to"
+  PLATFORM_USERS ||--o{ WATCHLIST_SYNC_JOBS : "triggers"
+  PLATFORM_USERS ||--o{ PLATFORM_AUDIT_LOG : "performs actions"
+  TENANTS ||--o{ PLATFORM_AUDIT_LOG : "scopes actions to"
