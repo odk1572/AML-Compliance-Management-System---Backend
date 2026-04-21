@@ -5,10 +5,6 @@ import org.springframework.context.ApplicationEvent;
 
 import java.util.UUID;
 
-/**
- * Event published when a Transaction Batch finishes processing.
- * Used to trigger success/failure notifications and audit logs.
- */
 @Getter
 public class BatchCompletedEvent extends ApplicationEvent {
 
@@ -20,16 +16,6 @@ public class BatchCompletedEvent extends ApplicationEvent {
     private final int totalRecords;
     private final int failedRecords;
 
-    /**
-     * @param source         The object on which the event initially occurred.
-     * @param tenantId       The ID of the tenant/bank.
-     * @param batchId        The database UUID of the batch.
-     * @param batchReference The reference string (e.g., BATCH-20260421-001).
-     * @param uploaderEmail  The email of the user who uploaded the file.
-     * @param status         The final processing status.
-     * @param totalRecords   The total count of rows in the CSV.
-     * @param failedRecords  The count of rows that failed validation/ingestion.
-     */
     public BatchCompletedEvent(Object source,
                                String tenantId,
                                UUID batchId,
