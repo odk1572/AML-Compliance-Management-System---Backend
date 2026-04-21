@@ -1,4 +1,4 @@
-package com.app.aml.domain.enums;
+package com.app.aml.security.rbac;
 
 public enum Role {
     SUPER_ADMIN,

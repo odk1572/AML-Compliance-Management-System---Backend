@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+# Ignore actual property files containing secrets
+src/main/resources/application-local.properties
+src/main/resources/application-prod.properties
+
+# Ignore environment variable files
+.env
