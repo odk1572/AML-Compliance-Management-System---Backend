@@ -1,7 +1,5 @@
 package com.app.aml.feature.ruleengine.executor.strategies;
 
-import com.app.aml.feature.ruleengine.dto.ConditionExecutionDto;
-import com.app.aml.feature.ruleengine.dto.RuleExecutionDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

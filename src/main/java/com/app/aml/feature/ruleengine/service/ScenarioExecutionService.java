@@ -1,14 +1,11 @@
 package com.app.aml.feature.ruleengine.service;
 
-import com.app.aml.feature.ruleengine.dto.RuleExecutionDto;
-import com.app.aml.feature.ruleengine.dto.ScenarioExecutionDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorFactory;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
