@@ -16,25 +16,17 @@ public class RuleExecutorFactory {
 
     @Autowired
     public RuleExecutorFactory(List<RuleExecutorStrategy> strategies) {
-        // Automatically maps the strategies: {"SMURFING" -> SmurfingRuleExecutor}
-        // Added merge function to prevent duplicate key exceptions
         this.executorMap = strategies.stream()
                 .collect(Collectors.toMap(
-                    strategy -> strategy.getRuleType().toUpperCase(), 
-                    strategy -> strategy,
-                    (existing, replacement) -> existing
+                        strategy -> strategy.getRuleType().toUpperCase(),
+                        strategy -> strategy
                 ));
     }
 
     public RuleExecutorStrategy getStrategy(String ruleType) {
-        if (ruleType == null) {
-            log.error("Rule type provided is null");
-            throw new IllegalArgumentException("Rule Type cannot be null");
-        }
-        
         RuleExecutorStrategy strategy = executorMap.get(ruleType.toUpperCase());
         if (strategy == null) {
-            log.error("No rule executor found for type: {}", ruleType);
+            log.error("No rule executor configured for type: {}", ruleType);
             throw new IllegalArgumentException("Unsupported Rule Type: " + ruleType);
         }
         return strategy;

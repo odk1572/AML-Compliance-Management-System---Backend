@@ -1,54 +1,79 @@
 package com.app.aml.feature.ruleengine.service;
 
+import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
+import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
+import com.app.aml.feature.ruleengine.dto.globalRuleCondition.response.GlobalRuleConditionResponseDto;
+import com.app.aml.feature.ruleengine.dto.globalRules.response.GlobalRuleResponseDto;
+import com.app.aml.feature.ruleengine.dto.tenantRuleThreshold.response.TenantRuleThresholdResponseDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorFactory;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ScenarioExecutionService {
 
     private final RuleExecutorFactory ruleExecutorFactory;
 
-    public void executeBatch(UUID batchId, ScenarioExecutionDto scenario) {
-        
-        if (scenario == null || scenario.getActiveRules() == null || scenario.getActiveRules().isEmpty()) {
-            return; 
+    public void executeScenario(
+            String categoryName,
+            GlobalRuleResponseDto ruleInfo,
+            List<GlobalRuleConditionResponseDto> globals,
+            List<TenantRuleThresholdResponseDto> overrides) {
+
+        log.info("Starting execution for Category: {}", categoryName);
+
+        // Flatten DB mapping to Execution Context
+        RuleExecutionContextDto executionContext = buildExecutionContext(categoryName, ruleInfo, globals, overrides);
+
+        // Fetch the correct strategy
+        RuleExecutorStrategy strategy = ruleExecutorFactory.getStrategy(categoryName);
+
+        // Run the SQL
+        Set<String> breachingAccounts = strategy.executeRule(executionContext);
+
+        // Generate Alerts
+    }
+
+    private RuleExecutionContextDto buildExecutionContext(
+            String category,
+            GlobalRuleResponseDto ruleInfo,
+            List<GlobalRuleConditionResponseDto> globals,
+            List<TenantRuleThresholdResponseDto> overrides) {
+
+        List<ConditionExecutionContextDto> conditions = new ArrayList<>();
+
+        for (GlobalRuleConditionResponseDto global : globals) {
+            TenantRuleThresholdResponseDto override = overrides.stream()
+                    .filter(o -> o.getGlobalConditionId().equals(global.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            conditions.add(ConditionExecutionContextDto.builder()
+                    .attributeName(global.getAttributeName())
+                    .operator(global.getOperator())
+                    .aggregationFunction(override != null && override.getOverrideAggregationFunction() != null
+                            ? override.getOverrideAggregationFunction() : global.getAggregationFunction())
+                    .thresholdValue(override != null && override.getOverrideValue() != null
+                            ? override.getOverrideValue() : global.getThresholdValue())
+                    .lookbackPeriod(override != null && override.getOverrideLookbackPeriod() != null
+                            ? override.getOverrideLookbackPeriod() : global.getLookbackPeriod())
+                    .build());
         }
 
-        Set<String> finalAccounts = new HashSet<>();
-        boolean isFirstRule = true;
-
-        for (RuleExecutionDto rule : scenario.getActiveRules()) {
-            
-            // Get the right strategy dynamically
-            RuleExecutorStrategy strategy = ruleExecutorFactory.getStrategy(rule.getRuleType());
-            
-            // Execute the rule to fetch the breaching accounts
-            Set<String> currentAccounts = strategy.executeRule(rule, batchId);
-            if (currentAccounts == null) {
-                currentAccounts = new HashSet<>();
-            }
-
-            
-            if (isFirstRule) {
-                finalAccounts.addAll(currentAccounts);
-                isFirstRule = false;
-            } else {
-                if ("OR".equalsIgnoreCase(scenario.getLogicalOperator())) {
-                    finalAccounts.addAll(currentAccounts); 
-                } else {
-                    finalAccounts.retainAll(currentAccounts); 
-                }
-            }
-        }
-
-        // Generate the  alert
-
+        return RuleExecutionContextDto.builder()
+                .ruleId(ruleInfo.getId())
+                .ruleName(ruleInfo.getRuleName())
+                .baseRiskScore(ruleInfo.getBaseRiskScore())
+                .ruleCategory(category)
+                .conditions(conditions)
+                .build();
     }
 }
