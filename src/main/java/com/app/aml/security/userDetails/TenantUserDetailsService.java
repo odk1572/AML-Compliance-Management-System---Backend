@@ -2,8 +2,8 @@ package com.app.aml.security.userDetails;
 
 
 import com.app.aml.multitenency.TenantContext;
-import com.app.aml.tenant.entity.TenantUser;
-import com.app.aml.tenant.repository.TenantUserRepository;
+import com.app.aml.feature.tenantuser.entity.TenantUser;
+import com.app.aml.feature.tenantuser.repository.TenantUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationServiceException;

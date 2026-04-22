@@ -1,7 +1,7 @@
 package com.app.aml.security.userDetails;
 
 
-import com.app.aml.platform.entity.PlatformUser;
+import com.app.aml.feature.platformuser.entity.PlatformUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -51,7 +51,7 @@ public class PlatformUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return platformUser.isActive();
+        return !platformUser.isLocked();
     }
 
     @Override

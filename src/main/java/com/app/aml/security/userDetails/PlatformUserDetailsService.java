@@ -2,8 +2,8 @@ package com.app.aml.security.userDetails;
 
 
 import com.app.aml.multitenency.TenantContext;
-import com.app.aml.platform.entity.PlatformUser;
-import com.app.aml.platform.repository.PlatformUserRepository;
+import com.app.aml.feature.platformuser.entity.PlatformUser;
+import com.app.aml.feature.platformuser.repository.PlatformUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;

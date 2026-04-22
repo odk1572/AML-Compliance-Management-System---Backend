@@ -1,7 +1,7 @@
 package com.app.aml.security.userDetails;
 
 
-import com.app.aml.tenant.entity.TenantUser;
+import com.app.aml.feature.tenantuser.entity.TenantUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -48,7 +48,7 @@ public class TenantUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return tenantUser.isActive();
+        return !tenantUser.isLocked();
     }
 
     @Override
