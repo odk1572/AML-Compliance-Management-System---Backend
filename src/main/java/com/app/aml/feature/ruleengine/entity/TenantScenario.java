@@ -4,7 +4,9 @@ import com.app.aml.domain.enums.RuleStatus;
 import com.app.aml.shared.audit.AuditableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -35,6 +37,11 @@ public class TenantScenario extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
     private RuleStatus status = RuleStatus.ACTIVE;
+
+    @NotBlank
+    @Size(max = 10)
+    @Column(name = "condition_logic", nullable = false, length = 10)
+    private String conditionLogic = "AND";
 
     @Column(name = "sys_activated_by")
     private UUID sysActivatedBy;

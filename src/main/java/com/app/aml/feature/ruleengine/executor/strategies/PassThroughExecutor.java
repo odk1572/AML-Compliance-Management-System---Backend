@@ -26,6 +26,8 @@ public class PassThroughExecutor implements RuleExecutorStrategy {
         BigDecimal margin = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
+            // MARGIN is a domain-specific concept (the acceptable difference between incoming and outgoing),
+            // not a standard aggregation function, so it is matched by attributeName.
             if ("MARGIN".equalsIgnoreCase(cond.getAttributeName())) margin = new BigDecimal(cond.getThresholdValue());
             if (cond.getLookbackPeriod() != null) lookback = SqlIntervalParser.parse(cond.getLookbackPeriod());
         }

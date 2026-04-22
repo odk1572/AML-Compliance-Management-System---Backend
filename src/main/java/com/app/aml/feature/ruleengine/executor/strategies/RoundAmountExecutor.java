@@ -26,8 +26,14 @@ public class RoundAmountExecutor implements RuleExecutorStrategy {
         String lookback = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            if ("DIVISOR".equalsIgnoreCase(cond.getAttributeName())) divisor = Integer.parseInt(cond.getThresholdValue());
-            if ("COUNT".equalsIgnoreCase(cond.getAggregationFunction())) threshold = Integer.parseInt(cond.getThresholdValue());
+            // Compound matching: DIVISOR is identified by attributeName (a domain concept, not an aggregation)
+            if ("DIVISOR".equalsIgnoreCase(cond.getAttributeName())) {
+                divisor = Integer.parseInt(cond.getThresholdValue());
+            }
+            // COUNT is identified by aggregationFunction, but ONLY when it's not the DIVISOR condition
+            else if ("COUNT".equalsIgnoreCase(cond.getAggregationFunction())) {
+                threshold = Integer.parseInt(cond.getThresholdValue());
+            }
             if (cond.getLookbackPeriod() != null) lookback = SqlIntervalParser.parse(cond.getLookbackPeriod());
         }
 

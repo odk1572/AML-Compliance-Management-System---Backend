@@ -14,5 +14,6 @@ private UUID ruleId;
     private String ruleName;
     private String ruleCategory;  
     private Integer baseRiskScore;
+    private String conditionLogic;
     private List<ConditionExecutionContextDto> conditions;
 }

@@ -22,21 +22,32 @@ public class SuddenSpikeExecutor implements RuleExecutorStrategy {
 
     @Override
     public Set<UUID> executeRule(RuleExecutionContextDto rule) {
-        String shortWindow = "24 hours"; 
-        String longWindow = "30 days"; 
+        String shortWindow = null;
+        String longWindow = null;
         BigDecimal multiplier = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            if ("MULTIPLIER".equalsIgnoreCase(cond.getAttributeName())) multiplier = new BigDecimal(cond.getThresholdValue());
+            if ("SHORT_WINDOW".equalsIgnoreCase(cond.getAttributeName())) {
+                shortWindow = SqlIntervalParser.parse(cond.getLookbackPeriod());
+            }
+            if ("LONG_WINDOW".equalsIgnoreCase(cond.getAttributeName())) {
+                longWindow = SqlIntervalParser.parse(cond.getLookbackPeriod());
+            }
+            if ("MULTIPLIER".equalsIgnoreCase(cond.getAttributeName())) {
+                multiplier = new BigDecimal(cond.getThresholdValue());
+            }
         }
 
-        if (multiplier == null) {
-            throw new IllegalStateException("Missing required global or tenant condition thresholds for Sudden Spike Rule.");
+        if (shortWindow == null || longWindow == null || multiplier == null) {
+            throw new IllegalStateException("Missing required conditions for Sudden Spike Rule. ");
         }
+
+        // Extract numeric days from longWindow for dynamic divisor (e.g., "30 days" → 30)
+        int longWindowDays = extractDaysFromInterval(longWindow);
 
         String sql = """
             WITH historical_avg AS (
-                SELECT originator_account_no, (SUM(amount) / 30) as daily_avg
+                SELECT originator_account_no, (SUM(amount) / ?) as daily_avg
                 FROM transactions WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL) GROUP BY originator_account_no
             ),
             recent_spike AS (
@@ -51,7 +62,23 @@ public class SuddenSpikeExecutor implements RuleExecutorStrategy {
         
         List<UUID> results = jdbcTemplate.query(sql, 
             (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")), 
-            longWindow, shortWindow, multiplier);
+            longWindowDays, longWindow, shortWindow, multiplier);
         return new HashSet<>(results);
+    }
+
+    // Extracts the number of days from a PostgreSQL interval string.
+    private int extractDaysFromInterval(String interval) {
+        String[] parts = interval.split(" ");
+        int value = Integer.parseInt(parts[0]);
+        String unit = parts[1].toLowerCase();
+
+        return switch (unit) {
+            case "hours" -> Math.max(1, value / 24);
+            case "days" -> value;
+            case "weeks" -> value * 7;
+            case "months" -> value * 30;
+            case "years" -> value * 365;
+            default -> throw new IllegalStateException("Cannot compute days from interval: " + interval);
+        };
     }
 }
