@@ -8,9 +8,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -20,6 +18,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class PlatformUser extends SoftDeletableEntity {
 
     @Id
@@ -45,14 +45,17 @@ public class PlatformUser extends SoftDeletableEntity {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 50)
+    @Builder.Default
     private Role role = Role.SUPER_ADMIN;
 
     @NotNull
     @Column(name = "failed_login_attempts", nullable = false)
+    @Builder.Default
     private Integer failedLoginAttempts = 0;
 
     @NotNull
     @Column(name = "is_locked", nullable = false)
+    @Builder.Default
     private boolean isLocked = false;
 
     @Column(name = "locked_at")
@@ -64,4 +67,30 @@ public class PlatformUser extends SoftDeletableEntity {
     @Size(max = 45)
     @Column(name = "last_login_ip", length = 45)
     private String lastLoginIp;
+
+    public void incrementFailedAttempts() {
+        this.failedLoginAttempts++;
+        if (this.failedLoginAttempts >= 5) { // Policy: Lock after 5 tries
+            this.lockAccount();
+        }
+    }
+
+    public void lockAccount() {
+        this.isLocked = true;
+        this.lockedAt = Instant.now();
+    }
+
+    public void unlockAccount() {
+        this.isLocked = false;
+        this.lockedAt = null;
+        this.failedLoginAttempts = 0;
+    }
+
+    public void recordSuccessfulLogin(String ip) {
+        this.lastLoginAt = Instant.now();
+        this.lastLoginIp = ip;
+        this.failedLoginAttempts = 0;
+    }
 }
+
+

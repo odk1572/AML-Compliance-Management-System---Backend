@@ -3,10 +3,7 @@ package com.app.aml.shared.validation;
 import com.app.aml.multitenency.TenantContext;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Utility class enforcing strict tenant boundaries at the application layer.
- * Acts as a fail-safe secondary wall alongside the Database Schema routing.
- */
+
 @Slf4j
 public class TenantBoundaryValidator {
 

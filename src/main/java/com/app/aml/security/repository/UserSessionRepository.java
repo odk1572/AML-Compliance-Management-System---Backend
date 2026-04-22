@@ -21,4 +21,6 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
     @Modifying
     @Query("UPDATE UserSession s SET s.isRevoked = true, s.revokedAt = ?2 WHERE s.jwtJti = ?1")
     void revokeSessionByJti(String jwtJti, Instant revokedAt);
+
+    int revokeAllActiveSessions();
 }
