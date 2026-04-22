@@ -2,8 +2,8 @@ package com.app.aml.multitenency;
 
 
 import com.app.aml.domain.enums.TenantStatus;
-import com.app.aml.tenant.entity.Tenant;
-import com.app.aml.tenant.repository.TenantRepository;
+import com.app.aml.feature.tenant.entity.Tenant;
+import com.app.aml.feature.tenant.repository.TenantRepository;
 import com.app.aml.security.repository.UserSessionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,7 @@ public class TenantSchemaDeactivator {
         Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Tenant not found in platform registry"));
 
-        tenant.setStatus(TenantStatus.SUSPENDED.name());
+        tenant.setStatus(TenantStatus.SUSPENDED);
         tenantRepository.save(tenant);
 
         // CRITICAL MVP ADDITION: Flush the change to the common_schema immediately.

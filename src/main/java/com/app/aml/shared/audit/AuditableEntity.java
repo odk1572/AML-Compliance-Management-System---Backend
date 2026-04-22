@@ -18,11 +18,6 @@ import java.util.UUID;
 @MappedSuperclass
 public abstract class AuditableEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
-
     @CreationTimestamp
     @Column(name = "sys_created_at", nullable = false, updatable = false)
     private Instant sysCreatedAt;

@@ -3,8 +3,8 @@ package com.app.aml.multitenency;
 import com.app.aml.domain.enums.TenantStatus;
 import com.app.aml.domain.exceptions.TenantNotFoundException;
 import com.app.aml.domain.exceptions.TenantSuspendedException; // New Exception
-import com.app.aml.tenant.entity.Tenant;
-import com.app.aml.tenant.repository.TenantRepository;
+import com.app.aml.feature.tenant.entity.Tenant;
+import com.app.aml.feature.tenant.repository.TenantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
