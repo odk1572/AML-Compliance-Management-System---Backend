@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,35 +15,36 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class VelocityRuleExecutor implements RuleExecutorStrategy {
+public class LowIncomeHighTransferExecutor implements RuleExecutorStrategy {
     private final JdbcTemplate jdbcTemplate;
 
-    @Override public String getRuleType() { return "VELOCITY"; }
+    @Override public String getRuleType() { return "LOW_INCOME_HIGH_TRANSFER"; }
 
     @Override
     public Set<UUID> executeRule(RuleExecutionContextDto rule) {
-        int threshold = 0; 
-        String lookback = null; 
+        BigDecimal multiplier = null;
+        String lookback = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            if ("COUNT".equalsIgnoreCase(cond.getAggregationFunction())) threshold = Integer.parseInt(cond.getThresholdValue());
+            if ("MULTIPLIER".equalsIgnoreCase(cond.getAttributeName())) multiplier = new BigDecimal(cond.getThresholdValue());
             if (cond.getLookbackPeriod() != null) lookback = SqlIntervalParser.parse(cond.getLookbackPeriod());
         }
 
-        if (threshold == 0 || lookback == null) {
-            throw new IllegalStateException("Missing required global or tenant condition thresholds for Velocity Rule.");
+        if (multiplier == null || lookback == null) {
+            throw new IllegalStateException("Missing required global or tenant condition thresholds for Low Income High Transfer Rule.");
         }
 
         String sql = """
             SELECT cp.id as customer_id FROM transactions t
             JOIN customer_profiles cp ON t.originator_account_no = cp.account_no
             WHERE t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-            GROUP BY cp.id HAVING COUNT(t.id) >= ?
+            GROUP BY cp.id, cp.declared_annual_income
+            HAVING SUM(t.amount) > (cp.declared_annual_income * ?)
         """;
         
         List<UUID> results = jdbcTemplate.query(sql, 
             (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")), 
-            lookback, threshold);
+            lookback, multiplier);
         return new HashSet<>(results);
     }
 }

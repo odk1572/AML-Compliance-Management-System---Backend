@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -23,26 +24,31 @@ public class ScenarioExecutionService {
     private final RuleExecutorFactory ruleExecutorFactory;
 
     public void executeScenario(
+            UUID scenarioId,       
+            UUID tenantRuleId,     
             String categoryName,
             GlobalRuleResponseDto ruleInfo,
             List<GlobalRuleConditionResponseDto> globals,
             List<TenantRuleThresholdResponseDto> overrides) {
 
-        log.info("Starting execution for Category: {}", categoryName);
+        log.info("Starting execution for Category: {} under Scenario: {}", categoryName, scenarioId);
 
         // Flatten DB mapping to Execution Context
-        RuleExecutionContextDto executionContext = buildExecutionContext(categoryName, ruleInfo, globals, overrides);
+        RuleExecutionContextDto executionContext = buildExecutionContext(
+                scenarioId, tenantRuleId, categoryName, ruleInfo, globals, overrides);
 
         // Fetch the correct strategy
         RuleExecutorStrategy strategy = ruleExecutorFactory.getStrategy(categoryName);
 
-        // Run the SQL
-        Set<String> breachingAccounts = strategy.executeRule(executionContext);
+        // Run the SQL (Now properly returns Entity-Centric Set<UUID> for Customer IDs)
+        Set<UUID> breachingCustomers = strategy.executeRule(executionContext);
 
         // Generate Alerts
     }
 
     private RuleExecutionContextDto buildExecutionContext(
+            UUID scenarioId,
+            UUID tenantRuleId,
             String category,
             GlobalRuleResponseDto ruleInfo,
             List<GlobalRuleConditionResponseDto> globals,
@@ -69,6 +75,8 @@ public class ScenarioExecutionService {
         }
 
         return RuleExecutionContextDto.builder()
+                .scenarioId(scenarioId)     // Pass to Execution Context
+                .tenantRuleId(tenantRuleId) // Pass to Execution Context
                 .ruleId(ruleInfo.getId())
                 .ruleName(ruleInfo.getRuleName())
                 .baseRiskScore(ruleInfo.getBaseRiskScore())

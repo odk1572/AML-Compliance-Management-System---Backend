@@ -14,35 +14,35 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class VelocityRuleExecutor implements RuleExecutorStrategy {
+public class ScatterExecutor implements RuleExecutorStrategy {
     private final JdbcTemplate jdbcTemplate;
 
-    @Override public String getRuleType() { return "VELOCITY"; }
+    @Override public String getRuleType() { return "SCATTER"; }
 
     @Override
     public Set<UUID> executeRule(RuleExecutionContextDto rule) {
-        int threshold = 0; 
-        String lookback = null; 
+        int targetCount = 0;
+        String lookback = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            if ("COUNT".equalsIgnoreCase(cond.getAggregationFunction())) threshold = Integer.parseInt(cond.getThresholdValue());
+            if ("COUNT".equalsIgnoreCase(cond.getAggregationFunction())) targetCount = Integer.parseInt(cond.getThresholdValue());
             if (cond.getLookbackPeriod() != null) lookback = SqlIntervalParser.parse(cond.getLookbackPeriod());
         }
 
-        if (threshold == 0 || lookback == null) {
-            throw new IllegalStateException("Missing required global or tenant condition thresholds for Velocity Rule.");
+        if (targetCount == 0 || lookback == null) {
+            throw new IllegalStateException("Missing required global or tenant condition thresholds for Scatter Rule.");
         }
 
         String sql = """
             SELECT cp.id as customer_id FROM transactions t
             JOIN customer_profiles cp ON t.originator_account_no = cp.account_no
             WHERE t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-            GROUP BY cp.id HAVING COUNT(t.id) >= ?
+            GROUP BY cp.id HAVING COUNT(DISTINCT t.beneficiary_account_no) >= ?
         """;
         
         List<UUID> results = jdbcTemplate.query(sql, 
             (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")), 
-            lookback, threshold);
+            lookback, targetCount);
         return new HashSet<>(results);
     }
 }

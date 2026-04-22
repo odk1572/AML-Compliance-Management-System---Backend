@@ -8,9 +8,11 @@ import java.util.UUID;
 @Data
 @Builder
 public class RuleExecutionContextDto {
-    private UUID ruleId;
+private UUID ruleId;           
+    private UUID scenarioId;      
+    private UUID tenantRuleId;    
     private String ruleName;
-    private String ruleCategory;
+    private String ruleCategory;  
     private Integer baseRiskScore;
     private List<ConditionExecutionContextDto> conditions;
 }
