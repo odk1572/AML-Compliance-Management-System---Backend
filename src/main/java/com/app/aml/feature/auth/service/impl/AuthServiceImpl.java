@@ -63,13 +63,6 @@ public class AuthServiceImpl implements AuthService {
         } else {
             TenantContext.clear();
         }
-
-        // temporary debug code
-        // Add this temporarily
-        String generatedHash = passwordEncoder.encode("password");
-        log.info("--- THE PERFECT HASH FOR YOUR APP ---");
-        log.info(generatedHash);
-        log.info("-------------------------------------");
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
         );

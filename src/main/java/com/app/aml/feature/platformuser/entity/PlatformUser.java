@@ -9,6 +9,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -20,6 +22,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE common_schema.platform_users SET sys_is_deleted = true, sys_deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("sys_is_deleted = false")
 public class PlatformUser extends SoftDeletableEntity {
 
     @Id
@@ -61,7 +65,7 @@ public class PlatformUser extends SoftDeletableEntity {
     @NotNull
     @Column(name = "is_locked", nullable = false)
     @Builder.Default
-    private boolean isLocked = false;
+    private boolean locked = false;
 
     @Column(name = "locked_at")
     private Instant lockedAt;
@@ -81,12 +85,12 @@ public class PlatformUser extends SoftDeletableEntity {
     }
 
     public void lockAccount() {
-        this.isLocked = true;
+        this.locked = true;
         this.lockedAt = Instant.now();
     }
 
     public void unlockAccount() {
-        this.isLocked = false;
+        this.locked = false;
         this.lockedAt = null;
         this.failedLoginAttempts = 0;
     }

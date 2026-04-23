@@ -23,7 +23,7 @@ public class PlatformUserResponseDto {
 
     private Role role;
 
-    private boolean isLocked;
+    private boolean locked;
 
     private Instant lockedAt;
 
