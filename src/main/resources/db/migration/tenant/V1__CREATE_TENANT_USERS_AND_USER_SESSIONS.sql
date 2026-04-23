@@ -44,8 +44,8 @@ CREATE TABLE user_sessions (
                                expires_at TIMESTAMP NOT NULL,
                                is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
                                revoked_at TIMESTAMP,
-                               sys_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-                               sys_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                               sys_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                               sys_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 
 );
 

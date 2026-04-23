@@ -1,6 +1,7 @@
 package com.app.aml.multitenency;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 import javax.sql.DataSource;
@@ -19,7 +20,7 @@ public class TenantAwareDataSource extends AbstractRoutingDataSource {
 
     private final TenantSchemaResolver schemaResolver;
 
-    public TenantAwareDataSource(DataSource defaultDataSource, TenantSchemaResolver schemaResolver) {
+    public TenantAwareDataSource(DataSource defaultDataSource,   @Lazy TenantSchemaResolver schemaResolver) {
         this.schemaResolver = schemaResolver;
 
         // In a Schema-per-Tenant model, we use a single Hikari connection pool.
@@ -67,9 +68,7 @@ public class TenantAwareDataSource extends AbstractRoutingDataSource {
         return connection;
     }
 
-    /**
-     * The core isolation logic. Resolves the schema name and executes SET search_path.
-     */
+
     private void setSchemaPath(Connection connection) throws SQLException {
         String tenantId = (String) determineCurrentLookupKey();
 
@@ -83,4 +82,5 @@ public class TenantAwareDataSource extends AbstractRoutingDataSource {
             log.trace("Connection routed to schema: {}", schemaName);
         }
     }
+
 }

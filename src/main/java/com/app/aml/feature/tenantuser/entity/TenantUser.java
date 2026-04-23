@@ -1,6 +1,5 @@
 package com.app.aml.feature.tenantuser.entity;
-
-import com.app.aml.domain.enums.Role;
+import com.app.aml.security.rbac.Role;
 import com.app.aml.shared.audit.SoftDeletableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
@@ -8,21 +7,24 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.springframework.data.domain.Persistable;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "tenant_users")
-@Getter
+@Getter // Better than @Data for JPA entities to avoid Circular Dependency in toString/equals
 @Setter
 @NoArgsConstructor
-public class TenantUser extends SoftDeletableEntity {
+@AllArgsConstructor
+@SuperBuilder
+public class TenantUser extends SoftDeletableEntity implements Persistable<UUID> {
 
     @Id
+    @Builder.Default
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
@@ -48,19 +50,23 @@ public class TenantUser extends SoftDeletableEntity {
     private String passwordHash;
 
     @NotNull
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 50)
     private Role role = Role.COMPLIANCE_OFFICER;
 
     @NotNull
+    @Builder.Default
     @Column(name = "is_first_login", nullable = false)
     private boolean isFirstLogin = true;
 
     @NotNull
+    @Builder.Default
     @Column(name = "failed_login_attempts", nullable = false)
     private Integer failedLoginAttempts = 0;
 
     @NotNull
+    @Builder.Default
     @Column(name = "is_locked", nullable = false)
     private boolean isLocked = false;
 
@@ -76,4 +82,14 @@ public class TenantUser extends SoftDeletableEntity {
 
     @Column(name = "sys_created_by")
     private UUID sysCreatedBy;
+
+    @Override
+    @Transient // Important: don't persist this field
+    public boolean isNew() {
+        return true; // Tells Hibernate to skip the SELECT and go straight to INSERT
+    }
+    @Override
+    public UUID getId() {
+        return this.id;
+    }
 }

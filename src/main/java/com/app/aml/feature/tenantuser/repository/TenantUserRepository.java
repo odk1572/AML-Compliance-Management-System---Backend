@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface TenantUserRepository extends JpaRepository<TenantUser, UUID> {
     Optional<TenantUser> findByEmail(String email);
+    Optional<TenantUser> findByEmailIgnoreCase(String email);
 }

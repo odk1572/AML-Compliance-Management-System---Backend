@@ -2,15 +2,20 @@ package com.app.aml.shared.audit;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
+
 @Getter
 @Setter
 @MappedSuperclass
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 public abstract class SoftDeletableEntity extends AuditableEntity {
 
+    @Builder.Default
     @Column(name = "sys_is_deleted", nullable = false)
     private boolean sysIsDeleted = false;
 

@@ -30,7 +30,7 @@ public class TenantSchemaInitializer {
 
         for (String schemaName : activeSchemas) {
             // Use the reusable method from your FlywayConfig
-            flywayConfig.runTenantSchemaMigration(schemaName);
+            flywayConfig.runTenantSchemaMigration(schemaName, dataSource);
         }
     }
 
