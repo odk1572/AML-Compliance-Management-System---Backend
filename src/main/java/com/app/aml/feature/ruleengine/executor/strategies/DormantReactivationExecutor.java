@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,39 +24,43 @@ public class DormantReactivationExecutor implements RuleExecutorStrategy {
     public Set<UUID> executeRule(RuleExecutionContextDto rule) {
         String dormantPeriod = null;
         String reactivationWindow = null;
+        BigDecimal threshold = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            if ("DORMANT_PERIOD".equalsIgnoreCase(cond.getAttributeName())) {
+            // Use Aggregation Function to safely map variables past DB constraints
+            if ("MIN".equalsIgnoreCase(cond.getAggregationFunction())) {
                 dormantPeriod = SqlIntervalParser.parse(cond.getLookbackPeriod());
-            }
-            if ("REACTIVATION_WINDOW".equalsIgnoreCase(cond.getAttributeName())) {
+            } else if ("MAX".equalsIgnoreCase(cond.getAggregationFunction())) {
                 reactivationWindow = SqlIntervalParser.parse(cond.getLookbackPeriod());
+            } else if ("NONE".equalsIgnoreCase(cond.getAggregationFunction()) || cond.getAggregationFunction() == null) {
+                threshold = new BigDecimal(cond.getThresholdValue());
             }
         }
 
-        if (dormantPeriod == null || reactivationWindow == null) {
-            throw new IllegalStateException("Missing required conditions for Dormant Reactivation Rule. "
-                    + "Need: DORMANT_PERIOD (attributeName + lookbackPeriod), REACTIVATION_WINDOW (attributeName + lookbackPeriod).");
+        if (dormantPeriod == null || reactivationWindow == null || threshold == null) {
+            throw new IllegalStateException("Missing required conditions for Dormant Reactivation Rule. Need: MIN (dormant period), MAX (reactivation window), NONE (threshold).");
         }
 
-        // Find customers who:
-        // 1. Have at least one transaction in the reactivation window (recent activity)
-        // 2. Had NO transactions during the dormant period before the reactivation window
+        // FIXED: Changed cp.account_no to cp.account_number
+        // Logic: Has transactions > threshold in the recent window, but NO transactions in the dormant period before that
         String sql = """
-            SELECT DISTINCT cp.id as customer_id FROM transactions t_recent
-            JOIN customer_profiles cp ON t_recent.originator_account_no = cp.account_no
-            WHERE t_recent.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-              AND NOT EXISTS (
-                  SELECT 1 FROM transactions t_dormant
-                  WHERE t_dormant.originator_account_no = t_recent.originator_account_no
-                    AND t_dormant.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-                    AND t_dormant.transaction_timestamp < CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-              )
+            SELECT cp.id as customer_id FROM transactions t
+            JOIN customer_profiles cp ON t.originator_account_no = cp.account_number
+            WHERE t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
+            GROUP BY cp.id, cp.account_number
+            HAVING SUM(t.amount) >= ?
+               AND NOT EXISTS (
+                   SELECT 1 FROM transactions t2 
+                   WHERE t2.originator_account_no = cp.account_number
+                     AND t2.transaction_timestamp < CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
+                     AND t2.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
+               )
         """;
 
         List<UUID> results = jdbcTemplate.query(sql,
-            (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),
-            reactivationWindow, dormantPeriod, reactivationWindow);
+                (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),
+                reactivationWindow, threshold, reactivationWindow, dormantPeriod);
+
         return new HashSet<>(results);
     }
 }

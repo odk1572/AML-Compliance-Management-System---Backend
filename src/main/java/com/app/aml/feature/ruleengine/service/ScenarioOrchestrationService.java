@@ -11,11 +11,7 @@ import com.app.aml.feature.ruleengine.entity.TenantScenario;
 import com.app.aml.feature.ruleengine.mapper.GlobalRuleConditionMapper;
 import com.app.aml.feature.ruleengine.mapper.GlobalRuleMapper;
 import com.app.aml.feature.ruleengine.mapper.TenantRuleThresholdMapper;
-import com.app.aml.feature.ruleengine.repository.GlobalRuleConditionRepository;
-import com.app.aml.feature.ruleengine.repository.GlobalRuleRepository;
-import com.app.aml.feature.ruleengine.repository.TenantRuleRepository;
-import com.app.aml.feature.ruleengine.repository.TenantRuleThresholdRepository;
-import com.app.aml.feature.ruleengine.repository.TenantScenarioRepository;
+import com.app.aml.feature.ruleengine.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,6 +29,7 @@ public class ScenarioOrchestrationService {
     private final TenantRuleThresholdRepository tenantRuleThresholdRepository;
     private final GlobalRuleRepository globalRuleRepository;
     private final GlobalRuleConditionRepository globalRuleConditionRepository;
+    private final GlobalScenarioRepository globalScenarioRepository;
 
     private final GlobalRuleMapper globalRuleMapper;
     private final GlobalRuleConditionMapper globalRuleConditionMapper;
@@ -99,34 +96,82 @@ public class ScenarioOrchestrationService {
     }
 
 
+//    private Set<UUID> executeSingleRule(UUID tenantScenarioId, TenantRule tenantRule) {
+//
+//        // Load the GlobalRule definition
+//        GlobalRule globalRule = globalRuleRepository.findById(tenantRule.getGlobalRuleId())
+//                .orElseThrow(() -> new IllegalArgumentException(
+//                        "GlobalRule not found: " + tenantRule.getGlobalRuleId()
+//                                + " (referenced by TenantRule " + tenantRule.getId() + ")"));
+//        GlobalRuleResponseDto ruleInfo = globalRuleMapper.toResponseDto(globalRule);
+//
+//        // Load global conditions (ordered by sequence)
+//        List<GlobalRuleCondition> globalConditions = globalRuleConditionRepository
+//                .findByRuleIdOrderByConditionSequenceAsc(globalRule.getId());
+//        List<GlobalRuleConditionResponseDto> globalConditionDtos = globalRuleConditionMapper
+//                .toResponseDtoList(globalConditions);
+//
+//        // Load tenant-specific threshold overrides
+//        List<TenantRuleThreshold> tenantOverrides = tenantRuleThresholdRepository
+//                .findByTenantRuleId(tenantRule.getId());
+//        List<TenantRuleThresholdResponseDto> overrideDtos = tenantRuleThresholdMapper
+//                .toResponseDtoList(tenantOverrides);
+//
+//        // Determine the rule category (used for strategy dispatch)
+//        String categoryName = globalRule.getRuleName().toUpperCase().replace(" ", "_");
+//
+//        log.info("Executing TenantRule '{}' (id={}, globalRuleId={}, category={})",
+//                tenantRule.getRuleName(), tenantRule.getId(), globalRule.getId(), categoryName);
+//
+//        // Delegate to ScenarioExecutionService for the actual execution
+//        return scenarioExecutionService.executeScenario(
+//                tenantScenarioId,
+//                tenantRule.getId(),
+//                categoryName,
+//                ruleInfo,
+//                globalConditionDtos,
+//                overrideDtos
+//        );
+//    }
+
+    // ... inside ScenarioOrchestrationService.java
+
     private Set<UUID> executeSingleRule(UUID tenantScenarioId, TenantRule tenantRule) {
 
-        // Load the GlobalRule definition
+        // 1. Fetch the associated TenantScenario to get the GlobalScenario ID
+        TenantScenario tenantScenario = tenantScenarioRepository.findById(tenantScenarioId)
+                .orElseThrow(() -> new IllegalArgumentException("TenantScenario not found"));
+
+        // 2. Fetch the GlobalScenario to get the actual TypologyCategory
+        com.app.aml.feature.ruleengine.entity.GlobalScenario globalScenario =
+                globalScenarioRepository.findById(tenantScenario.getGlobalScenarioId()) // Note: You'll need to inject GlobalScenarioRepository
+                        .orElseThrow(() -> new IllegalArgumentException("GlobalScenario not found"));
+
+        // 3. Load the GlobalRule definition
         GlobalRule globalRule = globalRuleRepository.findById(tenantRule.getGlobalRuleId())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "GlobalRule not found: " + tenantRule.getGlobalRuleId()
                                 + " (referenced by TenantRule " + tenantRule.getId() + ")"));
         GlobalRuleResponseDto ruleInfo = globalRuleMapper.toResponseDto(globalRule);
 
-        // Load global conditions (ordered by sequence)
+        // ... (rest of the data fetching logic remains the same)
         List<GlobalRuleCondition> globalConditions = globalRuleConditionRepository
                 .findByRuleIdOrderByConditionSequenceAsc(globalRule.getId());
         List<GlobalRuleConditionResponseDto> globalConditionDtos = globalRuleConditionMapper
                 .toResponseDtoList(globalConditions);
 
-        // Load tenant-specific threshold overrides
         List<TenantRuleThreshold> tenantOverrides = tenantRuleThresholdRepository
                 .findByTenantRuleId(tenantRule.getId());
         List<TenantRuleThresholdResponseDto> overrideDtos = tenantRuleThresholdMapper
                 .toResponseDtoList(tenantOverrides);
 
-        // Determine the rule category (used for strategy dispatch)
-        String categoryName = globalRule.getRuleName().toUpperCase().replace(" ", "_");
+        // 4. Use the category from the GlobalScenario instead of deriving from the rule name
+        String categoryName = globalScenario.getCategory();
 
         log.info("Executing TenantRule '{}' (id={}, globalRuleId={}, category={})",
                 tenantRule.getRuleName(), tenantRule.getId(), globalRule.getId(), categoryName);
 
-        // Delegate to ScenarioExecutionService for the actual execution
+        // Delegate to ScenarioExecutionService
         return scenarioExecutionService.executeScenario(
                 tenantScenarioId,
                 tenantRule.getId(),

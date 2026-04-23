@@ -26,15 +26,17 @@ public class RoundAmountExecutor implements RuleExecutorStrategy {
         String lookback = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            // Compound matching: DIVISOR is identified by attributeName (a domain concept, not an aggregation)
-            if ("DIVISOR".equalsIgnoreCase(cond.getAttributeName())) {
-                divisor = Integer.parseInt(cond.getThresholdValue());
+            // Using Aggregation Function to map thresholds safely past DB constraints
+            if ("NONE".equalsIgnoreCase(cond.getAggregationFunction()) || cond.getAggregationFunction() == null) {
+                divisor = (int) Double.parseDouble(cond.getThresholdValue());
             }
-            // COUNT is identified by aggregationFunction, but ONLY when it's not the DIVISOR condition
             else if ("COUNT".equalsIgnoreCase(cond.getAggregationFunction())) {
-                threshold = Integer.parseInt(cond.getThresholdValue());
+                threshold = (int) Double.parseDouble(cond.getThresholdValue());
             }
-            if (cond.getLookbackPeriod() != null) lookback = SqlIntervalParser.parse(cond.getLookbackPeriod());
+
+            if (cond.getLookbackPeriod() != null) {
+                lookback = SqlIntervalParser.parse(cond.getLookbackPeriod());
+            }
         }
 
         if (divisor == 0 || threshold == 0 || lookback == null) {
@@ -43,14 +45,15 @@ public class RoundAmountExecutor implements RuleExecutorStrategy {
 
         String sql = """
             SELECT cp.id as customer_id FROM transactions t
-            JOIN customer_profiles cp ON t.originator_account_no = cp.account_no
+            JOIN customer_profiles cp ON t.originator_account_no = cp.account_number
             WHERE MOD(t.amount, ?) = 0 AND t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
             GROUP BY cp.id HAVING COUNT(t.id) >= ?
         """;
-        
-        List<UUID> results = jdbcTemplate.query(sql, 
-            (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")), 
-            divisor, lookback, threshold);
+
+        List<UUID> results = jdbcTemplate.query(sql,
+                (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),
+                divisor, lookback, threshold);
+
         return new HashSet<>(results);
     }
 }

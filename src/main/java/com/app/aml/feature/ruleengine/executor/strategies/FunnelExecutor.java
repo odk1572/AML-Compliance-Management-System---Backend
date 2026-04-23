@@ -35,7 +35,7 @@ public class FunnelExecutor implements RuleExecutorStrategy {
 
         String sql = """
             SELECT cp.id as customer_id FROM transactions t
-            JOIN customer_profiles cp ON t.beneficiary_account_no = cp.account_no
+            JOIN customer_profiles cp ON t.beneficiary_account_no = cp.account_number
             WHERE t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
             GROUP BY cp.id HAVING COUNT(DISTINCT t.originator_account_no) >= ?
         """;

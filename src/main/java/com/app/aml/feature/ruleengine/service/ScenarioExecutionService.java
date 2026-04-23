@@ -1,5 +1,7 @@
 package com.app.aml.feature.ruleengine.service;
 
+import com.app.aml.feature.ingestion.entity.CustomerProfile;
+import com.app.aml.feature.ingestion.repository.CustomerProfileRepository;
 import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.globalRuleCondition.response.GlobalRuleConditionResponseDto;
@@ -23,6 +25,7 @@ import java.util.UUID;
 public class ScenarioExecutionService {
 
     private final RuleExecutorFactory ruleExecutorFactory;
+    private final CustomerProfileRepository customerProfileRepository;
 
     @Transactional(readOnly = true)
     public Set<UUID> executeScenario(
@@ -48,8 +51,32 @@ public class ScenarioExecutionService {
         // Fetch the correct strategy
         RuleExecutorStrategy strategy = ruleExecutorFactory.getStrategy(categoryName);
 
+        // Print Pre-Execution Header
+        log.info("===============================================================");
+        log.info("▶ STARTING EXECUTION FOR RULE: {}", ruleInfo.getRuleName());
+        log.info("▶ TYPOLOGY CATEGORY: {}", categoryName);
+        log.info("===============================================================");
+
         // Run the SQL (Returns Entity-Centric Set<UUID> for Customer IDs)
         Set<UUID> breachingCustomers = strategy.executeRule(executionContext);
+
+        // Print Stylized Results
+        if (breachingCustomers.isEmpty()) {
+            log.info("✅ NO BREACHES FOUND. All customers passed the rule thresholds.");
+        } else {
+            log.info("🚨 RULE BREACHED! Found {} customers violating the rule thresholds.", breachingCustomers.size());
+
+            int counter = 1;
+            for (UUID customerId : breachingCustomers) {
+                // Fetch the human-readable account number from the DB
+                String accountNumber = customerProfileRepository.findById(customerId)
+                        .map(CustomerProfile::getAccountNumber)
+                        .orElse("UNKNOWN_ACC");
+
+                log.info("   [!] Offender {}: Customer ID -> {} ({})", counter++, customerId, accountNumber);
+            }
+        }
+        log.info("===============================================================\n");
 
         log.info("Rule '{}' found {} breaching customers under Scenario: {}",
                 ruleInfo.getRuleName(), breachingCustomers.size(), scenarioId);

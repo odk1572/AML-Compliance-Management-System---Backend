@@ -70,16 +70,34 @@ public class TenantAwareDataSource extends AbstractRoutingDataSource {
     /**
      * The core isolation logic. Resolves the schema name and executes SET search_path.
      */
+//    private void setSchemaPath(Connection connection) throws SQLException {
+//        String tenantId = (String) determineCurrentLookupKey();
+//
+//        // Use our cached resolver to get the actual Postgres schema name
+//        String schemaName = schemaResolver.resolveSchema(tenantId);
+//
+//        try (Statement sql = connection.createStatement()) {
+//            // Force the connection into the isolated bank schema.
+//            // Appending 'public' ensures extensions like uuid-ossp or citext still work.
+//            sql.execute("SET search_path TO " + schemaName + ", public");
+//            log.trace("Connection routed to schema: {}", schemaName);
+//        }
+//    }
+
+    /**
+     * The core isolation logic. Resolves the schema name and executes SET search_path.
+     */
     private void setSchemaPath(Connection connection) throws SQLException {
         String tenantId = (String) determineCurrentLookupKey();
 
         // Use our cached resolver to get the actual Postgres schema name
+        // (If testing without a JWT, make sure your schemaResolver returns "public" when tenantId is null)
         String schemaName = schemaResolver.resolveSchema(tenantId);
 
         try (Statement sql = connection.createStatement()) {
             // Force the connection into the isolated bank schema.
-            // Appending 'public' ensures extensions like uuid-ossp or citext still work.
-            sql.execute("SET search_path TO " + schemaName + ", public");
+            // Appending 'public' ensures extensions work, and 'common_schema' ensures global entities are found!
+            sql.execute("SET search_path TO " + schemaName + ", public, common_schema");
             log.trace("Connection routed to schema: {}", schemaName);
         }
     }
