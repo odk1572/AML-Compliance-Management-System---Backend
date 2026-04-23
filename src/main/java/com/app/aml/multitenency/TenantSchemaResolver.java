@@ -6,7 +6,7 @@ import com.app.aml.domain.exceptions.TenantSuspendedException;
 import com.app.aml.feature.tenant.entity.Tenant;
 import com.app.aml.feature.tenant.repository.TenantRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider; // Import this
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -17,11 +17,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class TenantSchemaResolver {
 
-    // 1. Break the cycle using ObjectProvider
     private final ObjectProvider<TenantRepository> tenantRepositoryProvider;
     private final Map<String, String> schemaCache = new ConcurrentHashMap<>();
 
-    // Manually define constructor (Remove @RequiredArgsConstructor)
     public TenantSchemaResolver(ObjectProvider<TenantRepository> tenantRepositoryProvider) {
         this.tenantRepositoryProvider = tenantRepositoryProvider;
     }
@@ -32,7 +30,19 @@ public class TenantSchemaResolver {
             return "common_schema";
         }
 
-        return schemaCache.computeIfAbsent(tenantId, this::fetchAndValidateTenant);
+        // 1. Check cache manually (DO NOT use computeIfAbsent with a DB call lambda)
+        String schemaName = schemaCache.get(tenantId);
+        if (schemaName != null) {
+            return schemaName;
+        }
+
+        // 2. Fetch from DB if not in cache
+        schemaName = fetchAndValidateTenant(tenantId);
+
+        // 3. Put in cache manually
+        schemaCache.put(tenantId, schemaName);
+
+        return schemaName;
     }
 
     public void evict(String tenantId) {
@@ -49,8 +59,7 @@ public class TenantSchemaResolver {
 
         log.debug("Cache miss. Validating tenant status in DB for: {}", tenantId);
 
-        // 2. Logic to handle if we are passing the Schema Name directly instead of a UUID
-        // (Happens during the createTenant process)
+        // Logic to handle if we are passing the Schema Name directly instead of a UUID
         if (tenantId.endsWith("_schema")) {
             return tenantId;
         }
@@ -63,20 +72,33 @@ public class TenantSchemaResolver {
             return "common_schema";
         }
 
-        // 3. Fetch from repository via the Provider
-        TenantRepository repository = tenantRepositoryProvider.getIfAvailable();
-        if (repository == null) {
-            throw new IllegalStateException("TenantRepository is not yet initialized");
+        // CRITICAL FIX: Temporarily suspend the TenantContext.
+        // If we don't do this, the repository call below will trigger the
+        // DataSource again, asking for the schema, causing the infinite loop.
+        String originalContext = TenantContext.getTenantId();
+        TenantContext.clear();
+
+        try {
+            TenantRepository repository = tenantRepositoryProvider.getIfAvailable();
+            if (repository == null) {
+                throw new IllegalStateException("TenantRepository is not yet initialized");
+            }
+
+            Tenant tenant = repository.findById(id)
+                    .orElseThrow(() -> new TenantNotFoundException(tenantId));
+
+            if (!TenantStatus.ACTIVE.name().equals(tenant.getStatus().name())) {
+                log.warn("Access denied for Tenant {}. Current status: {}", tenantId, tenant.getStatus());
+                throw new TenantSuspendedException("Tenant account is " + tenant.getStatus());
+            }
+
+            return tenant.getSchemaName();
+
+        } finally {
+            // ALWAYS restore the context, even if the DB lookup fails
+            if (originalContext != null) {
+                TenantContext.setTenantId(originalContext);
+            }
         }
-
-        Tenant tenant = repository.findById(id)
-                .orElseThrow(() -> new TenantNotFoundException(tenantId));
-
-        if (!TenantStatus.ACTIVE.name().equals(tenant.getStatus().name())) {
-            log.warn("Access denied for Tenant {}. Current status: {}", tenantId, tenant.getStatus());
-            throw new TenantSuspendedException("Tenant account is " + tenant.getStatus());
-        }
-
-        return tenant.getSchemaName();
     }
 }

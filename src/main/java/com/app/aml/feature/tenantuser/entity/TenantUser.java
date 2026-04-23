@@ -1,4 +1,5 @@
 package com.app.aml.feature.tenantuser.entity;
+
 import com.app.aml.security.rbac.Role;
 import com.app.aml.shared.audit.SoftDeletableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
@@ -16,7 +17,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "tenant_users")
-@Getter // Better than @Data for JPA entities to avoid Circular Dependency in toString/equals
+@Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -80,16 +81,55 @@ public class TenantUser extends SoftDeletableEntity implements Persistable<UUID>
     @Column(name = "last_login_ip", length = 45)
     private String lastLoginIp;
 
-    @Column(name = "sys_created_by")
-    private UUID sysCreatedBy;
+    /**
+     * Self-referencing foreign key as defined in SQL:
+     * sys_created_by UUID REFERENCES tenant_users(id)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sys_created_by", referencedColumnName = "id")
+    private TenantUser sysCreatedBy;
+
+    // --- DYNAMIC Persistable Logic (Fixes Duplicate Key Error) ---
+
+    @Transient
+    @Builder.Default
+    private boolean isNewRecord = true;
 
     @Override
-    @Transient // Important: don't persist this field
+    @Transient
     public boolean isNew() {
-        return true; // Tells Hibernate to skip the SELECT and go straight to INSERT
+        return isNewRecord;
     }
+
+    @PostLoad
+    @PrePersist
+    void markNotNew() {
+        this.isNewRecord = false;
+    }
+
     @Override
     public UUID getId() {
         return this.id;
+    }
+
+    // --- Helper Methods ---
+
+    public void incrementFailedAttempts() {
+        this.failedLoginAttempts++;
+    }
+
+    public void lock() {
+        this.isLocked = true;
+        this.lockedAt = Instant.now();
+    }
+
+    public void resetFailedAttempts() {
+        this.failedLoginAttempts = 0;
+        this.isLocked = false;
+        this.lockedAt = null;
+    }
+
+    public void markFirstLoginComplete() {
+        this.isFirstLogin = false;
     }
 }

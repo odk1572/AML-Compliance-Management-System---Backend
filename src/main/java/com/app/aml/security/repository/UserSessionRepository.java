@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,6 +17,14 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
 
 
     boolean existsByJwtJtiAndIsRevokedTrue(String jwtJti);
+
+    
+
+    List<UserSession> findAllByUserIdAndIsRevokedFalse(UUID userId);
+
+    @Modifying
+    @Query("UPDATE UserSession s SET s.isRevoked = true WHERE s.userId = :userId AND s.isRevoked = false")
+    void revokeAllActiveSessions(@Param("userId") UUID userId);
 
     Optional<UserSession> findByJwtJti(String jwtJti);
 

@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+import org.springframework.data.domain.Persistable; // Added
 
 import java.time.Instant;
 import java.util.UUID;
@@ -24,9 +25,10 @@ import java.util.UUID;
 @Builder
 @SQLDelete(sql = "UPDATE common_schema.platform_users SET sys_is_deleted = true, sys_deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("sys_is_deleted = false")
-public class PlatformUser extends SoftDeletableEntity {
+public class PlatformUser extends SoftDeletableEntity implements Persistable<UUID> { // Added Persistable
 
     @Id
+    @Builder.Default // Ensure builder uses the generator
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
@@ -77,9 +79,34 @@ public class PlatformUser extends SoftDeletableEntity {
     @Column(name = "last_login_ip", length = 45)
     private String lastLoginIp;
 
+    // --- NEW: Dynamic Persistable Logic ---
+
+    @Transient
+    @Builder.Default
+    private boolean isNewRecord = true;
+
+    @Override
+    @Transient
+    public boolean isNew() {
+        return isNewRecord;
+    }
+
+    @PostLoad
+    @PrePersist
+    void markNotNew() {
+        this.isNewRecord = false;
+    }
+
+    @Override
+    public UUID getId() {
+        return this.id;
+    }
+
+    // --- End of Persistable Logic ---
+
     public void incrementFailedAttempts() {
         this.failedLoginAttempts++;
-        if (this.failedLoginAttempts >= 5) { // Policy: Lock after 5 tries
+        if (this.failedLoginAttempts >= 5) {
             this.lockAccount();
         }
     }
@@ -99,7 +126,7 @@ public class PlatformUser extends SoftDeletableEntity {
         this.lastLoginAt = Instant.now();
         this.lastLoginIp = ip;
         this.failedLoginAttempts = 0;
+        // Optionally mark first login complete here if your business logic requires it
+        // this.isFirstLogin = false;
     }
 }
-
-

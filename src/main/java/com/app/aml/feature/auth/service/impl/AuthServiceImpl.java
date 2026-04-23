@@ -6,6 +6,8 @@ import com.app.aml.feature.auth.repository.RefreshTokenRepository;
 import com.app.aml.feature.auth.service.interfaces.AuthService;
 import com.app.aml.feature.platformuser.entity.PlatformUser;
 import com.app.aml.feature.platformuser.repository.PlatformUserRepository;
+import com.app.aml.feature.tenant.entity.Tenant;
+import com.app.aml.feature.tenant.repository.TenantRepository;
 import com.app.aml.feature.tenantuser.entity.TenantUser;
 import com.app.aml.feature.tenantuser.repository.TenantUserRepository;
 import com.app.aml.multitenency.TenantContext;
@@ -15,6 +17,8 @@ import com.app.aml.security.jwt.JtiBlacklistService;
 import com.app.aml.security.jwt.JwtTokenProvider;
 import com.app.aml.security.repository.PlatformUserSessionRepository;
 import com.app.aml.security.repository.UserSessionRepository;
+import com.app.aml.security.userDetails.PlatformUserDetails;
+import com.app.aml.security.userDetails.TenantUserDetails;
 import io.jsonwebtoken.Claims;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -52,66 +56,104 @@ public class AuthServiceImpl implements AuthService {
     private final TenantUserRepository tenantUserRepository;
     private final JtiBlacklistService jtiBlacklistService;
     private final PasswordEncoder passwordEncoder;
+    private final TenantRepository tenantRepository;
 
     @Value("${app.security.jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
 
-    @Transactional
     public LoginResponseDto login(LoginRequestDto dto) {
+        // 1. Set explicit tenant if provided, else clear for discovery
         if (dto.getTenantId() != null) {
             TenantContext.setTenantId(dto.getTenantId().toString());
         } else {
             TenantContext.clear();
         }
+
+        // 2. Authenticate
+        // This triggers UnifiedUserDetailsService which might perform "Discovery"
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
         );
 
         String userId;
         String role;
-        UUID tenantId = dto.getTenantId();
         boolean isFirstLogin;
+        UUID finalTenantId = dto.getTenantId();
+        String sessionSchema = null; // To track where the session table lives
 
-        if (tenantId == null) {
-            // Mapping 'username' from DTO to 'email' in Entity
-            PlatformUser user = platformUserRepository.findByEmail(dto.getEmail())
-                    .orElseThrow(() -> new EntityNotFoundException("Platform user not found"));
+        Object principal = authentication.getPrincipal();
 
+        // 3. Process Platform User
+        if (principal instanceof PlatformUserDetails platformUserDetails) {
+            PlatformUser user = platformUserDetails.getPlatformUser();
             if (user.isLocked()) throw new RuntimeException("Account is locked");
 
             userId = user.getId().toString();
             role = user.getRole().name();
             isFirstLogin = user.isFirstLogin();
-            user.recordSuccessfulLogin("unknown-ip"); // You can pass actual IP here
+
+            user.recordSuccessfulLogin("unknown-ip");
             platformUserRepository.save(user);
-        } else {
-            TenantUser user = tenantUserRepository.findByEmail(dto.getEmail())
-                    .orElseThrow(() -> new EntityNotFoundException("Tenant user not found"));
+
+            finalTenantId = null;
+            sessionSchema = "common_schema"; // Sessions go to common_schema
+
+            // 4. Process Tenant User
+        } else if (principal instanceof TenantUserDetails tenantUserDetails) {
+            TenantUser user = tenantUserDetails.getTenantUser();
+            if (user.isLocked()) throw new RuntimeException("Account is locked");
 
             userId = user.getId().toString();
             role = user.getRole().name();
             isFirstLogin = user.isFirstLogin();
+
+            user.setLastLoginAt(java.time.Instant.now());
+            tenantUserRepository.save(user);
+
+            // Retrieve the schema name (either from DTO or Discovery)
+            sessionSchema = TenantContext.getTenantId();
+
+            if (finalTenantId == null) {
+                Tenant tenant = tenantRepository.findBySchemaName(sessionSchema)
+                        .orElseThrow(() -> new RuntimeException("Tenant not found for schema: " ));
+                finalTenantId = tenant.getId();
+            }
+        } else {
+            throw new IllegalStateException("Unknown Principal type");
         }
 
-        String accessToken = tokenProvider.generateToken(userId, tenantId != null ? tenantId.toString() : null, role);
+        // 5. Generate Tokens
+        String accessToken = tokenProvider.generateToken(userId, finalTenantId != null ? finalTenantId.toString() : null, role);
         String jti = tokenProvider.extractJti(accessToken);
-        Instant expiry = tokenProvider.extractAllClaims(accessToken).getExpiration().toInstant();
+        java.time.Instant expiry = tokenProvider.extractAllClaims(accessToken).getExpiration().toInstant();
 
-        persistSession(UUID.fromString(userId), tenantId, jti, expiry);
+        // 6. --- CRITICAL SESSION ROUTING ---
+        // Instead of clearing blindly, we set the context to where the user_sessions table is.
+        if (finalTenantId != null && sessionSchema != null) {
+            TenantContext.setTenantId(sessionSchema); // Route to Bank Schema
+        } else {
+            TenantContext.clear(); // Route to common_schema/public
+        }
 
-        String rawRefreshToken = UUID.randomUUID().toString();
-        saveRefreshToken(UUID.fromString(userId), tenantId, rawRefreshToken);
+        try {
+            persistSession(UUID.fromString(userId), finalTenantId, jti, expiry);
 
-        return LoginResponseDto.builder()
-                .accessToken(accessToken)
-                .refreshToken(rawRefreshToken)
-                .username(dto.getEmail())
-                .role(role)
-                .tenantId(tenantId)
-                .isFirstLogin(isFirstLogin)
-                .build();
+            String rawRefreshToken = UUID.randomUUID().toString();
+            saveRefreshToken(UUID.fromString(userId), finalTenantId, rawRefreshToken);
+
+            return LoginResponseDto.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(rawRefreshToken)
+                    .username(dto.getEmail())
+                    .role(role)
+                    .tenantId(finalTenantId)
+                    .isFirstLogin(isFirstLogin)
+                    .build();
+        } finally {
+            // 7. ALWAYS clear at the very end
+            TenantContext.clear();
+        }
     }
-
     @Transactional
     public LoginResponseDto refreshToken(TokenRefreshRequestDto dto) {
         String hashedToken = hashToken(dto.getRefreshToken());

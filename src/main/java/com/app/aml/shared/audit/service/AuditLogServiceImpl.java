@@ -27,30 +27,11 @@ public class AuditLogServiceImpl implements AuditLogService {
 
     @Override
     public void log(UUID actorId, String category, String action, String entityType, UUID entityId, Object prev, Object next) {
-        try {
-            String tenantId = TenantContext.getTenantId();
-
-            if (tenantId != null) {
-                // Route to Tenant Schema
-                TenantAuditLog logEntry = TenantAuditLog.builder()
-                        .actorId(actorId != null ? actorId : getCurrentUserIdSafe())
-                        .actionCategory(category)
-                        .actionPerformed(action)
-                        .targetEntityType(entityType)
-                        .targetEntityId(entityId)
-                        .prevState(toJsonSafe(prev))
-                        .nextState(toJsonSafe(next))
-                        .sysCreatedAt(Instant.now())
-                        .build();
-
-                tenantRepo.save(logEntry);
-            } else {
-                // Route to Platform (common_schema)
-                logPlatform(actorId, category, action, entityType, entityId, prev, next);
-            }
-        } catch (Exception ex) {
-            // Swallow exception to prevent breaking the main business transaction
-            log.error("CRITICAL: Failed to write audit log. Action: {}, EntityId: {}", action, entityId, ex);
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId != null && !tenantId.equals("common_schema")) {
+            logTenant(actorId, category, action, entityType, entityId, prev, next);
+        } else {
+            logPlatform(actorId, category, action, entityType, entityId, prev, next);
         }
     }
 
@@ -71,60 +52,69 @@ public class AuditLogServiceImpl implements AuditLogService {
 
             platformRepo.save(logEntry);
         } catch (Exception ex) {
-            log.error("CRITICAL: Failed to write platform audit log. Action: {}, EntityId: {}", action, entityId, ex);
+            log.error("CRITICAL: Failed to write platform audit log. Action: {}", action, ex);
         }
     }
 
-    private String getCurrentUserRoleSafe() {
+    @Override
+    public void logTenant(UUID actorId, String category, String action, String entityType, UUID entityId, Object prev, Object next) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && !authentication.getAuthorities().isEmpty()) {
-                return authentication.getAuthorities().iterator().next().getAuthority();
-            }
-        } catch (Exception e) {
-            log.debug("No authenticated role found for audit log.");
-        }
-        return "SYSTEM";
-    }
+            TenantAuditLog logEntry = TenantAuditLog.builder()
+                    .actorId(actorId != null ? actorId : getCurrentUserIdSafe())
+                    .actionCategory(category)
+                    .actionPerformed(action)
+                    .targetEntityType(entityType)
+                    .targetEntityId(entityId)
+                    .prevState(toJsonSafe(prev))
+                    .nextState(toJsonSafe(next))
+                    .sysCreatedAt(Instant.now())
+                    .build();
 
-    // --- Overloaded Convenience Methods (for compatibility with existing Service calls) ---
+            tenantRepo.save(logEntry);
+        } catch (Exception ex) {
+            log.error("CRITICAL: Failed to write tenant audit log. Action: {}", action, ex);
+        }
+    }
 
     @Override
     public void log(String action, String entityId, String details) {
+        UUID parsedEntityId = null;
         try {
-            UUID parsedEntityId = entityId != null ? UUID.fromString(entityId) : null;
-            log(getCurrentUserIdSafe(), "SYSTEM", action, "UNKNOWN", parsedEntityId, null, details);
-        } catch (Exception ex) {
-            log.error("CRITICAL: Failed to write simplified audit log. Action: {}", action, ex);
-        }
+            if (entityId != null) parsedEntityId = UUID.fromString(entityId);
+        } catch (Exception ignored) {}
+
+        log(null, "SYSTEM", action, "SYSTEM_EVENT", parsedEntityId, null, details);
     }
 
-    // --- Private Helpers ---
+    // --- Helpers ---
 
     private String toJsonSafe(Object obj) {
-        if (obj == null) {
-            return null;
-        }
-        if (obj instanceof String) {
-            return (String) obj; // if it's already a string details payload
-        }
+        if (obj == null) return null;
+        if (obj instanceof String) return (String) obj;
         try {
             return objectMapper.writeValueAsString(obj);
         } catch (JsonProcessingException e) {
-            log.warn("Failed to serialize audit log object to JSON. Falling back to toString().", e);
             return obj.toString();
         }
     }
 
     private UUID getCurrentUserIdSafe() {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.getPrincipal() instanceof String) {
-                return UUID.fromString((String) authentication.getPrincipal());
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof String) {
+                return UUID.fromString((String) auth.getPrincipal());
             }
-        } catch (Exception e) {
-            log.debug("No authenticated user found for audit log actor.");
-        }
+        } catch (Exception ignored) {}
         return null;
+    }
+
+    private String getCurrentUserRoleSafe() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && !auth.getAuthorities().isEmpty()) {
+                return auth.getAuthorities().iterator().next().getAuthority();
+            }
+        } catch (Exception ignored) {}
+        return "SYSTEM";
     }
 }

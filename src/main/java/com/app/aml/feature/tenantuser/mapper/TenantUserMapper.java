@@ -18,6 +18,7 @@ public interface TenantUserMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "passwordHash", source = "password")
     @Mapping(target = "sysCreatedBy", ignore = true)
+    @Mapping(target = "employeeId", source = "employeeId")
     TenantUser toEntity(CreateTenantUserRequestDto dto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -26,5 +27,6 @@ public interface TenantUserMapper {
     @Mapping(target = "email", ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
     @Mapping(target = "sysCreatedBy", ignore = true)
+    @Mapping(target = "locked", ignore = true)
     void updateEntityFromDto(UpdateTenantUserRequestDto dto, @MappingTarget TenantUser entity);
 }
