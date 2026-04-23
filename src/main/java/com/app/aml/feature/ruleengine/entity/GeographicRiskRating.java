@@ -40,7 +40,7 @@ public class GeographicRiskRating extends SoftDeletableEntity {
     private String fatfStatus = "COMPLIANT";
 
     @NotNull
-    @Column(name = "basel_aml_index_sAcore", nullable = false)
+    @Column(name = "basel_aml_index_score", nullable = false)
     private Integer baselAmlIndexScore = 0;
 
     @NotBlank

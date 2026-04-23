@@ -1,6 +1,6 @@
-
 SET search_path TO common_schema;
 
+-- 1. Create the user
 INSERT INTO platform_users (
     id,
     email,
@@ -16,8 +16,6 @@ INSERT INTO platform_users (
 VALUES (
            '00000000-0000-0000-0000-000000000001',
            'superadmin@amlsystem.internal',
-           -- BCrypt hash of 'Admin@AML2024!' (strength 12)
-           -- ROTATE THIS BEFORE PRODUCTION DEPLOYMENT
            '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCkGP4CzU9c7TSBpGmHjL6G',
            'AML System Administrator',
            'SUPER_ADMIN',
@@ -29,9 +27,10 @@ VALUES (
        )
     ON CONFLICT (email) DO NOTHING;
 
--- Log the seeding as a system action
-INSERT INTO platform_audit_log (
-    actor_id,
+-- 2. Log the action using the valid User ID as the actor
+INSERT INTO common_schema.platform_audit_log (
+    id,
+    actor_id,           -- This must exist in platform_users
     actor_role,
     action_category,
     action_performed,
@@ -42,7 +41,8 @@ INSERT INTO platform_audit_log (
     sys_created_at
 )
 VALUES (
-           NULL,
+           gen_random_uuid(), -- ID for the log itself is fine to be random
+           '00000000-0000-0000-0000-000000000001', -- FIX: Match the Admin ID above
            'SYSTEM',
            'SYSTEM',
            'SUPER_ADMIN_SEEDED',
@@ -50,10 +50,10 @@ VALUES (
            '00000000-0000-0000-0000-000000000001',
            jsonb_build_object(
                    'email', 'superadmin@amlsystem.internal',
-                   'note',  'Pre-seeded via V8 Flyway migration. Password must be rotated on first login.'
+                   'note',  'Pre-seeded via Flyway migration.'
            ),
            '127.0.0.1',
            NOW()
        );
 
-COMMENT ON TABLE platform_users IS 'Super Admin seeded by V8 migration. ID: 00000000-0000-0000-0000-000000000001. Rotate password before production.';
+--Admin@AML2024!

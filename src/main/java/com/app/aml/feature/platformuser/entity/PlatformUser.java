@@ -43,6 +43,11 @@ public class PlatformUser extends SoftDeletableEntity {
     private String fullName;
 
     @NotNull
+    @Column(name = "is_first_login", nullable = false)
+    @Builder.Default
+    private boolean isFirstLogin = true;
+
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 50)
     @Builder.Default

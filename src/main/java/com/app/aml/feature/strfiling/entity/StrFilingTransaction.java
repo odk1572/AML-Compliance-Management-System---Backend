@@ -14,7 +14,6 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "str_filing_transactions",
-        schema = "common_schema",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_str_transaction", columnNames = {"str_filing_id", "transaction_id"})
         }

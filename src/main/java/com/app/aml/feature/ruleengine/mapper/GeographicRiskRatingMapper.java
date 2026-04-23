@@ -12,19 +12,16 @@ import java.util.List;
 public interface GeographicRiskRatingMapper {
 
 
-    @Mapping(target = "baselAmlIndexScore", source = "baselAmlIndexSAcore")
     GeographicRiskRatingResponseDto toResponseDto(GeographicRiskRating entity);
 
     List<GeographicRiskRatingResponseDto> toResponseDtoList(List<GeographicRiskRating> entities);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "baselAmlIndexSAcore", source = "baselAmlIndexScore")
     GeographicRiskRating toEntity(CreateGeographicRiskRequestDto dto);
 
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "countryCode", ignore = true) // Country code usually shouldn't change
-    @Mapping(target = "baselAmlIndexSAcore", source = "baselAmlIndexScore")
     void updateEntityFromDto(UpdateGeographicRiskRequestDto dto, @MappingTarget GeographicRiskRating entity);
 }

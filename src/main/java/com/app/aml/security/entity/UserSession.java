@@ -2,8 +2,10 @@ package com.app.aml.security.entity;
 
 
 import com.app.aml.shared.audit.AuditableEntity;
+import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
 
@@ -18,6 +20,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class UserSession extends AuditableEntity {
+
+    @Id
+    @Column(name = "id", updatable = false, nullable = false)
+    @Builder.Default
+    private UUID id = UuidCreator.getTimeOrderedEpoch();
 
     @Column(name = "user_id", nullable = false)
     private UUID userId;
