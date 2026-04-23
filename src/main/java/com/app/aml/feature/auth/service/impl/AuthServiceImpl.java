@@ -8,6 +8,7 @@ import com.app.aml.feature.platformuser.entity.PlatformUser;
 import com.app.aml.feature.platformuser.repository.PlatformUserRepository;
 import com.app.aml.feature.tenantuser.entity.TenantUser;
 import com.app.aml.feature.tenantuser.repository.TenantUserRepository;
+import com.app.aml.multitenency.TenantContext;
 import com.app.aml.security.entity.PlatformUserSession;
 import com.app.aml.security.entity.UserSession;
 import com.app.aml.security.jwt.JtiBlacklistService;
@@ -17,7 +18,9 @@ import com.app.aml.security.repository.UserSessionRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -33,10 +36,14 @@ import java.util.Base64;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+    @Lazy
     private final AuthenticationManager authenticationManager;
+
+
     private final JwtTokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PlatformUserSessionRepository platformSessionRepo;
@@ -51,6 +58,18 @@ public class AuthServiceImpl implements AuthService {
 
     @Transactional
     public LoginResponseDto login(LoginRequestDto dto) {
+        if (dto.getTenantId() != null) {
+            TenantContext.setTenantId(dto.getTenantId().toString());
+        } else {
+            TenantContext.clear();
+        }
+
+        // temporary debug code
+        // Add this temporarily
+        String generatedHash = passwordEncoder.encode("password");
+        log.info("--- THE PERFECT HASH FOR YOUR APP ---");
+        log.info(generatedHash);
+        log.info("-------------------------------------");
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
         );
