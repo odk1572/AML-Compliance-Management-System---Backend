@@ -29,6 +29,6 @@ public interface CaseRecordMapper {
     @Mapping(target = "openedAt", ignore = true)
     void updateEntityFromDto(UpdateCaseRequestDto dto, @MappingTarget CaseRecord entity);
 
-    @Mapping(target = "status", constant = "CLOSED")
+    @Mapping(target = "status", constant = "CLOSED_NO_ACTION")
     void closeCase(CloseCaseRequestDto dto, @MappingTarget CaseRecord entity);
 }

@@ -15,6 +15,7 @@ CREATE TABLE platform_users (
                                 email VARCHAR(255) UNIQUE NOT NULL,
                                 password_hash VARCHAR(255) NOT NULL,
                                 full_name VARCHAR(255) NOT NULL,
+                                is_first_login BOOLEAN NOT NULL DEFAULT TRUE,
                                 role VARCHAR(50) NOT NULL DEFAULT 'SUPER_ADMIN',
                                 failed_login_attempts INT NOT NULL DEFAULT 0,
                                 is_locked BOOLEAN NOT NULL DEFAULT FALSE,
@@ -72,9 +73,12 @@ CREATE TABLE platform_user_sessions (
                                         expires_at TIMESTAMP NOT NULL,
                                         is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
                                         revoked_at TIMESTAMP,
-                                        sys_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                        sys_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                        sys_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+
 );
 
 
 CREATE INDEX idx_platform_user_sessions_jti ON platform_user_sessions(jwt_jti);
 CREATE INDEX idx_platform_user_sessions_expires_at ON platform_user_sessions(expires_at);
+
