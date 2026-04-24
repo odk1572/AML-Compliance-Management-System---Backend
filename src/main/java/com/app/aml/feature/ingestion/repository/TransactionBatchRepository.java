@@ -7,4 +7,5 @@ import java.util.UUID;
 
 @Repository
 public interface TransactionBatchRepository extends JpaRepository<TransactionBatch, UUID> {
+    boolean existsByFileHashSha256(String fileHash);
 }

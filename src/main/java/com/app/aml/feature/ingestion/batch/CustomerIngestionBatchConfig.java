@@ -3,28 +3,32 @@ package com.app.aml.feature.ingestion.batch;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import com.app.aml.feature.ingestion.repository.CustomerProfileRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.listener.StepExecutionListenerSupport;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.data.RepositoryItemWriter;
 import org.springframework.batch.item.data.builder.RepositoryItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.FlatFileParseException;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @RequiredArgsConstructor
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 public class CustomerIngestionBatchConfig {
+
+    private static final int CHUNK_SIZE = 1000;
+    private static final int MAX_SKIP_LIMIT = Integer.MAX_VALUE;
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
@@ -35,40 +39,63 @@ public class CustomerIngestionBatchConfig {
 
     @Bean
     public Job customerProfileIngestionJob() {
+
+        Step validation = validationStep();
+        Step ingestion = ingestionStep();
+
         return new JobBuilder("customerProfileIngestionJob", jobRepository)
                 .listener(completionListener)
-                .start(validationStep())
-                // Only execute ingestion step if validation step generates NO errors
-                .next(ingestionStep())
+                .start(validation)
+                .on("COMPLETED_WITH_SKIPS").end()     // stop job if validation found errors
+                .from(validation)
+                .on(ExitStatus.COMPLETED.getExitCode()).to(ingestion)
+                .end()
                 .build();
     }
 
     @Bean
     public Step validationStep() {
         return new StepBuilder("validationStep", jobRepository)
-                .<CustomerProfileCsvDto, CustomerProfile>chunk(1000, transactionManager)
+                .<CustomerProfileCsvDto, CustomerProfile>chunk(CHUNK_SIZE, transactionManager)
                 .reader(customerProfileReader(null))
                 .processor(processor)
                 .writer(items -> {
-                    // No-Op Writer: We are just validating here. Don't write to DB yet.
+                    // No-op: validation only
                 })
                 .faultTolerant()
                 .skip(ValidationException.class)
-                .skip(org.springframework.batch.item.file.FlatFileParseException.class)
-                .skipLimit(Integer.MAX_VALUE) // Keep validating whole file to find ALL errors
+                .skip(FlatFileParseException.class)
+                .skipLimit(MAX_SKIP_LIMIT)
                 .listener(skipListener)
-                .taskExecutor(taskExecutor())
+                .listener(validationExitStatusListener())
+                // IMPORTANT: no taskExecutor here (reader is not thread-safe)
                 .build();
+    }
+
+    @Bean
+    public StepExecutionListener validationExitStatusListener() {
+        return new StepExecutionListenerSupport() {
+            @Override
+            public ExitStatus afterStep(StepExecution stepExecution) {
+                if (stepExecution.getSkipCount() > 0) {
+                    return new ExitStatus("COMPLETED_WITH_SKIPS");
+                }
+                return ExitStatus.COMPLETED;
+            }
+        };
     }
 
     @Bean
     public Step ingestionStep() {
         return new StepBuilder("ingestionStep", jobRepository)
-                .<CustomerProfileCsvDto, CustomerProfile>chunk(1000, transactionManager)
-                .reader(customerProfileReader(null))
+                .<CustomerProfileCsvDto, CustomerProfile>chunk(CHUNK_SIZE, transactionManager)
+                // Wrap the reader to make it thread-safe for the TaskExecutor
+                .reader(new org.springframework.batch.item.support.builder.SynchronizedItemStreamReaderBuilder<CustomerProfileCsvDto>()
+                        .delegate(customerProfileReader(null))
+                        .build())
                 .processor(processor)
                 .writer(customerProfileWriter())
-                .taskExecutor(taskExecutor()) // Parallel database insertion
+                .taskExecutor(taskExecutor())
                 .build();
     }
 
@@ -77,22 +104,23 @@ public class CustomerIngestionBatchConfig {
     public FlatFileItemReader<CustomerProfileCsvDto> customerProfileReader(
             @Value("#{jobParameters['filePath']}") String filePath) {
 
-        // Define the exact expected header string (comma separated)
-        String expectedHeader = "accountNumber,customerName,customerType,idType,idNumber,nationality,countryOfResidence,monthlyIncome,netWorth,riskRating,isPep,isDormant,accountOpenedOn";
+        final String expectedHeader =
+                "accountNumber,customerName,customerType,idType,idNumber,nationality," +
+                        "countryOfResidence,monthlyIncome,netWorth,riskRating,isPep,isDormant,accountOpenedOn";
 
         return new FlatFileItemReaderBuilder<CustomerProfileCsvDto>()
                 .name("customerProfileReader")
                 .resource(new FileSystemResource(filePath))
-                .linesToSkip(1) // We still skip it so it doesn't map as a data DTO
+                .linesToSkip(1)
                 .skippedLinesCallback(headerLine -> {
-                    // This callback fires exactly once for the skipped header row.
-                    // If it doesn't match perfectly, we throw an exception to kill the job instantly.
                     if (!headerLine.trim().equalsIgnoreCase(expectedHeader)) {
-                        throw new IllegalArgumentException("Header mismatch. Expected: [" + expectedHeader + "] but found: [" + headerLine + "]");
+                        throw new IllegalArgumentException(
+                                "Header mismatch. Expected: [" + expectedHeader + "] but found: [" + headerLine + "]"
+                        );
                     }
                 })
                 .delimited()
-                .names(expectedHeader.split(",")) // Reusing the string to prevent typos
+                .names(expectedHeader.split(","))
                 .targetType(CustomerProfileCsvDto.class)
                 .build();
     }
@@ -101,14 +129,19 @@ public class CustomerIngestionBatchConfig {
     public RepositoryItemWriter<CustomerProfile> customerProfileWriter() {
         return new RepositoryItemWriterBuilder<CustomerProfile>()
                 .repository(repository)
-                .methodName("save")
+                .methodName("saveAll")
                 .build();
     }
 
     @Bean
     public TaskExecutor taskExecutor() {
-        SimpleAsyncTaskExecutor asyncTaskExecutor = new SimpleAsyncTaskExecutor("batch_worker_");
-        asyncTaskExecutor.setConcurrencyLimit(10); // Process 10 chunks in parallel
-        return asyncTaskExecutor;
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("batch-worker-");
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(200);
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.initialize();
+        return executor;
     }
 }

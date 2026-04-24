@@ -2,69 +2,109 @@ package com.app.aml.feature.ingestion.batch;
 
 import com.app.aml.domain.enums.CustomerType;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
+import com.app.aml.feature.ingestion.repository.CustomerProfileRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.batch.item.ItemProcessor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-
 @Component
+@RequiredArgsConstructor
 public class CustomerProfileValidationProcessor implements ItemProcessor<CustomerProfileCsvDto, CustomerProfile> {
 
+    private final CustomerProfileRepository customerProfileRepository;
+
     @Override
-    public CustomerProfile process(CustomerProfileCsvDto dto) throws ValidationException {
+    public CustomerProfile process(CustomerProfileCsvDto dto) {
+
+        int line = dto.getLineNumber();
         CustomerProfile profile = new CustomerProfile();
 
-        try {
-            // Validate Account Number (No Null)
-            if (dto.getAccountNumber() == null || dto.getAccountNumber().isBlank()) {
-                throw new ValidationException(dto.getLineNumber(), "accountNumber", "Cannot be null or blank");
-            }
-            profile.setAccountNumber(dto.getAccountNumber());
+        // Account Number
+        String accNum = require(dto.getAccountNumber(), line, "accountNumber");
 
-            // Validate Customer Name
-            if (dto.getCustomerName() == null || dto.getCustomerName().isBlank()) {
-                throw new ValidationException(dto.getLineNumber(), "customerName", "Cannot be null or blank");
-            }
-            profile.setCustomerName(dto.getCustomerName());
-
-            // Validate Type Matching (Enum)
-            try {
-                profile.setCustomerType(CustomerType.valueOf(dto.getCustomerType()));
-            } catch (IllegalArgumentException | NullPointerException e) {
-                throw new ValidationException(dto.getLineNumber(), "customerType", "Invalid or missing Customer Type");
-            }
-
-            // Validate Type Matching (BigDecimal)
-            try {
-                profile.setMonthlyIncome(dto.getMonthlyIncome() != null ? new BigDecimal(dto.getMonthlyIncome()) : BigDecimal.ZERO);
-                profile.setNetWorth(dto.getNetWorth() != null ? new BigDecimal(dto.getNetWorth()) : BigDecimal.ZERO);
-            } catch (NumberFormatException e) {
-                throw new ValidationException(dto.getLineNumber(), "monthlyIncome/netWorth", "Must be a valid decimal number");
-            }
-
-            // Validate Dates
-            try {
-                if (dto.getAccountOpenedOn() == null) throw new NullPointerException();
-                profile.setAccountOpenedOn(LocalDate.parse(dto.getAccountOpenedOn()));
-            } catch (DateTimeParseException | NullPointerException e) {
-                throw new ValidationException(dto.getLineNumber(), "accountOpenedOn", "Invalid date format. Expected YYYY-MM-DD");
-            }
-
-            // Map standard text fields safely
-            profile.setIdType(dto.getIdType());
-            profile.setIdNumber(dto.getIdNumber());
-            profile.setNationality(dto.getNationality());
-            profile.setCountryOfResidence(dto.getCountryOfResidence());
-            profile.setRiskRating(dto.getRiskRating() != null ? dto.getRiskRating() : "LOW");
-            profile.setPep(Boolean.parseBoolean(dto.getIsPep()));
-            profile.setDormant(Boolean.parseBoolean(dto.getIsDormant()));
-
-            return profile;
-
-        } catch (ValidationException e) {
-            throw e;
+        if (customerProfileRepository.existsByAccountNumber(accNum)) {
+            throw new ValidationException(line, "accountNumber", "Account Number already exists in system");
         }
+        profile.setAccountNumber(accNum);
+
+        // Name
+        profile.setCustomerName(require(dto.getCustomerName(), line, "customerName"));
+
+        // Customer Type
+        String type = require(dto.getCustomerType(), line, "customerType");
+        try {
+            profile.setCustomerType(CustomerType.valueOf(type.toUpperCase()));
+        } catch (Exception e) {
+            throw new ValidationException(line, "customerType", "Invalid value: " + type);
+        }
+
+        // Financials
+        profile.setMonthlyIncome(parseBigDecimal(dto.getMonthlyIncome(), line, "monthlyIncome"));
+        profile.setNetWorth(parseBigDecimal(dto.getNetWorth(), line, "netWorth"));
+
+        // Date
+        profile.setAccountOpenedOn(parseDate(dto.getAccountOpenedOn(), line, "accountOpenedOn"));
+
+        // Optional fields (trimmed)
+        profile.setIdType(safe(dto.getIdType()));
+        profile.setIdNumber(safe(dto.getIdNumber()));
+        profile.setNationality(safe(dto.getNationality()));
+        profile.setCountryOfResidence(safe(dto.getCountryOfResidence()));
+
+        profile.setRiskRating(dto.getRiskRating() != null ? dto.getRiskRating().trim() : "LOW");
+
+        profile.setPep(parseBooleanStrict(dto.getIsPep(), line, "isPep"));
+        profile.setDormant(parseBooleanStrict(dto.getIsDormant(), line, "isDormant"));
+
+        return profile;
+    }
+
+    // ===== helpers =====
+
+    private String require(String value, int line, String field) {
+        if (value == null || value.isBlank()) {
+            throw new ValidationException(line, field, "Cannot be null or blank");
+        }
+        return value.trim();
+    }
+
+    private String safe(String value) {
+        return value == null ? null : value.trim();
+    }
+
+    private BigDecimal parseBigDecimal(String value, int line, String field) {
+        if (value == null || value.isBlank()) {
+            throw new ValidationException(line, field, "Cannot be null or blank");
+        }
+        try {
+            return new BigDecimal(value.trim());
+        } catch (NumberFormatException e) {
+            throw new ValidationException(line, field, "Invalid decimal: " + value);
+        }
+    }
+
+    private LocalDate parseDate(String value, int line, String field) {
+        if (value == null || value.isBlank()) {
+            throw new ValidationException(line, field, "Cannot be null");
+        }
+        try {
+            return LocalDate.parse(value.trim());
+        } catch (Exception e) {
+            throw new ValidationException(line, field, "Invalid date format (yyyy-MM-dd): " + value);
+        }
+    }
+
+    private Boolean parseBooleanStrict(String value, int line, String field) {
+        if (value == null) return false;
+
+        String v = value.trim().toLowerCase();
+
+        if (v.equals("true") || v.equals("1") || v.equals("yes")) return true;
+        if (v.equals("false") || v.equals("0") || v.equals("no")) return false;
+
+        throw new ValidationException(line, field, "Invalid boolean: " + value);
     }
 }

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.context.annotation.Bean;
@@ -23,11 +24,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class IngestionJobCompletionListener implements JobExecutionListener {
 
-    @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
-    }
-
     private final TransactionBatchRepository batchRepository;
     private final ValidationSkipListener skipListener;
     private final ObjectMapper objectMapper;
@@ -35,7 +31,7 @@ public class IngestionJobCompletionListener implements JobExecutionListener {
 
     @Override
     public void beforeJob(JobExecution jobExecution) {
-        skipListener.clearErrors(); // Ensure clean slate per    job
+        skipListener.clearErrors();
     }
 
     @Override
@@ -49,7 +45,8 @@ public class IngestionJobCompletionListener implements JobExecutionListener {
 
         // 2. Parse the correct variable to UUID
         UUID batchId = UUID.fromString(batchIdStr);
-        TransactionBatch batch = batchRepository.findById(batchId).orElseThrow();
+        TransactionBatch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> new IllegalStateException("Batch not found: " + batchId));
 
         Map<Integer, java.util.List<String>> errors = skipListener.getValidationErrors();
 
@@ -61,12 +58,12 @@ public class IngestionJobCompletionListener implements JobExecutionListener {
             } catch (JsonProcessingException e) {
                 log.error("Failed to parse errors to JSON", e);
             }
-            batch.setBatchStatus(com.app.aml.domain.enums.BatchStatus.FAILED);
+            batch.setBatchStatus(BatchStatus.FAILED);
             batch.setProcessedAt(Instant.now());
             batchRepository.save(batch);
 
             // Stop Spring batch job execution gracefully
-            jobExecution.setStatus(org.springframework.batch.core.BatchStatus.FAILED);
+            jobExecution.setExitStatus(ExitStatus.FAILED);
 
             // Trigger failure email (Ensure mailService is injected via constructor)
             mailService.sendEmail("admin@yourdomain.com", "Batch Failed: " + batch.getFileName(), "Errors found. Please check system.");

@@ -5,6 +5,8 @@ import lombok.Getter;
 import org.springframework.batch.core.SkipListener;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.List;
@@ -14,8 +16,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class ValidationSkipListener implements SkipListener<CustomerProfileCsvDto, CustomerProfile> {
 
-    // Thread-safe collection for storing errors
     private static final int MAX_ERRORS_TO_COLLECT = 1000;
+    private static final int SYSTEM_KEY = -1;
+
     @Getter
     private final Map<Integer, List<String>> validationErrors = new ConcurrentHashMap<>();
     private final AtomicInteger errorCount = new AtomicInteger(0);
@@ -23,21 +26,49 @@ public class ValidationSkipListener implements SkipListener<CustomerProfileCsvDt
     @Override
     public void onSkipInProcess(CustomerProfileCsvDto item, Throwable t) {
         if (t instanceof ValidationException ex) {
-            if (errorCount.incrementAndGet() <= MAX_ERRORS_TO_COLLECT) {
-                validationErrors.computeIfAbsent(ex.getRow(), k -> new CopyOnWriteArrayList<>())
-                        .add("Col: " + ex.getColumn() + " -> " + ex.getMessage());
-            } else if (errorCount.get() == MAX_ERRORS_TO_COLLECT + 1) {
-                // Add a final truncation message
-                validationErrors.computeIfAbsent(-1, k -> new CopyOnWriteArrayList<>())
-                        .add("SYSTEM WARNING: Over " + MAX_ERRORS_TO_COLLECT + " errors found. Truncating error report.");
-            } else if (t instanceof org.springframework.batch.item.file.FlatFileParseException parseEx) {
-                validationErrors.computeIfAbsent(parseEx.getLineNumber(), k -> new CopyOnWriteArrayList<>())
-                        .add("Col: N/A -> Malformed CSV structure or illegal characters.");
-            }
+            handleValidationError(ex);
+        }
+    }
+
+    @Override
+    public void onSkipInRead(Throwable t) {
+        if (t instanceof org.springframework.batch.item.file.FlatFileParseException parseEx) {
+            handleParseError(parseEx);
+        }
+    }
+
+    private void handleValidationError(ValidationException ex) {
+        int current = errorCount.getAndIncrement();
+
+        if (current < MAX_ERRORS_TO_COLLECT) {
+            validationErrors
+                    .computeIfAbsent(ex.getRow(), k -> Collections.synchronizedList(new ArrayList<>()))
+                    .add("Col: " + ex.getColumn() + " -> " + ex.getMessage());
+
+        } else if (current == MAX_ERRORS_TO_COLLECT) {
+            validationErrors
+                    .computeIfAbsent(SYSTEM_KEY, k -> Collections.synchronizedList(new ArrayList<>()))
+                    .add("SYSTEM WARNING: More than " + MAX_ERRORS_TO_COLLECT + " errors. Truncated.");
+        }
+    }
+
+    private void handleParseError(org.springframework.batch.item.file.FlatFileParseException ex) {
+        int current = errorCount.getAndIncrement();
+
+        if (current < MAX_ERRORS_TO_COLLECT) {
+            validationErrors
+                    .computeIfAbsent(ex.getLineNumber(), k -> Collections.synchronizedList(new ArrayList<>()))
+                    .add("Malformed CSV or invalid structure");
+
+        } else if (current == MAX_ERRORS_TO_COLLECT) {
+            validationErrors
+                    .computeIfAbsent(SYSTEM_KEY, k -> Collections.synchronizedList(new ArrayList<>()))
+                    .add("SYSTEM WARNING: More than " + MAX_ERRORS_TO_COLLECT + " errors. Truncated.");
         }
     }
 
     public void clearErrors() {
         validationErrors.clear();
+        errorCount.set(0);
     }
 }
