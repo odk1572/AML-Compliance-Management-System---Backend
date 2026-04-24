@@ -1,6 +1,5 @@
 package com.app.aml.security.userDetails;
 
-
 import com.app.aml.multitenency.TenantContext;
 import com.app.aml.feature.tenantuser.entity.TenantUser;
 import com.app.aml.feature.tenantuser.repository.TenantUserRepository;
@@ -24,7 +23,7 @@ public class TenantUserDetailsService implements UserDetailsService {
     private final TenantUserRepository tenantUserRepository;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true) // This starts a new transaction in the isolated schema context
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
         // 1. HARD GUARD: We cannot look up a bank user without knowing the bank.
@@ -37,7 +36,7 @@ public class TenantUserDetailsService implements UserDetailsService {
         log.debug("Attempting to load bank user [{}] from tenant schema [{}]", email, tenantId);
 
         // 2. Fetch the user from the isolated schema
-        TenantUser user = tenantUserRepository.findByEmail(email)
+        TenantUser user = tenantUserRepository.findByEmailAndSysIsDeletedFalse(email)
                 .orElseThrow(() -> {
                     log.warn("Bank login failed: No user found with email {} in tenant {}", email, tenantId);
                     return new UsernameNotFoundException("Invalid credentials.");

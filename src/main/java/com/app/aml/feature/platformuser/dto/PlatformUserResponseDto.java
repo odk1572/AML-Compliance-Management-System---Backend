@@ -1,6 +1,6 @@
 package com.app.aml.feature.platformuser.dto;
 
-import com.app.aml.domain.enums.Role;
+import com.app.aml.security.rbac.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +23,7 @@ public class PlatformUserResponseDto {
 
     private Role role;
 
-    private boolean isLocked;
+    private boolean locked;
 
     private Instant lockedAt;
 

@@ -10,6 +10,7 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PlatformUserMapper {
 
+    @Mapping(target = "locked", source = "locked")
     PlatformUserResponseDto toResponseDto(PlatformUser entity);
 
     @Mapping(target = "passwordHash", source = "password")

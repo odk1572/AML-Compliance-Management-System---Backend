@@ -4,6 +4,7 @@ import com.app.aml.config.FlywayConfig;
 import com.app.aml.domain.exceptions.BusinessRuleException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -18,6 +19,7 @@ import java.sql.Statement;
  */
 @Slf4j
 @RequiredArgsConstructor
+@Component
 public class TenantSchemaProvisioner {
 
     private final DataSource dataSource;
@@ -39,7 +41,7 @@ public class TenantSchemaProvisioner {
         createSchema(schemaName);
 
         // 3. Trigger Flyway to build the tables inside the new schema
-        flywayConfig.runTenantSchemaMigration(schemaName);
+        flywayConfig.runTenantSchemaMigration(schemaName, dataSource);
 
         log.info("Successfully provisioned and migrated schema: {}", schemaName);
     }

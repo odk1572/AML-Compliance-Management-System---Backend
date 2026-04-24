@@ -8,6 +8,7 @@ import com.app.aml.security.repository.UserSessionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
@@ -32,7 +33,7 @@ public class TenantSchemaDeactivator {
      * Marks the tenant as SUSPENDED and instantly revokes all active JWT sessions.
      * * @param tenantId The UUID of the target tenant
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void deactivate(String tenantId) {
         log.warn("Initiating deactivation sequence for tenantId: {}", tenantId);
 

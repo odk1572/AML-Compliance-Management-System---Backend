@@ -13,7 +13,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_sessions", schema = "common_schema")
+@Table(name = "user_sessions")
 @Getter
 @Setter
 @NoArgsConstructor

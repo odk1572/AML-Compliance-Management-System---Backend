@@ -1,6 +1,6 @@
 package com.app.aml.feature.tenantuser.dto;
 
-import com.app.aml.domain.enums.Role;
+import com.app.aml.security.rbac.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

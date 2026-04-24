@@ -1,6 +1,6 @@
 package com.app.aml.feature.tenantuser.entity;
 
-import com.app.aml.domain.enums.Role;
+import com.app.aml.security.rbac.Role;
 import com.app.aml.shared.audit.SoftDeletableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
@@ -8,9 +8,9 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.springframework.data.domain.Persistable;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -20,9 +20,12 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-public class TenantUser extends SoftDeletableEntity {
+@AllArgsConstructor
+@SuperBuilder
+public class TenantUser extends SoftDeletableEntity implements Persistable<UUID> {
 
     @Id
+    @Builder.Default
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
@@ -48,19 +51,23 @@ public class TenantUser extends SoftDeletableEntity {
     private String passwordHash;
 
     @NotNull
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 50)
     private Role role = Role.COMPLIANCE_OFFICER;
 
     @NotNull
+    @Builder.Default
     @Column(name = "is_first_login", nullable = false)
     private boolean isFirstLogin = true;
 
     @NotNull
+    @Builder.Default
     @Column(name = "failed_login_attempts", nullable = false)
     private Integer failedLoginAttempts = 0;
 
     @NotNull
+    @Builder.Default
     @Column(name = "is_locked", nullable = false)
     private boolean isLocked = false;
 
@@ -74,6 +81,55 @@ public class TenantUser extends SoftDeletableEntity {
     @Column(name = "last_login_ip", length = 45)
     private String lastLoginIp;
 
-    @Column(name = "sys_created_by")
-    private UUID sysCreatedBy;
+    /**
+     * Self-referencing foreign key as defined in SQL:
+     * sys_created_by UUID REFERENCES tenant_users(id)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sys_created_by", referencedColumnName = "id")
+    private TenantUser sysCreatedBy;
+
+    // --- DYNAMIC Persistable Logic (Fixes Duplicate Key Error) ---
+
+    @Transient
+    @Builder.Default
+    private boolean isNewRecord = true;
+
+    @Override
+    @Transient
+    public boolean isNew() {
+        return isNewRecord;
+    }
+
+    @PostLoad
+    @PrePersist
+    void markNotNew() {
+        this.isNewRecord = false;
+    }
+
+    @Override
+    public UUID getId() {
+        return this.id;
+    }
+
+    // --- Helper Methods ---
+
+    public void incrementFailedAttempts() {
+        this.failedLoginAttempts++;
+    }
+
+    public void lock() {
+        this.isLocked = true;
+        this.lockedAt = Instant.now();
+    }
+
+    public void resetFailedAttempts() {
+        this.failedLoginAttempts = 0;
+        this.isLocked = false;
+        this.lockedAt = null;
+    }
+
+    public void markFirstLoginComplete() {
+        this.isFirstLogin = false;
+    }
 }

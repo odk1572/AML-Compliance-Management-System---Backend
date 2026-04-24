@@ -1,6 +1,7 @@
 package com.app.aml.multitenency;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 import javax.sql.DataSource;
@@ -19,7 +20,7 @@ public class TenantAwareDataSource extends AbstractRoutingDataSource {
 
     private final TenantSchemaResolver schemaResolver;
 
-    public TenantAwareDataSource(DataSource defaultDataSource, TenantSchemaResolver schemaResolver) {
+    public TenantAwareDataSource(DataSource defaultDataSource,   @Lazy TenantSchemaResolver schemaResolver) {
         this.schemaResolver = schemaResolver;
 
         // In a Schema-per-Tenant model, we use a single Hikari connection pool.
@@ -67,38 +68,19 @@ public class TenantAwareDataSource extends AbstractRoutingDataSource {
         return connection;
     }
 
-    /**
-     * The core isolation logic. Resolves the schema name and executes SET search_path.
-     */
-//    private void setSchemaPath(Connection connection) throws SQLException {
-//        String tenantId = (String) determineCurrentLookupKey();
-//
-//        // Use our cached resolver to get the actual Postgres schema name
-//        String schemaName = schemaResolver.resolveSchema(tenantId);
-//
-//        try (Statement sql = connection.createStatement()) {
-//            // Force the connection into the isolated bank schema.
-//            // Appending 'public' ensures extensions like uuid-ossp or citext still work.
-//            sql.execute("SET search_path TO " + schemaName + ", public");
-//            log.trace("Connection routed to schema: {}", schemaName);
-//        }
-//    }
 
-    /**
-     * The core isolation logic. Resolves the schema name and executes SET search_path.
-     */
     private void setSchemaPath(Connection connection) throws SQLException {
         String tenantId = (String) determineCurrentLookupKey();
 
         // Use our cached resolver to get the actual Postgres schema name
-        // (If testing without a JWT, make sure your schemaResolver returns "public" when tenantId is null)
         String schemaName = schemaResolver.resolveSchema(tenantId);
 
         try (Statement sql = connection.createStatement()) {
             // Force the connection into the isolated bank schema.
-            // Appending 'public' ensures extensions work, and 'common_schema' ensures global entities are found!
-            sql.execute("SET search_path TO " + schemaName + ", public, common_schema");
+            // Appending 'public' ensures extensions like uuid-ossp or citext still work.
+            sql.execute("SET search_path TO " + schemaName + ", public");
             log.trace("Connection routed to schema: {}", schemaName);
         }
     }
+
 }

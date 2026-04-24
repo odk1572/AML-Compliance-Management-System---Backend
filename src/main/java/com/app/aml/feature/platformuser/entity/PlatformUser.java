@@ -1,6 +1,6 @@
 package com.app.aml.feature.platformuser.entity;
 
-import com.app.aml.domain.enums.Role;
+import com.app.aml.security.rbac.Role;
 import com.app.aml.shared.audit.SoftDeletableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
@@ -9,6 +9,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.springframework.data.domain.Persistable; // Added
 
 import java.time.Instant;
 import java.util.UUID;
@@ -20,9 +23,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PlatformUser extends SoftDeletableEntity {
+@SQLDelete(sql = "UPDATE common_schema.platform_users SET sys_is_deleted = true, sys_deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("sys_is_deleted = false")
+public class PlatformUser extends SoftDeletableEntity implements Persistable<UUID> { // Added Persistable
 
     @Id
+    @Builder.Default // Ensure builder uses the generator
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
@@ -61,7 +67,7 @@ public class PlatformUser extends SoftDeletableEntity {
     @NotNull
     @Column(name = "is_locked", nullable = false)
     @Builder.Default
-    private boolean isLocked = false;
+    private boolean locked = false;
 
     @Column(name = "locked_at")
     private Instant lockedAt;
@@ -73,20 +79,45 @@ public class PlatformUser extends SoftDeletableEntity {
     @Column(name = "last_login_ip", length = 45)
     private String lastLoginIp;
 
+    // --- NEW: Dynamic Persistable Logic ---
+
+    @Transient
+    @Builder.Default
+    private boolean isNewRecord = true;
+
+    @Override
+    @Transient
+    public boolean isNew() {
+        return isNewRecord;
+    }
+
+    @PostLoad
+    @PrePersist
+    void markNotNew() {
+        this.isNewRecord = false;
+    }
+
+    @Override
+    public UUID getId() {
+        return this.id;
+    }
+
+    // --- End of Persistable Logic ---
+
     public void incrementFailedAttempts() {
         this.failedLoginAttempts++;
-        if (this.failedLoginAttempts >= 5) { // Policy: Lock after 5 tries
+        if (this.failedLoginAttempts >= 5) {
             this.lockAccount();
         }
     }
 
     public void lockAccount() {
-        this.isLocked = true;
+        this.locked = true;
         this.lockedAt = Instant.now();
     }
 
     public void unlockAccount() {
-        this.isLocked = false;
+        this.locked = false;
         this.lockedAt = null;
         this.failedLoginAttempts = 0;
     }
@@ -95,7 +126,7 @@ public class PlatformUser extends SoftDeletableEntity {
         this.lastLoginAt = Instant.now();
         this.lastLoginIp = ip;
         this.failedLoginAttempts = 0;
+        // Optionally mark first login complete here if your business logic requires it
+        // this.isFirstLogin = false;
     }
 }
-
-
