@@ -1,4 +1,4 @@
-package com.app.aml.feature.ingestion.batch;
+package com.app.aml.feature.ingestion.batch.transaction;
 
 import com.app.aml.domain.enums.BatchStatus;
 import com.app.aml.feature.ingestion.entity.TransactionBatch;
@@ -11,76 +11,84 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class IngestionJobCompletionListener implements JobExecutionListener {
+public class TransactionJobCompletionListener implements JobExecutionListener {
 
     private final TransactionBatchRepository batchRepository;
-    private final ValidationSkipListener skipListener;
+    private final TransactionValidationSkipListener skipListener;
     private final ObjectMapper objectMapper;
-    private final MailService mailService; // Assumes your mail service logic exists
+    private final MailService mailService;
 
     @Override
     public void beforeJob(JobExecution jobExecution) {
+        // Vital: Clear out errors from previous jobs that used this singleton listener
         skipListener.clearErrors();
     }
 
     @Override
     @Transactional
     public void afterJob(JobExecution jobExecution) {
-        // 1. Extract both parameters safely
         String batchIdStr = jobExecution.getJobParameters().getString("batchId");
         String filePath = jobExecution.getJobParameters().getString("filePath");
 
         if (batchIdStr == null) return;
 
-        // 2. Parse the correct variable to UUID
         UUID batchId = UUID.fromString(batchIdStr);
         TransactionBatch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new IllegalStateException("Batch not found: " + batchId));
 
-        Map<Integer, java.util.List<String>> errors = skipListener.getValidationErrors();
+        Map<Integer, List<String>> errors = skipListener.getValidationErrors();
 
         if (!errors.isEmpty()) {
-            // FAILED STATE - The ingestion step was bypassed.
+            // --- FAILURE PATH ---
             try {
                 String failureJson = objectMapper.writeValueAsString(errors);
                 batch.setFailureDetails(failureJson);
             } catch (JsonProcessingException e) {
-                log.error("Failed to parse errors to JSON", e);
+                log.error("Failed to parse Transaction batch errors to JSON", e);
             }
             batch.setBatchStatus(BatchStatus.FAILED);
             batch.setProcessedAt(Instant.now());
             batchRepository.save(batch);
 
-            // Stop Spring batch job execution gracefully
             jobExecution.setExitStatus(ExitStatus.FAILED);
 
-            // Trigger failure email (Ensure mailService is injected via constructor)
-            mailService.sendEmail("admin@yourdomain.com", "Batch Failed: " + batch.getFileName(), "Errors found. Please check system.");
+            mailService.sendEmail(
+                    "admin@yourdomain.com",
+                    "Transaction Batch Failed: " + batch.getFileName(),
+                    "Validation failed for " + errors.size() + " lines. Please check the system dashboard for the detailed JSON error report."
+            );
+
+            log.warn("Transaction Batch {} failed with {} validation errors.", batch.getBatchReference(), errors.size());
+
         } else {
-            // SUCCESS STATE
-            batch.setBatchStatus(com.app.aml.domain.enums.BatchStatus.PROCESSED);
+            // --- SUCCESS PATH ---
+            batch.setBatchStatus(BatchStatus.PROCESSED);
             batch.setProcessedAt(Instant.now());
             batchRepository.save(batch);
+
+            log.info("Transaction Batch {} successfully processed and ingested.", batch.getBatchReference());
         }
 
-        // 3. Clean up the local temporary file to prevent disk space starvation
+        // --- DISK CLEANUP ---
         if (filePath != null) {
             try {
-                java.nio.file.Files.deleteIfExists(java.nio.file.Path.of(filePath));
-                log.info("Successfully deleted temporary batch file: {}", filePath);
+                Files.deleteIfExists(Path.of(filePath));
+                log.info("Deleted temporary transaction batch file: {}", filePath);
             } catch (java.io.IOException e) {
-                log.error("Failed to delete local temp file: " + filePath, e);
+                log.error("Failed to delete local temp file: {}", filePath, e);
             }
         }
     }

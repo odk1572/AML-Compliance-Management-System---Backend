@@ -4,6 +4,7 @@ import com.app.aml.domain.api.ApiResponse;
 import com.app.aml.feature.ingestion.dto.transactionBatch.response.TransactionBatchResponseDto;
 import com.app.aml.feature.ingestion.service.CustomerProfileBatchService;
 import com.app.aml.security.userDetails.PlatformUserDetails;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,17 +23,20 @@ public class CustomerProfileBatchController {
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<TransactionBatchResponseDto>> uploadCustomerBatch(
             @RequestParam("file") MultipartFile file,
-            @AuthenticationPrincipal PlatformUserDetails userDetails) {
+            @AuthenticationPrincipal PlatformUserDetails userDetails,
+            HttpServletRequest request) {
 
-        // Trigger the service. The service returns instantly while Spring Batch runs in the background.
-        TransactionBatchResponseDto responseDto = batchService.uploadAndTriggerBatch(file, userDetails.getId());
+        TransactionBatchResponseDto responseDto = batchService.uploadAndTriggerBatch(
+                file,
+                userDetails.getPlatformUser().getId()
+        );
 
-        // Assuming your standard ApiResponse wrapper
-        ApiResponse<TransactionBatchResponseDto> response = ApiResponse.<TransactionBatchResponseDto>builder()
-                .success(true)
-                .message("Batch file uploaded successfully and is currently pending processing.")
-                .data(responseDto)
-                .build();
+        ApiResponse<TransactionBatchResponseDto> response = ApiResponse.of(
+                HttpStatus.ACCEPTED,
+                "Batch file uploaded successfully and is currently pending processing.",
+                request.getRequestURI(),
+                responseDto
+        );
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }

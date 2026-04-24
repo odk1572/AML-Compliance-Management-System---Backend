@@ -2,6 +2,7 @@ package com.app.aml.feature.ingestion.service;
 
 import com.app.aml.domain.enums.BatchStatus;
 import com.app.aml.domain.exceptions.ApplicationException;
+import com.app.aml.domain.exceptions.BusinessRuleException;
 import com.app.aml.feature.ingestion.dto.transactionBatch.response.TransactionBatchResponseDto;
 import com.app.aml.feature.ingestion.entity.TransactionBatch;
 import com.app.aml.feature.ingestion.mapper.TransactionBatchMapper;
@@ -41,7 +42,7 @@ public class CustomerProfileBatchServiceImplementation implements CustomerProfil
     @Transactional
     public TransactionBatchResponseDto uploadAndTriggerBatch(MultipartFile file, UUID uploadedBy) {
         if (file.isEmpty() || file.getOriginalFilename() == null) {
-            throw new ApplicationException("Uploaded file cannot be empty");
+            throw new RuntimeException("Uploaded file cannot be empty");
         }
 
         try {
@@ -50,7 +51,7 @@ public class CustomerProfileBatchServiceImplementation implements CustomerProfil
 
             // 2. Prevent Duplicate Uploads (Optional but recommended)
             if (batchRepository.existsByFileHashSha256(fileHash)) {
-                throw new ApplicationException("A file with this exact content has already been uploaded.");
+                throw new BusinessRuleException("A file with this exact content has already been uploaded.");
             }
 
             // 3. Save File to Secure Temp Location for Spring Batch to read
@@ -72,11 +73,11 @@ public class CustomerProfileBatchServiceImplementation implements CustomerProfil
             triggerBatchJobAsync(savedBatch.getId(), tempFilePath.toAbsolutePath().toString());
 
             // 6. Return response immediately to the user
-            return batchMapper.toDto(savedBatch);
+            return batchMapper.toResponseDto(savedBatch);
 
         } catch (Exception e) {
             log.error("Failed to process batch upload", e);
-            throw new ApplicationException("Failed to initialize batch upload: " + e.getMessage());
+            throw new RuntimeException("Failed to initialize batch upload: " + e.getMessage());
         }
     }
 

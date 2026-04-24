@@ -1,4 +1,4 @@
-package com.app.aml.feature.ingestion.batch;
+package com.app.aml.feature.ingestion.batch.customer;
 
 import lombok.Data;
 import org.springframework.batch.item.ItemCountAware;

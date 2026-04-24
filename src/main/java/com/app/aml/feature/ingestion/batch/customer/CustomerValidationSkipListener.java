@@ -1,5 +1,6 @@
-package com.app.aml.feature.ingestion.batch;
+package com.app.aml.feature.ingestion.batch.customer;
 
+import com.app.aml.feature.ingestion.batch.ValidationException;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import lombok.Getter;
 import org.springframework.batch.core.SkipListener;
@@ -8,13 +9,12 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
-public class ValidationSkipListener implements SkipListener<CustomerProfileCsvDto, CustomerProfile> {
+public class CustomerValidationSkipListener implements SkipListener<CustomerProfileCsvDto, CustomerProfile> {
 
     private static final int MAX_ERRORS_TO_COLLECT = 1000;
     private static final int SYSTEM_KEY = -1;

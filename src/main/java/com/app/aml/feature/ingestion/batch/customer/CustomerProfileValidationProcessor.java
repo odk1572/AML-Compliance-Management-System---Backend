@@ -1,15 +1,15 @@
-package com.app.aml.feature.ingestion.batch;
+package com.app.aml.feature.ingestion.batch.customer;
 
 import com.app.aml.domain.enums.CustomerType;
+import com.app.aml.feature.ingestion.batch.ValidationException;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import com.app.aml.feature.ingestion.repository.CustomerProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.batch.item.ItemProcessor;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+import static com.app.aml.feature.ingestion.batch.util.BatchValidationUtils.*;
+
 @Component
 @RequiredArgsConstructor
 public class CustomerProfileValidationProcessor implements ItemProcessor<CustomerProfileCsvDto, CustomerProfile> {
@@ -23,6 +23,7 @@ public class CustomerProfileValidationProcessor implements ItemProcessor<Custome
         CustomerProfile profile = new CustomerProfile();
 
         // Account Number
+//        String accNum = BatchValidationUtils.require(dto.getAccountNumber(), line, "accountNumber");
         String accNum = require(dto.getAccountNumber(), line, "accountNumber");
 
         if (customerProfileRepository.existsByAccountNumber(accNum)) {
@@ -46,7 +47,7 @@ public class CustomerProfileValidationProcessor implements ItemProcessor<Custome
         profile.setNetWorth(parseBigDecimal(dto.getNetWorth(), line, "netWorth"));
 
         // Date
-        profile.setAccountOpenedOn(parseDate(dto.getAccountOpenedOn(), line, "accountOpenedOn"));
+        profile.setAccountOpenedOn(parseLocalDate(dto.getAccountOpenedOn(), line, "accountOpenedOn"));
 
         // Optional fields (trimmed)
         profile.setIdType(safe(dto.getIdType()));
@@ -60,51 +61,5 @@ public class CustomerProfileValidationProcessor implements ItemProcessor<Custome
         profile.setDormant(parseBooleanStrict(dto.getIsDormant(), line, "isDormant"));
 
         return profile;
-    }
-
-    // ===== helpers =====
-
-    private String require(String value, int line, String field) {
-        if (value == null || value.isBlank()) {
-            throw new ValidationException(line, field, "Cannot be null or blank");
-        }
-        return value.trim();
-    }
-
-    private String safe(String value) {
-        return value == null ? null : value.trim();
-    }
-
-    private BigDecimal parseBigDecimal(String value, int line, String field) {
-        if (value == null || value.isBlank()) {
-            throw new ValidationException(line, field, "Cannot be null or blank");
-        }
-        try {
-            return new BigDecimal(value.trim());
-        } catch (NumberFormatException e) {
-            throw new ValidationException(line, field, "Invalid decimal: " + value);
-        }
-    }
-
-    private LocalDate parseDate(String value, int line, String field) {
-        if (value == null || value.isBlank()) {
-            throw new ValidationException(line, field, "Cannot be null");
-        }
-        try {
-            return LocalDate.parse(value.trim());
-        } catch (Exception e) {
-            throw new ValidationException(line, field, "Invalid date format (yyyy-MM-dd): " + value);
-        }
-    }
-
-    private Boolean parseBooleanStrict(String value, int line, String field) {
-        if (value == null) return false;
-
-        String v = value.trim().toLowerCase();
-
-        if (v.equals("true") || v.equals("1") || v.equals("yes")) return true;
-        if (v.equals("false") || v.equals("0") || v.equals("no")) return false;
-
-        throw new ValidationException(line, field, "Invalid boolean: " + value);
     }
 }
