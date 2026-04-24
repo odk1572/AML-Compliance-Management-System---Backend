@@ -19,14 +19,6 @@ public class CreateAlertEvidenceRequestDto {
     @NotNull(message = "Alert ID is required")
     private UUID alertId;
 
-    @NotBlank(message = "Attribute name is required (e.g., TXN_AMOUNT)")
-    @Size(max = 100, message = "Attribute name cannot exceed 100 characters")
-    private String attributeName;
-
-    @NotBlank(message = "Operator is required (e.g., GREATER_THAN)")
-    @Size(max = 50, message = "Operator cannot exceed 50 characters")
-    private String operator;
-
     @NotBlank(message = "Threshold applied is required")
     @Size(max = 255, message = "Threshold applied cannot exceed 255 characters")
     private String thresholdApplied;

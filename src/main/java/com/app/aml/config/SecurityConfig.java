@@ -46,9 +46,9 @@ public class SecurityConfig {
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                //will be changed as the controller are added
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**").permitAll()           // Login/Refresh public
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/dev/faker/**").permitAll()// Login/Refresh public
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll() // OpenAPI
                         .anyRequest().authenticated()                             // Everything else locked
                 )

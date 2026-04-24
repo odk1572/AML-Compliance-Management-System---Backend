@@ -54,6 +54,7 @@ public class TenantServiceImpl implements TenantService {
     private final MailService mailService;
     private final AuditLogService auditLog;
     private final ApplicationEventPublisher eventPublisher;
+
     private final PlatformTransactionManager transactionManager;
     private final EntityManager entityManager; // <--- Add this!
 

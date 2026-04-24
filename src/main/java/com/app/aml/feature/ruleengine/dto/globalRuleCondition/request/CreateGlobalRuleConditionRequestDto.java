@@ -20,25 +20,16 @@ public class CreateGlobalRuleConditionRequestDto {
     @NotNull(message = "Rule ID is required to associate this condition")
     private UUID ruleId;
 
-    @NotBlank(message = "Attribute name (e.g., TXN_AMOUNT) is required")
-    @Size(max = 100)
-    private String attributeName;
-
-    @NotNull(message = "Sequence order is required")
-    @Min(1)
-    private Integer conditionSequence;
 
     @NotBlank(message = "Aggregation function (e.g., SUM, COUNT, NONE) is required")
+    @Size(max = 10, message = "Aggregation function cannot exceed 10 characters")
     private String aggregationFunction;
 
-    private String lookbackPeriod; // e.g., "P1D" (ISO-8601 Duration) or "24H"
-
-    @NotBlank(message = "Operator (e.g., GREATER_THAN, EQUALS) is required")
-    private String operator;
+    @Size(max = 10, message = "Lookback period cannot exceed 10 characters")
+    private String lookbackPeriod; // e.g., "P1D" or "24h"
 
     @NotBlank(message = "Threshold value is required")
+    @Size(max = 255, message = "Threshold value cannot exceed 255 characters")
     private String thresholdValue;
 
-    @NotBlank(message = "Data type (e.g., DECIMAL, STRING) is required")
-    private String valueDataType;
 }

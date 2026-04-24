@@ -1,5 +1,6 @@
 package com.app.aml.feature.ingestion.batch;
 
+import com.app.aml.config.AsyncConfig;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import com.app.aml.feature.ingestion.repository.CustomerProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +19,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @RequiredArgsConstructor
+
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 public class CustomerIngestionBatchConfig {
 
+    private final AsyncConfig asyncConfig;
     private static final int CHUNK_SIZE = 1000;
     private static final int MAX_SKIP_LIMIT = Integer.MAX_VALUE;
 
@@ -95,7 +99,7 @@ public class CustomerIngestionBatchConfig {
                         .build())
                 .processor(processor)
                 .writer(customerProfileWriter())
-                .taskExecutor(taskExecutor())
+                .taskExecutor(asyncConfig.batchtaskExecutor())
                 .build();
     }
 
@@ -133,15 +137,5 @@ public class CustomerIngestionBatchConfig {
                 .build();
     }
 
-    @Bean
-    public TaskExecutor taskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("batch-worker-");
-        executor.setCorePoolSize(5);
-        executor.setMaxPoolSize(10);
-        executor.setQueueCapacity(200);
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.initialize();
-        return executor;
-    }
+
 }

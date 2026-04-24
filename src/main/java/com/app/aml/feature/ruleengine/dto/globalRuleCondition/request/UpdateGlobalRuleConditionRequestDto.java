@@ -15,25 +15,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateGlobalRuleConditionRequestDto {
 
-    @NotBlank(message = "Attribute name is required")
-    @Size(max = 100)
-    private String attributeName;
-
-    @NotNull(message = "Sequence order is required")
-    @Min(1)
-    private Integer conditionSequence;
-
     @NotBlank(message = "Aggregation function is required")
+    @Size(max = 10, message = "Aggregation function cannot exceed 10 characters")
     private String aggregationFunction;
 
+    @Size(max = 10, message = "Lookback period cannot exceed 10 characters")
     private String lookbackPeriod;
 
-    @NotBlank(message = "Operator is required")
-    private String operator;
 
     @NotBlank(message = "Threshold value is required")
+    @Size(max = 255, message = "Threshold value cannot exceed 255 characters")
     private String thresholdValue;
 
-    @NotBlank(message = "Data type is required")
-    private String valueDataType;
 }

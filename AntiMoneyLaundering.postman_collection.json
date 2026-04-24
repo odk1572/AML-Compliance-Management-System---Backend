@@ -1,9 +1,10 @@
 {
   "info": {
-    "_postman_id": "ff4f6a08-d255-4be0-9e27-c52de4257a0c",
+    "_postman_id": "732d2bf2-2360-4993-be69-7a5d1278b2d5",
     "name": "AntiMoneyLaundering",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "37239013"
+    "_exporter_id": "53105028",
+    "_collection_link": "https://go.postman.co/collection/53105028-732d2bf2-2360-4993-be69-7a5d1278b2d5?source=collection_link"
   },
   "item": [
     {
@@ -17,7 +18,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYjkxOC1jM2ViLTc2YmMtODk5Zi1iMWFiYzZmMGJlYWQiLCJpYXQiOjE3NzY5MjY5MDEsImV4cCI6MTc3NjkzMDUwMX0.NdRnzNI9hferCyL1LGPHKw0TKVrzW1GANU4xxu5XfS4",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDIiLCJqdGkiOiIwMTlkYmRjNC0xNTUwLTcyNWEtODliMC05OWM2YTg4YzJkZmIiLCJpYXQiOjE3NzcwMDUyMzcsImV4cCI6MTc3NzAwODgzN30.2I_GY1y2-sAc4eGYeBrGImaao_n2SA2-6Y0qvLA-Jdc\",\n        \"refreshToken\": \"fb989082-91cc-46ab-92bc-de21ca53cbcd",
                   "type": "string"
                 }
               ]
@@ -25,12 +26,12 @@
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "http://localhost:8081/api/v1/auth/logout",
+              "raw": "http://localhost:8080/api/v1/auth/logout",
               "protocol": "http",
               "host": [
                 "localhost"
               ],
-              "port": "8081",
+              "port": "8080",
               "path": [
                 "api",
                 "v1",
@@ -88,12 +89,12 @@
               }
             },
             "url": {
-              "raw": "http://localhost:54893/api/v1/auth/login",
+              "raw": "http://localhost:8080/api/v1/auth/login",
               "protocol": "http",
               "host": [
                 "localhost"
               ],
-              "port": "54893",
+              "port": "8080",
               "path": [
                 "api",
                 "v1",
@@ -1298,7 +1299,10 @@
           "name": "list all scenarios",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         },
@@ -1617,7 +1621,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJiYy0zNzM5LTczMjEtOTY1YS0zNzlmYTMyZDgyMWEiLCJpYXQiOjE3NzY5NzExNjcsImV4cCI6MTc3Njk3NDc2N30.DljzLrnehGzzDEoECHj8AWpLAx3pcDNo3zUXYMuSKds",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDIiLCJqdGkiOiIwMTlkYmU0My1mMTBkLTdjNWYtYmQ1NC0wNzE4YmFlNjRjMDEiLCJpYXQiOjE3NzcwMTM2MTYsImV4cCI6MTc3NzAxNzIxNn0.oP9uxNnHsIkOpvGskVZekGVZZEj3bNXqWgc1BdEl3_Q",
                   "type": "string"
                 }
               ]
@@ -1625,23 +1629,616 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:54893/api/v1/platform/rules/019dbbbd-85e0-7912-9b5d-30f55ec5b655/conditions",
+              "raw": "http://localhost:8080/api/v1/platform/rules/019dbdf6-eddc-7e60-91a6-44d2c2a18d7a/conditions",
               "protocol": "http",
               "host": [
                 "localhost"
               ],
-              "port": "54893",
+              "port": "8080",
               "path": [
                 "api",
                 "v1",
                 "platform",
                 "rules",
-                "019dbbbd-85e0-7912-9b5d-30f55ec5b655",
+                "019dbdf6-eddc-7e60-91a6-44d2c2a18d7a",
                 "conditions"
               ]
             }
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "tenant scenario",
+      "item": [
+        {
+          "name": "activate scenario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJkZjEtODg0Ni03ZjNmLTgxNDMtZTc2MzY2NjU1ODJjIiwic3ViIjoiMDE5ZGJkZjEtOGUyZS03NTk1LWI5OTQtYjAzODhkM2FjMGVjIiwianRpIjoiMDE5ZGJlMzgtMGI0NS03NmU4LWEyMGMtNWU2Y2VlM2VmYWJlIiwiaWF0IjoxNzc3MDEyODM3LCJleHAiOjE3NzcwMTY0Mzd9.1m88WwII_BKseHem4ZHag_hw4Fq62er8V7VOybmKMOw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-scenarios/activate/019dbe29-0fdf-7bdf-99a5-9687ca4d8da1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-scenarios",
+                "activate",
+                "019dbe29-0fdf-7bdf-99a5-9687ca4d8da1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "pause scenario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJkZjEtODg0Ni03ZjNmLTgxNDMtZTc2MzY2NjU1ODJjIiwic3ViIjoiMDE5ZGJkZjEtOGUyZS03NTk1LWI5OTQtYjAzODhkM2FjMGVjIiwianRpIjoiMDE5ZGJkZmQtMTE1Zi03YjgzLThhNDUtZmFmZjVlNDA0OTVlIiwiaWF0IjoxNzc3MDA4OTcyLCJleHAiOjE3NzcwMTI1NzJ9.aZ1FQgnI3mUjQvURLEiBb7QWzneuEHeEJEF02YEHIPw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-scenarios/019dbe04-e9ce-7e59-8fa3-6f58147901e0/pause",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-scenarios",
+                "019dbe04-e9ce-7e59-8fa3-6f58147901e0",
+                "pause"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reactivate scenario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJkZjEtODg0Ni03ZjNmLTgxNDMtZTc2MzY2NjU1ODJjIiwic3ViIjoiMDE5ZGJkZjEtOGUyZS03NTk1LWI5OTQtYjAzODhkM2FjMGVjIiwianRpIjoiMDE5ZGJkZmQtMTE1Zi03YjgzLThhNDUtZmFmZjVlNDA0OTVlIiwiaWF0IjoxNzc3MDA4OTcyLCJleHAiOjE3NzcwMTI1NzJ9.aZ1FQgnI3mUjQvURLEiBb7QWzneuEHeEJEF02YEHIPw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-scenarios/019dbe04-e9ce-7e59-8fa3-6f58147901e0/resume",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-scenarios",
+                "019dbe04-e9ce-7e59-8fa3-6f58147901e0",
+                "resume"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "toggle scenario rule",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJkZjEtODg0Ni03ZjNmLTgxNDMtZTc2MzY2NjU1ODJjIiwic3ViIjoiMDE5ZGJkZjEtOGUyZS03NTk1LWI5OTQtYjAzODhkM2FjMGVjIiwianRpIjoiMDE5ZGJkZmQtMTE1Zi03YjgzLThhNDUtZmFmZjVlNDA0OTVlIiwiaWF0IjoxNzc3MDA4OTcyLCJleHAiOjE3NzcwMTI1NzJ9.aZ1FQgnI3mUjQvURLEiBb7QWzneuEHeEJEF02YEHIPw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-scenarios/rules/019dbdf6-eddc-7e60-91a6-44d2c2a18d7a/toggle?active=true",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-scenarios",
+                "rules",
+                "019dbdf6-eddc-7e60-91a6-44d2c2a18d7a",
+                "toggle"
+              ],
+              "query": [
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "list active scenarios with rules",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJkZjEtODg0Ni03ZjNmLTgxNDMtZTc2MzY2NjU1ODJjIiwic3ViIjoiMDE5ZGJkZjEtOGUyZS03NTk1LWI5OTQtYjAzODhkM2FjMGVjIiwianRpIjoiMDE5ZGJlMzgtMGI0NS03NmU4LWEyMGMtNWU2Y2VlM2VmYWJlIiwiaWF0IjoxNzc3MDEyODM3LCJleHAiOjE3NzcwMTY0Mzd9.1m88WwII_BKseHem4ZHag_hw4Fq62er8V7VOybmKMOw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-scenarios",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-scenarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get scenario by id with rules",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJkZjEtODg0Ni03ZjNmLTgxNDMtZTc2MzY2NjU1ODJjIiwic3ViIjoiMDE5ZGJkZjEtOGUyZS03NTk1LWI5OTQtYjAzODhkM2FjMGVjIiwianRpIjoiMDE5ZGJkZmQtMTE1Zi03YjgzLThhNDUtZmFmZjVlNDA0OTVlIiwiaWF0IjoxNzc3MDA4OTcyLCJleHAiOjE3NzcwMTI1NzJ9.aZ1FQgnI3mUjQvURLEiBb7QWzneuEHeEJEF02YEHIPw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-scenarios/019dbe04-e9ce-7e59-8fa3-6f58147901e0",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-scenarios",
+                "019dbe04-e9ce-7e59-8fa3-6f58147901e0"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "tenant rules",
+      "item": [
+        {
+          "name": "get rule by id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJkZjEtODg0Ni03ZjNmLTgxNDMtZTc2MzY2NjU1ODJjIiwic3ViIjoiMDE5ZGJkZjEtOGUyZS03NTk1LWI5OTQtYjAzODhkM2FjMGVjIiwianRpIjoiMDE5ZGJlMzgtMGI0NS03NmU4LWEyMGMtNWU2Y2VlM2VmYWJlIiwiaWF0IjoxNzc3MDEyODM3LCJleHAiOjE3NzcwMTY0Mzd9.1m88WwII_BKseHem4ZHag_hw4Fq62er8V7VOybmKMOw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-rules/019dbe38-495a-7413-a63c-483f6a9084f5",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-rules",
+                "019dbe38-495a-7413-a63c-483f6a9084f5"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update rule",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJkZjEtODg0Ni03ZjNmLTgxNDMtZTc2MzY2NjU1ODJjIiwic3ViIjoiMDE5ZGJkZjEtOGUyZS03NTk1LWI5OTQtYjAzODhkM2FjMGVjIiwianRpIjoiMDE5ZGJlMzgtMGI0NS03NmU4LWEyMGMtNWU2Y2VlM2VmYWJlIiwiaWF0IjoxNzc3MDEyODM3LCJleHAiOjE3NzcwMTY0Mzd9.1m88WwII_BKseHem4ZHag_hw4Fq62er8V7VOybmKMOw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"ruleName\": \"Large Cash Deposit Monitor\",\r\n  \"isActive\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-rules/019dbe38-495a-7413-a63c-483f6a9084f5",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-rules",
+                "019dbe38-495a-7413-a63c-483f6a9084f5"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get thresholds for rule",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJkZjEtODg0Ni03ZjNmLTgxNDMtZTc2MzY2NjU1ODJjIiwic3ViIjoiMDE5ZGJkZjEtOGUyZS03NTk1LWI5OTQtYjAzODhkM2FjMGVjIiwianRpIjoiMDE5ZGJlMzgtMGI0NS03NmU4LWEyMGMtNWU2Y2VlM2VmYWJlIiwiaWF0IjoxNzc3MDEyODM3LCJleHAiOjE3NzcwMTY0Mzd9.1m88WwII_BKseHem4ZHag_hw4Fq62er8V7VOybmKMOw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-rules/019dbe38-495a-7413-a63c-483f6a9084f5/thresholds",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-rules",
+                "019dbe38-495a-7413-a63c-483f6a9084f5",
+                "thresholds"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "toggle rule by id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJkZjEtODg0Ni03ZjNmLTgxNDMtZTc2MzY2NjU1ODJjIiwic3ViIjoiMDE5ZGJkZjEtOGUyZS03NTk1LWI5OTQtYjAzODhkM2FjMGVjIiwianRpIjoiMDE5ZGJlMzgtMGI0NS03NmU4LWEyMGMtNWU2Y2VlM2VmYWJlIiwiaWF0IjoxNzc3MDEyODM3LCJleHAiOjE3NzcwMTY0Mzd9.1m88WwII_BKseHem4ZHag_hw4Fq62er8V7VOybmKMOw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-rules/019dbe38-495a-7413-a63c-483f6a9084f5/toggle?active=true",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-rules",
+                "019dbe38-495a-7413-a63c-483f6a9084f5",
+                "toggle"
+              ],
+              "query": [
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create thresholds for rule",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJkZjEtODg0Ni03ZjNmLTgxNDMtZTc2MzY2NjU1ODJjIiwic3ViIjoiMDE5ZGJkZjEtOGUyZS03NTk1LWI5OTQtYjAzODhkM2FjMGVjIiwianRpIjoiMDE5ZGJlMzgtMGI0NS03NmU4LWEyMGMtNWU2Y2VlM2VmYWJlIiwiaWF0IjoxNzc3MDEyODM3LCJleHAiOjE3NzcwMTY0Mzd9.1m88WwII_BKseHem4ZHag_hw4Fq62er8V7VOybmKMOw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"tenantRuleId\": \"019dbe38-495a-7413-a63c-483f6a9084f5\",\r\n  \"globalConditionId\": \"019dbdf8-f34a-7215-afb2-ae42458aca58\",\r\n  \"overrideValue\": \"25000.00\",\r\n  \"overrideLookbackPeriod\": \"P30D\",\r\n  \"overrideAggregationFunction\": \"SUM\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-rules/thresholds",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-rules",
+                "thresholds"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update threshold for rule",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDIiLCJqdGkiOiIwMTlkYmU0My1mMTBkLTdjNWYtYmQ1NC0wNzE4YmFlNjRjMDEiLCJpYXQiOjE3NzcwMTM2MTYsImV4cCI6MTc3NzAxNzIxNn0.oP9uxNnHsIkOpvGskVZekGVZZEj3bNXqWgc1BdEl3_Q",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"overrideValue\": \"50000.00\",\r\n  \"overrideLookbackPeriod\": \"P15D\",\r\n  \"overrideAggregationFunction\": \"COUNT\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-rules/thresholds/019dbe44-d263-7985-bca1-23d8db1300f9",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-rules",
+                "thresholds",
+                "019dbe44-d263-7985-bca1-23d8db1300f9"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete threshold override",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDIiLCJqdGkiOiIwMTlkYmU0My1mMTBkLTdjNWYtYmQ1NC0wNzE4YmFlNjRjMDEiLCJpYXQiOjE3NzcwMTM2MTYsImV4cCI6MTc3NzAxNzIxNn0.oP9uxNnHsIkOpvGskVZekGVZZEj3bNXqWgc1BdEl3_Q",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tenant-rules/thresholds/019dbe44-d263-7985-bca1-23d8db1300f9",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tenant-rules",
+                "thresholds",
+                "019dbe44-d263-7985-bca1-23d8db1300f9"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "faker",
+      "item": [
+        {
+          "name": "generate customer csv",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/dev/faker/customers",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "dev",
+                "faker",
+                "customers"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "generate customer csv",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:8080/api/v1/dev/faker/customers",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "api",
+                    "v1",
+                    "dev",
+                    "faker",
+                    "customers"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "Vary",
+                  "value": "Origin"
+                },
+                {
+                  "key": "Vary",
+                  "value": "Access-Control-Request-Method"
+                },
+                {
+                  "key": "Vary",
+                  "value": "Access-Control-Request-Headers"
+                },
+                {
+                  "key": "Content-Disposition",
+                  "value": "attachment; filename=\"faker_customers_100.csv\""
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-cache, no-store, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "Pragma",
+                  "value": "no-cache"
+                },
+                {
+                  "key": "Expires",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "DENY"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/octet-stream"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "13798"
+                },
+                {
+                  "key": "Date",
+                  "value": "Fri, 24 Apr 2026 16:40:01 GMT"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=60"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                }
+              ],
+              "cookie": [],
+              "body": "accountNumber,customerName,customerType,idType,idNumber,nationality,countryOfResidence,monthlyIncome,netWorth,riskRating,riskScore,isPep,isDormant,accountOpenedOn,lastActivityDate,kycStatus\nACCT81081827,Aslesha Reddy,INDIVIDUAL,VOTER_ID,8AQ40IT9U7,IND,IND,22005.56,216386.92,LOW,7,false,false,2020-08-30,2026-04-12,APPROVED\nACCT00922725,Chitrangada Reddy,INDIVIDUAL,PASSPORT,G5TUC1EF62,IND,IND,36850.71,173997.14,HIGH,75,false,false,2018-03-10,2026-03-27,APPROVED\nACCT92453536,Karan Menon,INDIVIDUAL,PASSPORT,83GM8H6W55,IND,IND,16198.55,331802.10,LOW,22,false,false,2016-07-25,2026-04-18,APPROVED\nACCT73548354,Manikya Joshi,INDIVIDUAL,VOTER_ID,0827STLK54,IND,IND,45871.22,41176.53,LOW,3,false,false,2025-10-28,2026-03-22,APPROVED\nACCT21047235,Miss Deeptimay Kocchar,INDIVIDUAL,VOTER_ID,7UDPE68WZ1,IND,IND,44842.44,282933.99,MEDIUM,29,false,false,2023-11-21,2026-03-26,APPROVED\nACCT73101303,Lakshman Varman,INDIVIDUAL,PASSPORT,3HI214Z76W,ZAR,MZN,16616.52,15548.14,LOW,12,false,false,2017-03-07,2026-02-25,APPROVED\nACCT22809478,Chitramala Namboothiri,INDIVIDUAL,AADHAAR,KS05491QQ0,IND,IND,40460.51,166137.90,LOW,18,true,true,2023-05-20,2025-03-05,APPROVED\nACCT76901498,Miss Laxmi Abbott,INDIVIDUAL,PASSPORT,5WT28SI518,IND,IND,39128.41,466846.64,MEDIUM,39,false,false,2024-12-17,2026-04-01,APPROVED\nACCT38467195,Chandrakin Abbott III,INDIVIDUAL,PAN,2V050179Z8,IND,IND,40673.05,332196.47,MEDIUM,47,false,false,2019-01-21,2026-04-22,APPROVED\nACCT71506478,Jagadish Shukla,INDIVIDUAL,PASSPORT,W698HLO961,IND,IND,46335.99,321580.44,LOW,15,false,false,2017-11-27,2026-03-08,APPROVED\nACCT15062836,\"Chattopadhyay, Pothuvaal and Agarwal\",CORPORATE,LEI,9C88LP2UX0,IND,IND,34079.50,292968.54,LOW,23,false,false,2023-02-01,2026-04-14,APPROVED\nACCT58735455,Ajeet Reddy IV,INDIVIDUAL,PAN,2AO446L6V9,IND,IND,14053.54,253293.71,LOW,9,false,false,2019-06-09,2026-03-22,APPROVED\nACCT68426203,Anagh Mehra III,INDIVIDUAL,PASSPORT,2K2NHO3211,IND,IND,3835.58,82354.74,LOW,18,false,false,2017-03-08,2026-04-11,APPROVED\nACCT96023066,Tara Ganaka,INDIVIDUAL,VOTER_ID,CKQ60692IQ,IND,IND,38297.41,132820.47,LOW,3,false,false,2023-11-15,2026-03-26,APPROVED\nACCT56457540,Omana Iyengar,INDIVIDUAL,PASSPORT,Y9JVXG4W20,IND,IND,11111.79,71750.62,MEDIUM,38,false,false,2016-11-11,2026-02-25,APPROVED\nACCT17462237,Mr. Amaresh Johar,INDIVIDUAL,AADHAAR,6CU6WN404T,IND,IND,6746.73,95738.39,LOW,8,false,false,2018-02-16,2026-04-24,APPROVED\nACCT93757498,Jitendra Mukhopadhyay,INDIVIDUAL,VOTER_ID,XA6563D8XR,CHF,KWD,33238.27,443818.01,LOW,0,false,false,2023-08-09,2026-03-02,APPROVED\nACCT16217637,Dhanadeepa Desai,INDIVIDUAL,VOTER_ID,G66BQ3XZN1,IND,IND,5531.61,447609.92,LOW,10,false,false,2019-07-14,2026-04-10,APPROVED\nACCT43405451,\"Nambeesan, Menon and Khanna\",CORPORATE,LEI,6143Z95B1L,IND,IND,4140.74,490613.58,MEDIUM,37,false,true,2023-06-14,2024-10-08,APPROVED\nACCT42348510,Shakuntala Ahuja,INDIVIDUAL,VOTER_ID,JF6X64OJ2W,IND,IND,29675.00,364913.55,LOW,2,false,false,2017-08-20,2026-03-31,APPROVED\nACCT39088401,Trivedi Group,CORPORATE,CIN,9E34Y014RH,IND,IND,30497.85,219090.06,LOW,10,false,false,2021-07-02,2026-04-17,APPROVED\nACCT24719691,Jagdish Chopra,INDIVIDUAL,VOTER_ID,G65H03D7S8,IND,IND,11959.42,461950.28,LOW,15,false,false,2019-09-10,2026-04-16,APPROVED\nACCT57447295,Sinha-Bandopadhyay,CORPORATE,PAN,6TSG104A3E,IND,IND,13373.42,102016.73,HIGH,66,false,false,2016-07-08,2026-04-15,APPROVED\nACCT70762562,Chattopadhyay Pvt Ltd,CORPORATE,LEI,Q04E8ZREU7,IND,IND,13933.89,13992.42,MEDIUM,26,false,false,2016-06-19,2026-03-28,PENDING\nACCT28568044,Triloki Nath Nair,INDIVIDUAL,PASSPORT,13676BK6SQ,IND,IND,6424.79,139944.55,MEDIUM,41,false,false,2023-05-06,2026-03-12,APPROVED\nACCT02754416,Dhyanesh Tandon,INDIVIDUAL,VOTER_ID,D4NV5P21LV,IND,IND,16263.65,261658.93,MEDIUM,27,false,false,2019-01-18,2026-03-05,APPROVED\nACCT48270101,Gandhi Ltd,CORPORATE,CIN,K6UI22FMD9,IND,IND,42794.84,440589.87,LOW,10,false,false,2024-06-13,2026-03-20,APPROVED\nACCT45441993,Nimit Jain V,INDIVIDUAL,AADHAAR,C426F00Y5V,IND,IND,18232.86,331055.89,MEDIUM,41,false,false,2023-07-12,2026-03-27,APPROVED\nACCT65473589,Aayushmaan Bhattacharya,INDIVIDUAL,VOTER_ID,86OW1U93Z5,TWD,EUR,8694.46,387210.18,MEDIUM,49,false,false,2020-11-23,2026-03-08,APPROVED\nACCT13673605,Bhattacharya and Sons,CORPORATE,PAN,M942Y0T6F5,IND,IND,13578.61,317412.59,LOW,12,false,false,2025-11-11,2026-03-04,APPROVED\nACCT22289068,Radha Patel,INDIVIDUAL,AADHAAR,71V74860OV,IND,IND,25353.28,359782.38,LOW,17,false,false,2023-07-06,2026-04-03,APPROVED\nACCT06418477,Dubashi-Pandey,CORPORATE,PAN,27DRL2L627,IND,IND,3930.58,60389.73,LOW,4,false,false,2023-05-06,2026-02-25,APPROVED\nACCT90702103,Sarada Kapoor I,INDIVIDUAL,VOTER_ID,BUQWH2L006,IND,IND,41077.66,385095.84,LOW,18,false,false,2023-05-29,2026-03-25,APPROVED\nACCT90974331,Aalok Saini,INDIVIDUAL,PASSPORT,3U36UD4NDG,IND,IND,35206.90,127833.42,MEDIUM,37,false,false,2022-10-21,2026-04-15,APPROVED\nACCT47818021,Anilabh Sinha IV,INDIVIDUAL,PAN,LDHPTJLF11,IND,IND,25815.37,52486.91,LOW,13,false,true,2023-06-26,2024-09-29,APPROVED\nACCT89614610,Shukla-Kapoor,CORPORATE,CIN,0S8591GC94,AFN,CDF,42350.59,70524.41,LOW,9,false,false,2016-06-16,2026-03-28,APPROVED\nACCT43683401,Ms. Rohan Deshpande,INDIVIDUAL,PAN,DCFS0P7IW5,IND,IND,17968.96,346655.07,HIGH,52,false,false,2023-01-17,2026-04-04,APPROVED\nACCT29386849,Devadatt Menon,INDIVIDUAL,PAN,R6KN0LH2YA,IND,IND,8950.30,245737.95,LOW,3,false,false,2020-06-04,2026-03-30,APPROVED\nACCT21825146,Talwar-Shukla,CORPORATE,LEI,SYO76EHEY1,IND,IND,1182.43,349747.82,MEDIUM,40,true,false,2025-12-03,2026-03-29,APPROVED\nACCT61735302,Mrs. Darshwana Ganaka,INDIVIDUAL,PASSPORT,H9UW3O3SF2,IND,IND,46498.49,436408.08,LOW,12,false,false,2020-05-04,2026-03-03,APPROVED\nACCT35013351,Aatreya Butt Jr.,INDIVIDUAL,PAN,HT3BGJ82MF,IND,IND,20866.30,350311.43,LOW,2,false,false,2020-04-23,2026-04-12,APPROVED\nACCT30509557,Dr. Shrishti Gandhi,INDIVIDUAL,PASSPORT,AX9P5T9F9F,IND,IND,40936.82,441358.69,LOW,10,false,false,2021-03-02,2026-03-01,APPROVED\nACCT98120053,Urmila Kakkar,INDIVIDUAL,AADHAAR,559WZP17LY,IND,IND,38004.70,406825.59,MEDIUM,43,false,false,2023-03-21,2026-03-19,APPROVED\nACCT54185987,Meghnath Deshpande,INDIVIDUAL,PAN,5OE4H4U4R5,IND,IND,37950.25,130507.46,LOW,5,true,false,2020-07-23,2026-03-16,APPROVED\nACCT52416061,Varma Group,CORPORATE,LEI,5G83B42IBQ,IND,IND,31467.83,431812.11,LOW,20,false,false,2022-08-19,2026-02-24,APPROVED\nACCT20133883,Avadhesh Kapoor Jr.,INDIVIDUAL,PAN,4P02H3WGY8,ZAR,EUR,46290.66,387887.13,MEDIUM,46,false,false,2025-01-20,2026-03-05,APPROVED\nACCT56464485,Bharadwaj-Khanna,CORPORATE,CIN,TH0QP6I25R,PRK,IRN,16344.99,159405.50,CRITICAL,99,false,false,2018-09-23,2026-04-20,APPROVED\nACCT05865884,Nayar-Ahuja,CORPORATE,LEI,844NRH23ZB,IND,IND,5232.53,12716.32,MEDIUM,37,false,false,2022-02-23,2026-03-26,APPROVED\nACCT84247045,Amaranaath Mukhopadhyay,INDIVIDUAL,PAN,8IZYZS9ZKL,OMR,GBP,37185.14,235851.95,CRITICAL,85,false,false,2021-03-29,2026-03-19,APPROVED\nACCT62100503,Miss Hiranmay Panicker,INDIVIDUAL,AADHAAR,4A3X3ZX990,IND,IND,46190.70,441706.06,MEDIUM,31,false,false,2021-04-04,2026-04-17,APPROVED\nACCT54332717,Gemine Sethi,INDIVIDUAL,PASSPORT,720ML21167,IND,IND,16554.52,380128.71,LOW,9,false,false,2021-07-24,2026-03-19,APPROVED\nACCT66819165,Miss Devi Embranthiri,INDIVIDUAL,PAN,S7HY1EDN0A,IND,IND,42995.67,148918.66,MEDIUM,34,false,false,2016-08-04,2026-04-12,APPROVED\nACCT10724827,Siddhi Nambeesan,INDIVIDUAL,PASSPORT,C2Y2B3PBLB,IND,IND,32035.28,458525.90,MEDIUM,31,false,false,2021-10-12,2026-04-20,APPROVED\nACCT63058761,Desai-Dhawan,CORPORATE,LEI,THBKX3H609,IND,IND,48382.66,264159.81,MEDIUM,49,false,false,2023-07-22,2026-04-17,APPROVED\nACCT56370853,Trivedi Corp,CORPORATE,CIN,KFIGS51PUJ,IND,IND,12887.15,232853.27,LOW,25,false,true,2017-01-18,2018-03-25,APPROVED\nACCT65041524,Divjot Ahuja,INDIVIDUAL,AADHAAR,H8KXSLT797,IND,IND,4361.68,48776.56,LOW,19,false,false,2019-06-05,2026-03-19,APPROVED\nACCT08445124,Param Kaur Sr.,INDIVIDUAL,VOTER_ID,F91OJL683X,IND,IND,32373.82,429295.32,LOW,20,false,false,2022-03-15,2026-03-17,APPROVED\nACCT66616431,Acharyasuta Nehru,INDIVIDUAL,PAN,7M715A1XU7,IND,IND,19827.58,231711.10,LOW,12,false,false,2022-06-25,2026-04-04,APPROVED\nACCT53203278,Ms. Abhirath Ahluwalia,INDIVIDUAL,AADHAAR,BL6P3990A7,IND,IND,13688.52,265685.45,LOW,6,false,false,2019-09-20,2026-03-13,APPROVED\nACCT34433888,Deeptendu Verma,INDIVIDUAL,AADHAAR,Z25D289239,IND,IND,39725.21,435787.33,MEDIUM,37,false,false,2019-12-10,2026-03-01,APPROVED\nACCT70076740,Preity Dwivedi Jr.,INDIVIDUAL,PASSPORT,3UV6526405,BIF,OMR,7629.46,239926.92,LOW,8,false,false,2024-10-16,2026-04-07,APPROVED\nACCT76810541,Pilla-Nehru,CORPORATE,CIN,38BK048NJN,XPF,PHP,36440.46,225354.03,LOW,4,false,false,2023-08-18,2026-03-29,APPROVED\nACCT53208841,Mr. Anasooya Panicker,INDIVIDUAL,AADHAAR,PVDA2R65G1,IND,IND,37096.30,97860.96,LOW,14,false,true,2018-07-12,2019-09-10,APPROVED\nACCT86867314,Shashi Singh,INDIVIDUAL,PASSPORT,729OKZ02HD,IND,IND,37899.01,254830.93,HIGH,69,false,false,2024-10-06,2026-03-22,APPROVED\nACCT05632410,Anilaabh Varma,INDIVIDUAL,PASSPORT,49PJBZ956Q,IND,IND,36102.37,471328.33,LOW,15,false,false,2021-03-06,2026-03-30,APPROVED\nACCT38864068,Dandak Gandhi,INDIVIDUAL,PASSPORT,63T10D3FCZ,IND,IND,6292.12,490506.29,LOW,8,false,false,2017-05-22,2026-03-31,APPROVED\nACCT80166768,Tushar Mehrotra,INDIVIDUAL,AADHAAR,4T69N9MOWC,IND,IND,36910.35,498287.30,LOW,13,false,false,2016-12-22,2026-04-01,APPROVED\nACCT56964818,Deeptimayee Varman,INDIVIDUAL,PAN,L0A93J5T9Z,IND,IND,5291.29,81420.30,LOW,15,false,false,2024-08-06,2026-02-25,APPROVED\nACCT04834212,Balachandra Mukhopadhyay,INDIVIDUAL,PASSPORT,OMH0084TM9,IND,IND,45375.89,272411.96,HIGH,75,false,false,2021-10-18,2026-03-29,APPROVED\nACCT62211093,Mrs. Kiran Kaniyar,INDIVIDUAL,VOTER_ID,I00D12D507,IND,IND,32441.13,293533.58,LOW,17,false,false,2022-01-28,2026-02-26,APPROVED\nACCT98075681,Chandranath Verma IV,INDIVIDUAL,PAN,IT59755J22,IND,IND,32086.82,320892.45,MEDIUM,31,false,false,2016-10-04,2026-04-01,APPROVED\nACCT53775122,Raj Asan III,INDIVIDUAL,AADHAAR,6YODM80X69,IND,IND,12211.75,498096.83,LOW,10,false,false,2018-11-16,2026-03-09,APPROVED\nACCT76313839,Yogesh Varma IV,INDIVIDUAL,PAN,NYFIU5FR64,IND,IND,9765.20,102795.04,LOW,12,false,false,2023-08-15,2026-04-15,APPROVED\nACCT13372493,Bheeshma Chopra,INDIVIDUAL,AADHAAR,4650TUX1PE,AFN,KES,5688.53,338809.79,LOW,14,false,true,2023-11-08,2024-07-29,APPROVED\nACCT91258418,Dharmaketu Banerjee II,INDIVIDUAL,PAN,32SI04906O,IND,IND,40736.45,231412.83,LOW,15,false,false,2020-01-11,2026-03-13,APPROVED\nACCT01138892,Subhashini Verma,INDIVIDUAL,PAN,MBY0X03Z20,IND,IND,6112.73,163270.17,LOW,12,false,false,2019-07-21,2026-03-24,APPROVED\nACCT68056225,Balamani Pothuvaal,INDIVIDUAL,VOTER_ID,G0RBO547O9,IND,IND,22103.50,262282.41,MEDIUM,46,false,false,2017-02-14,2026-04-16,APPROVED\nACCT44772438,Dwivedi Corp,CORPORATE,PAN,PC7F2Q537S,IND,IND,24563.88,212877.45,LOW,25,false,false,2021-04-03,2026-03-08,APPROVED\nACCT36285702,Javas Reddy,INDIVIDUAL,PASSPORT,6CKLN601F1,IND,IND,49829.44,168463.12,MEDIUM,40,false,false,2024-05-19,2026-03-10,APPROVED\nACCT76596644,Bhramar Patil,INDIVIDUAL,VOTER_ID,0487P59QXK,IND,IND,30436.32,415474.67,LOW,3,false,false,2022-10-24,2026-04-10,REJECTED\nACCT42623215,Omana Dwivedi,INDIVIDUAL,AADHAAR,VD68437252,NOK,EUR,33159.67,55281.08,LOW,14,false,false,2025-11-23,2026-03-03,APPROVED\nACCT48919287,Kumuda Asan Sr.,INDIVIDUAL,AADHAAR,C6FUO5S92W,IND,IND,11494.12,31899.71,LOW,3,false,false,2020-02-16,2026-03-17,APPROVED\nACCT27745158,Mrs. Gauraang Bandopadhyay,INDIVIDUAL,AADHAAR,YM09K43LZ5,IND,IND,500.00,95000000.00,HIGH,1,true,false,2025-05-17,2026-04-06,APPROVED\nACCT70183700,Bahula Panicker,INDIVIDUAL,AADHAAR,4TX968AR71,IND,IND,41684.59,429566.98,LOW,4,false,false,2019-05-27,2026-04-09,APPROVED\nACCT31170740,Deenabandhu Johar V,INDIVIDUAL,PAN,05FP6455I0,IND,IND,34027.29,279185.80,MEDIUM,36,false,false,2025-06-18,2026-03-25,REJECTED\nACCT00384123,Chakor Menon,INDIVIDUAL,PAN,JE7QP7K859,IND,IND,21730.60,126895.58,LOW,7,false,true,2018-10-27,2024-09-21,APPROVED\nACCT48566871,Ms. Bhaves Butt,INDIVIDUAL,PASSPORT,JC1EB76RG1,IND,IND,35475.74,373330.61,LOW,16,false,false,2016-12-29,2026-03-12,APPROVED\nACCT14425365,Adheesh Bhattacharya,INDIVIDUAL,PAN,ZMK4H193L4,IND,IND,6565.85,496083.08,LOW,9,false,false,2023-09-25,2026-04-06,APPROVED\nACCT58664881,Butt Brothers,CORPORATE,CIN,J6V9M72O10,IND,IND,22970.38,360082.19,LOW,8,false,false,2018-02-16,2026-04-11,APPROVED\nACCT01582526,Jagdish Varrier,INDIVIDUAL,VOTER_ID,4382WQNBA5,IND,IND,41726.83,434025.00,LOW,3,false,false,2019-07-21,2026-04-17,APPROVED\nACCT07685524,Dinesh Kaur PhD,INDIVIDUAL,PAN,6C0XT4U7XB,IND,IND,25327.24,348294.95,LOW,20,false,false,2016-06-20,2026-02-28,APPROVED\nACCT12986752,Deveshwar Acharya,INDIVIDUAL,AADHAAR,11KCG58790,IND,IND,8416.79,440901.34,LOW,0,false,false,2026-02-05,2026-04-10,APPROVED\nACCT23333714,Kumari Bandopadhyay,INDIVIDUAL,PASSPORT,W89I47SQ1P,IND,IND,22178.90,396837.86,LOW,19,false,true,2017-06-06,2019-06-04,APPROVED\nACCT94794028,Miss Bhudev Khanna,INDIVIDUAL,AADHAAR,W03L3VW1CP,PRK,IRN,10052.99,322472.77,CRITICAL,99,false,false,2020-05-22,2026-03-17,APPROVED\nACCT14806162,Ms. Shobhana Achari,INDIVIDUAL,PAN,1GRKR73637,IND,IND,24237.16,428037.05,LOW,0,false,false,2022-12-07,2026-04-11,APPROVED\nACCT05901835,Ms. Minakshi Sharma,INDIVIDUAL,VOTER_ID,0M7V3O79A6,IND,IND,39768.77,332575.24,LOW,5,false,false,2024-01-01,2026-03-31,APPROVED\nACCT73684142,Mahajan and Sons,CORPORATE,LEI,7511XRH9O4,IND,IND,16877.33,77299.67,MEDIUM,27,false,true,2025-09-11,2025-09-11,APPROVED\nACCT65873921,Ameyatma Somayaji,INDIVIDUAL,PASSPORT,Z6OFF202CR,IND,IND,41821.36,76417.86,HIGH,63,false,true,2018-08-09,2019-05-25,APPROVED\nACCT74308347,Niranjan Mishra,INDIVIDUAL,PAN,91VMH6W1E4,IND,IND,14657.43,377023.73,LOW,23,true,false,2018-06-03,2026-04-16,APPROVED\nACCT90444207,Akshat Varrier,INDIVIDUAL,AADHAAR,G7CLK2QRU9,IND,IND,15636.35,92929.24,LOW,7,false,true,2020-08-21,2021-11-14,APPROVED\n"
+            }
+          ]
         }
       ]
     }

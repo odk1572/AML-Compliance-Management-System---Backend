@@ -15,8 +15,6 @@ import java.util.UUID;
 public class AlertEvidenceResponseDto {
     private UUID id;
     private UUID alertId; // Flattened from the Alert object
-    private String attributeName;
-    private String operator;
     private String thresholdApplied;
     private String actualEvaluatedValue;
     private Instant sysCreatedAt;

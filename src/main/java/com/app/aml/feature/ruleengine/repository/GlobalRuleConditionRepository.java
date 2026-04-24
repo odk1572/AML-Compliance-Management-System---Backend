@@ -9,6 +9,6 @@ import java.util.UUID;
 
 @Repository
 public interface GlobalRuleConditionRepository extends JpaRepository<GlobalRuleCondition, UUID> {
-    List<GlobalRuleCondition> findByRuleIdOrderByConditionSequenceAsc(UUID ruleId);
+    List<GlobalRuleCondition> findByRuleId(UUID ruleId);
 
 }

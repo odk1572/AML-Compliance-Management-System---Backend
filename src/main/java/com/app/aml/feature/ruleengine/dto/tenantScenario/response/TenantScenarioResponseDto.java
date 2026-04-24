@@ -18,6 +18,7 @@ public class TenantScenarioResponseDto {
     private UUID id;
     private UUID globalScenarioId;
     private RuleStatus status;
+    private String conditionLogic;
     private UUID sysActivatedBy;
     private Instant sysCreatedAt;
     private Instant sysUpdatedAt;
