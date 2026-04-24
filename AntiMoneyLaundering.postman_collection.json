@@ -7,422 +7,1643 @@
   },
   "item": [
     {
-      "name": "login",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "logout",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "change password",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "get me (super admin)",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYjkxZC0zYjZiLTc0ZTktYjNlYi05N2Y5N2FjNDgzZDgiLCJpYXQiOjE3NzY5MjcxOTMsImV4cCI6MTc3NjkzMDc5M30.Y7C7UtNznHMhLAvxRmrDX3qZT4i42HjxvQ9psmEhth4",
-              "type": "string"
+      "name": "auth",
+      "item": [
+        {
+          "name": "logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYjkxOC1jM2ViLTc2YmMtODk5Zi1iMWFiYzZmMGJlYWQiLCJpYXQiOjE3NzY5MjY5MDEsImV4cCI6MTc3NjkzMDUwMX0.NdRnzNI9hferCyL1LGPHKw0TKVrzW1GANU4xxu5XfS4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/auth/logout",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
             }
-          ]
+          },
+          "response": []
         },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8081/api/v1/platform-users/me",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "8081",
-          "path": [
-            "api",
-            "v1",
-            "platform-users",
-            "me"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "get platform user by id",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "get all platform users",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "add platform user",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "update platform user profile",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "delete platform user",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "lock user",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "unlock platform user",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "create tenant",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "list all tenants",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "get tenant",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "get tenant by code",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "update tenangt",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "deactivate tenant",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmFiYi0wNmUzLTcyODUtYmNkNS02YjAxMWZiZTY1MmYiLCJpYXQiOjE3NzY5NTQzMTIsImV4cCI6MTc3Njk1NzkxMn0.J8xpumtRD_ZDWIm896VJ-qAn0WdisxqJuhKlxQ4w3H8",
-              "type": "string"
+        {
+          "name": "change password",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYjkxOC1jM2ViLTc2YmMtODk5Zi1iMWFiYzZmMGJlYWQiLCJpYXQiOjE3NzY5MjY5MDEsImV4cCI6MTc3NjkzMDUwMX0.NdRnzNI9hferCyL1LGPHKw0TKVrzW1GANU4xxu5XfS4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/auth/change-password",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "change-password"
+              ]
             }
-          ]
+          },
+          "response": []
         },
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:8081/api/v1/platform/tenants/019dbaba-a2ce-7dbe-b500-804735c113cb/deactivate",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "8081",
-          "path": [
-            "api",
-            "v1",
-            "platform",
-            "tenants",
-            "019dbaba-a2ce-7dbe-b500-804735c113cb",
-            "deactivate"
-          ]
+        {
+          "name": "login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"superadmin@amlsystem.internal\",\r\n  \"password\": \"password\",\r\n  \"tenantId\": null\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:54893/api/v1/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "54893",
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     },
     {
-      "name": "reset admin credentials",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
+      "name": "platform users (super admin)",
+      "item": [
+        {
+          "name": "get all platform users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmE2MC00ZDkyLTdkYzItYTEwMS1kYmU3YmIwYjc1YmMiLCJpYXQiOjE3NzY5NDgzNjYsImV4cCI6MTc3Njk1MTk2Nn0.pDComZ6chH3LZm81pe2Yz3qIxzZ9B4ien4v6UDNfi1k",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform-users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform-users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get platform user by id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYjkxZC0zYjZiLTc0ZTktYjNlYi05N2Y5N2FjNDgzZDgiLCJpYXQiOjE3NzY5MjcxOTMsImV4cCI6MTc3NjkzMDc5M30.Y7C7UtNznHMhLAvxRmrDX3qZT4i42HjxvQ9psmEhth4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform-users/00000000-0000-0000-0000-000000000001",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform-users",
+                "00000000-0000-0000-0000-000000000001"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "add platform user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYjkxZC0zYjZiLTc0ZTktYjNlYi05N2Y5N2FjNDgzZDgiLCJpYXQiOjE3NzY5MjcxOTMsImV4cCI6MTc3NjkzMDc5M30.Y7C7UtNznHMhLAvxRmrDX3qZT4i42HjxvQ9psmEhth4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"admin.support2@amlsystem.internal\",\r\n  \"fullName\": \"System Administrator\",\r\n  \"password\": \"SecurePassword2025!\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform-users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform-users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update platform user profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMTlkYjkyMy1lNDI1LTc1ZjUtODdmMC1jZjcxYmFkN2YwODYiLCJqdGkiOiIwMTlkYjkyNi1kNmQ0LTc2OGEtYWNkZi01ODJmYTRhYzQwZGQiLCJpYXQiOjE3NzY5Mjc4MjMsImV4cCI6MTc3NjkzMTQyM30.zhO5IWMzSsRQjwLecCcdT6-mJwT76zoTwOVcsm8CdNc",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"admin.support@amlsystem.internal\",\r\n  \"fullName\": \"System Administrator Updated\",\r\n  \"role\": \"SUPER_ADMIN\",\r\n  \"isLocked\": false\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform-users/019db923-e425-75f5-87f0-cf71bad7f086",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform-users",
+                "019db923-e425-75f5-87f0-cf71bad7f086"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "lock user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMTlkYjkyMy1lNDI1LTc1ZjUtODdmMC1jZjcxYmFkN2YwODYiLCJqdGkiOiIwMTlkYjkyNi1kNmQ0LTc2OGEtYWNkZi01ODJmYTRhYzQwZGQiLCJpYXQiOjE3NzY5Mjc4MjMsImV4cCI6MTc3NjkzMTQyM30.zhO5IWMzSsRQjwLecCcdT6-mJwT76zoTwOVcsm8CdNc",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform-users/019db932-5cfd-7472-b3c8-152afb8b62c5/lock",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform-users",
+                "019db932-5cfd-7472-b3c8-152afb8b62c5",
+                "lock"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete platform user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMTlkYjkyMy1lNDI1LTc1ZjUtODdmMC1jZjcxYmFkN2YwODYiLCJqdGkiOiIwMTlkYjkyNi1kNmQ0LTc2OGEtYWNkZi01ODJmYTRhYzQwZGQiLCJpYXQiOjE3NzY5Mjc4MjMsImV4cCI6MTc3NjkzMTQyM30.zhO5IWMzSsRQjwLecCcdT6-mJwT76zoTwOVcsm8CdNc",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform-users/019db92d-a7c0-71bd-9ed9-e49cdfa89585",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform-users",
+                "019db92d-a7c0-71bd-9ed9-e49cdfa89585"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "unlock platform user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMTlkYjkyMy1lNDI1LTc1ZjUtODdmMC1jZjcxYmFkN2YwODYiLCJqdGkiOiIwMTlkYjkyNi1kNmQ0LTc2OGEtYWNkZi01ODJmYTRhYzQwZGQiLCJpYXQiOjE3NzY5Mjc4MjMsImV4cCI6MTc3NjkzMTQyM30.zhO5IWMzSsRQjwLecCcdT6-mJwT76zoTwOVcsm8CdNc",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform-users/019db932-5cfd-7472-b3c8-152afb8b62c5/unlock",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform-users",
+                "019db932-5cfd-7472-b3c8-152afb8b62c5",
+                "unlock"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get me (super admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYjkxZC0zYjZiLTc0ZTktYjNlYi05N2Y5N2FjNDgzZDgiLCJpYXQiOjE3NzY5MjcxOTMsImV4cCI6MTc3NjkzMDc5M30.Y7C7UtNznHMhLAvxRmrDX3qZT4i42HjxvQ9psmEhth4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform-users/me",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform-users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     },
     {
-      "name": "reactivate tenant",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
+      "name": "tenant",
+      "item": [
+        {
+          "name": "create tenant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmI2ZC00N2M1LTcxYWQtOWE2ZC1lMDVmOTAwMjhhZDEiLCJpYXQiOjE3NzY5NjU5OTQsImV4cCI6MTc3Njk2OTU5NH0.U139CGgCYu5udACGbFQSXwIJeOCaxCeOjMp9yBDa3Uw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"tenantCode\": \"HDFC_BANK_02\",\r\n  \"schemaName\": \"hdfc_bank_02_schema\",\r\n  \"institutionName\": \"HDFC Bank\",\r\n  \"countryCode\": \"IND\",\r\n  \"regulatoryJurisdiction\": \"Reserve Bank of India (RBI)\",\r\n  \"contactEmail\": \"compliance@hdfcbank.com\",\r\n  \"contactPhone\": \"+91-22-6652-1000\",\r\n  \"address\": \"HDFC Bank House, Senapati Bapat Marg, Lower Parel, Mumbai, Maharashtra 400013, India\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/tenants",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "tenants"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reactivate tenant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmFiYi0wNmUzLTcyODUtYmNkNS02YjAxMWZiZTY1MmYiLCJpYXQiOjE3NzY5NTQzMTIsImV4cCI6MTc3Njk1NzkxMn0.J8xpumtRD_ZDWIm896VJ-qAn0WdisxqJuhKlxQ4w3H8",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/tenants/019dbaba-a2ce-7dbe-b500-804735c113cb/reactivate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "tenants",
+                "019dbaba-a2ce-7dbe-b500-804735c113cb",
+                "reactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get tenant by code",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmFiYi0wNmUzLTcyODUtYmNkNS02YjAxMWZiZTY1MmYiLCJpYXQiOjE3NzY5NTQzMTIsImV4cCI6MTc3Njk1NzkxMn0.J8xpumtRD_ZDWIm896VJ-qAn0WdisxqJuhKlxQ4w3H8",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/tenants/by-code/HDFC_BANK_01",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "tenants",
+                "by-code",
+                "HDFC_BANK_01"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get tenant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmFiYi0wNmUzLTcyODUtYmNkNS02YjAxMWZiZTY1MmYiLCJpYXQiOjE3NzY5NTQzMTIsImV4cCI6MTc3Njk1NzkxMn0.J8xpumtRD_ZDWIm896VJ-qAn0WdisxqJuhKlxQ4w3H8",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/tenants/019dbaba-a2ce-7dbe-b500-804735c113cb",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "tenants",
+                "019dbaba-a2ce-7dbe-b500-804735c113cb"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "list all tenants",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmIyOS0zYTFlLTcyM2YtOWY4Zi01MWU1YWVlMzFiOWEiLCJpYXQiOjE3NzY5NjE1MzQsImV4cCI6MTc3Njk2NTEzNH0.YWbAftsja8gaaMtcq5ZxjbJvzrV8E_oAJ2RZN4z3P4Q",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/tenants",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "tenants"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update tenangt",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmFiYi0wNmUzLTcyODUtYmNkNS02YjAxMWZiZTY1MmYiLCJpYXQiOjE3NzY5NTQzMTIsImV4cCI6MTc3Njk1NzkxMn0.J8xpumtRD_ZDWIm896VJ-qAn0WdisxqJuhKlxQ4w3H8",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"institutionName\": \"HDFC Bank Limited (Corporate HQ)\",\r\n  \"countryCode\": \"IND\",\r\n  \"regulatoryJurisdiction\": \"Reserve Bank of India (RBI)\",\r\n  \"contactEmail\": \"ops.compliance@hdfcbank.com\",\r\n  \"contactPhone\": \"+91-22-6652-1111\",\r\n  \"address\": \"HDFC Bank House, Senapati Bapat Marg, Lower Parel, Mumbai, Maharashtra 400013, India\",\r\n  \"status\": \"ACTIVE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/tenants/019dbaba-a2ce-7dbe-b500-804735c113cb",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "tenants",
+                "019dbaba-a2ce-7dbe-b500-804735c113cb"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "deactivate tenant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmFjOS0yN2I5LTdkODItOGUyYS0yNTZhYmZiNTE1NDUiLCJpYXQiOjE3NzY5NTUyMzgsImV4cCI6MTc3Njk1ODgzOH0.zgBy6XMI36syheAIbT1Hm_1qAGX9a861e5G2IQfpl_c",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/tenants/019dbaba-a2ce-7dbe-b500-804735c113cb/deactivate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "tenants",
+                "019dbaba-a2ce-7dbe-b500-804735c113cb",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reset admin credentials",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmFiYi0wNmUzLTcyODUtYmNkNS02YjAxMWZiZTY1MmYiLCJpYXQiOjE3NzY5NTQzMTIsImV4cCI6MTc3Njk1NzkxMn0.J8xpumtRD_ZDWIm896VJ-qAn0WdisxqJuhKlxQ4w3H8",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/tenants/019dbad6-03cb-7535-8cc5-3943cf6de80f/reset-admin",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "tenants",
+                "019dbad6-03cb-7535-8cc5-3943cf6de80f",
+                "reset-admin"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     },
     {
-      "name": "upsert geographic risk ratings",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
+      "name": "geo graphic risk ratings",
+      "item": [
+        {
+          "name": "upsert geographic risk ratings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmFkNS1jYWEyLTc5Y2UtOTllZS0yYTg1YjZiMDU0ODciLCJpYXQiOjE3NzY5NTYwNjYsImV4cCI6MTc3Njk1OTY2Nn0.wuYPgzA_-GaHusL48yo9jbFOFbmFqgd6IWOoVqC3fMU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"countryCode\": \"ARE\",\r\n  \"countryName\": \"United Arab Emirates\",\r\n  \"fatfStatus\": \"COMPLIANT\",\r\n  \"baselAmlIndexScore\": 5,\r\n  \"riskTier\": \"MEDIUM\",\r\n  \"notes\": \"Recently removed from grey list; monitoring effectiveness of new regulations.\",\r\n  \"effectiveFrom\": \"2026-04-23T15:45:00Z\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/geo-risk",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "geo-risk"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "bul upsert geo ratings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmFkNS1jYWEyLTc5Y2UtOTllZS0yYTg1YjZiMDU0ODciLCJpYXQiOjE3NzY5NTYwNjYsImV4cCI6MTc3Njk1OTY2Nn0.wuYPgzA_-GaHusL48yo9jbFOFbmFqgd6IWOoVqC3fMU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n  {\r\n    \"countryCode\": \"SGP\",\r\n    \"countryName\": \"Singapore\",\r\n    \"fatfStatus\": \"COMPLIANT\",\r\n    \"baselAmlIndexScore\": 3,\r\n    \"riskTier\": \"LOW\",\r\n    \"notes\": \"Strong regulatory framework.\",\r\n    \"effectiveFrom\": \"2026-04-23T15:45:00Z\"\r\n  },\r\n  {\r\n    \"countryCode\": \"VNM\",\r\n    \"countryName\": \"Vietnam\",\r\n    \"fatfStatus\": \"GREYLIST\",\r\n    \"baselAmlIndexScore\": 7,\r\n    \"riskTier\": \"HIGH\",\r\n    \"notes\": \"Increased monitoring due to strategic deficiencies.\",\r\n    \"effectiveFrom\": \"2026-04-23T15:45:00Z\"\r\n  }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/geo-risk/bulk",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "geo-risk",
+                "bulk"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get ratings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmFkNS1jYWEyLTc5Y2UtOTllZS0yYTg1YjZiMDU0ODciLCJpYXQiOjE3NzY5NTYwNjYsImV4cCI6MTc3Njk1OTY2Nn0.wuYPgzA_-GaHusL48yo9jbFOFbmFqgd6IWOoVqC3fMU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/geo-risk",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "geo-risk"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete ratings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmFkNS1jYWEyLTc5Y2UtOTllZS0yYTg1YjZiMDU0ODciLCJpYXQiOjE3NzY5NTYwNjYsImV4cCI6MTc3Njk1OTY2Nn0.wuYPgzA_-GaHusL48yo9jbFOFbmFqgd6IWOoVqC3fMU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/geo-risk/VNM",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "geo-risk",
+                "VNM"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get geo ratings by country code",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmFkNS1jYWEyLTc5Y2UtOTllZS0yYTg1YjZiMDU0ODciLCJpYXQiOjE3NzY5NTYwNjYsImV4cCI6MTc3Njk1OTY2Nn0.wuYPgzA_-GaHusL48yo9jbFOFbmFqgd6IWOoVqC3fMU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/geo-risk/VNM",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "geo-risk",
+                "VNM"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     },
     {
-      "name": "bul upsert geo ratings",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
+      "name": "tenant users",
+      "item": [
+        {
+          "name": "create compliance officer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJiNzAtNWE5Zi03MWZmLThhZTUtYTdjNGYyMDcxZDNhIiwic3ViIjoiMDE5ZGJiNzAtNWY5Zi03YjU2LWE3OTUtZjRmYjBhNWRmNTEyIiwianRpIjoiMDE5ZGJiNzItMGQ0Mi03YzZmLThkZTItYjRjMGQzNTY1Nzc0IiwiaWF0IjoxNzc2OTY2MzA3LCJleHAiOjE3NzY5Njk5MDd9.1mPop_KYZf4G9wT0MzYLd_oUb3oZqeRenM_7lHWBx0M",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"employeeId\": \"EMP-10294\",\r\n  \"fullName\": \"Alexander Hamilton\",\r\n  \"email\": \"a.hamilton@bank-example.com\",\r\n  \"password\": \"TemporaryPassword123!\",\r\n  \"role\": \"COMPLIANCE_OFFICER\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8081/api/v1/users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get all tenant users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJiNzAtNWE5Zi03MWZmLThhZTUtYTdjNGYyMDcxZDNhIiwic3ViIjoiMDE5ZGJiNzAtNWY5Zi03YjU2LWE3OTUtZjRmYjBhNWRmNTEyIiwianRpIjoiMDE5ZGJiNzItMGQ0Mi03YzZmLThkZTItYjRjMGQzNTY1Nzc0IiwiaWF0IjoxNzc2OTY2MzA3LCJleHAiOjE3NzY5Njk5MDd9.1mPop_KYZf4G9wT0MzYLd_oUb3oZqeRenM_7lHWBx0M",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reset password tenant user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJiMjktYjc1Zi03MTFkLWE4NGEtNDIxNjM5ODdmYTJjIiwic3ViIjoiMDE5ZGJiMjktYmJjYi03Mzk4LTk4OWMtMjEzNGZiNjNhMDRlIiwianRpIjoiMDE5ZGJiNWMtYzVjMi03OGYyLTg0ODktZmZmZjk2NTNkYzQyIiwiaWF0IjoxNzc2OTY0OTEyLCJleHAiOjE3NzY5Njg1MTJ9.-Dn1Hyvdk_z1SUfOlFtqBA_2htjqIV3x0Jy33z2HCgg",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/users/019dbb29-bbcb-7398-989c-2134fb63a04e/reset-password",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "019dbb29-bbcb-7398-989c-2134fb63a04e",
+                "reset-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "deactivate tenant user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJiNzAtNWE5Zi03MWZmLThhZTUtYTdjNGYyMDcxZDNhIiwic3ViIjoiMDE5ZGJiNzAtNWY5Zi03YjU2LWE3OTUtZjRmYjBhNWRmNTEyIiwianRpIjoiMDE5ZGJiNzItMGQ0Mi03YzZmLThkZTItYjRjMGQzNTY1Nzc0IiwiaWF0IjoxNzc2OTY2MzA3LCJleHAiOjE3NzY5Njk5MDd9.1mPop_KYZf4G9wT0MzYLd_oUb3oZqeRenM_7lHWBx0M",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/users/019dbb72-6101-7365-8234-e8f89108b3bb/deactivate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "019dbb72-6101-7365-8234-e8f89108b3bb",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reactivate tenant user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJiNzAtNWE5Zi03MWZmLThhZTUtYTdjNGYyMDcxZDNhIiwic3ViIjoiMDE5ZGJiNzAtNWY5Zi03YjU2LWE3OTUtZjRmYjBhNWRmNTEyIiwianRpIjoiMDE5ZGJiNzItMGQ0Mi03YzZmLThkZTItYjRjMGQzNTY1Nzc0IiwiaWF0IjoxNzc2OTY2MzA3LCJleHAiOjE3NzY5Njk5MDd9.1mPop_KYZf4G9wT0MzYLd_oUb3oZqeRenM_7lHWBx0M",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/users/019dbb72-6101-7365-8234-e8f89108b3bb/reactivate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "019dbb72-6101-7365-8234-e8f89108b3bb",
+                "reactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "change your password (tenant usr)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/users/019dbb72-6101-7365-8234-e8f89108b3bb",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "019dbb72-6101-7365-8234-e8f89108b3bb"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update tenant user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQkFOS19BRE1JTiIsInRlbmFudElkIjoiMDE5ZGJiNzAtNWE5Zi03MWZmLThhZTUtYTdjNGYyMDcxZDNhIiwic3ViIjoiMDE5ZGJiNzAtNWY5Zi03YjU2LWE3OTUtZjRmYjBhNWRmNTEyIiwianRpIjoiMDE5ZGJiNzItMGQ0Mi03YzZmLThkZTItYjRjMGQzNTY1Nzc0IiwiaWF0IjoxNzc2OTY2MzA3LCJleHAiOjE3NzY5Njk5MDd9.1mPop_KYZf4G9wT0MzYLd_oUb3oZqeRenM_7lHWBx0M",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fullName\": \"Jane Smith\",\r\n  \"role\": \"COMPLIANCE_OFFICER\",\r\n  \"isLocked\": false\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8081/api/v1/users/019dbb72-6101-7365-8234-e8f89108b3bb",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "019dbb72-6101-7365-8234-e8f89108b3bb"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     },
     {
-      "name": "get ratings",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
+      "name": "global scenario",
+      "item": [
+        {
+          "name": "create scenario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJhMC03MDA4LTdkMDQtODNhMC05ZDA0ZGNiYWQwM2YiLCJpYXQiOjE3NzY5NjkzNDcsImV4cCI6MTc3Njk3Mjk0N30.I49jGL-4LEZz7r2yjWZvCkBJ44_2GbX36XMY9-ZFn6c",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scenarioName\": \"Rapid Funds Movement Detection\",\r\n  \"category\": \"VELOCITY\",\r\n  \"description\": \"Identifies accounts exhibiting high-frequency transaction patterns within a short time window, indicative of rapid layering or pass-through activity.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/scenarios",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "scenarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update scenario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJhMC03MDA4LTdkMDQtODNhMC05ZDA0ZGNiYWQwM2YiLCJpYXQiOjE3NzY5NjkzNDcsImV4cCI6MTc3Njk3Mjk0N30.I49jGL-4LEZz7r2yjWZvCkBJ44_2GbX36XMY9-ZFn6c",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scenarioName\": \"Rapid Funds Movement Detection - Enhanced\",\r\n  \"category\": \"VELOCITY\",\r\n  \"description\": \"Identifies accounts exhibiting high-frequency transaction patterns within a short time window. Enhanced to include cross-border wire transfers.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/scenarios/019dbba2-a711-72c8-8185-92b51c3c30ee",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "scenarios",
+                "019dbba2-a711-72c8-8185-92b51c3c30ee"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete scenario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJhMC03MDA4LTdkMDQtODNhMC05ZDA0ZGNiYWQwM2YiLCJpYXQiOjE3NzY5NjkzNDcsImV4cCI6MTc3Njk3Mjk0N30.I49jGL-4LEZz7r2yjWZvCkBJ44_2GbX36XMY9-ZFn6c",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/scenarios/019dbba2-a711-72c8-8185-92b51c3c30ee",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "scenarios",
+                "019dbba2-a711-72c8-8185-92b51c3c30ee"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update rule in scenario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJiYy0zNzM5LTczMjEtOTY1YS0zNzlmYTMyZDgyMWEiLCJpYXQiOjE3NzY5NzExNjcsImV4cCI6MTc3Njk3NDc2N30.DljzLrnehGzzDEoECHj8AWpLAx3pcDNo3zUXYMuSKds",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"isActive\": true,\r\n  \"priorityOrder\": 10\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:54893/api/v1/platform/scenarios/019dbba5-72b7-7601-8b9a-30f68a4fc549/rules/019dbbbd-85e0-7912-9b5d-30f55ec5b655",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "54893",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "scenarios",
+                "019dbba5-72b7-7601-8b9a-30f68a4fc549",
+                "rules",
+                "019dbbbd-85e0-7912-9b5d-30f55ec5b655"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get scenario by id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJhMC03MDA4LTdkMDQtODNhMC05ZDA0ZGNiYWQwM2YiLCJpYXQiOjE3NzY5NjkzNDcsImV4cCI6MTc3Njk3Mjk0N30.I49jGL-4LEZz7r2yjWZvCkBJ44_2GbX36XMY9-ZFn6c",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/platform/scenarios/019dbba2-a711-72c8-8185-92b51c3c30ee",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "scenarios",
+                "019dbba2-a711-72c8-8185-92b51c3c30ee"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "list all scenarios",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "add rule to scenario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJiYy0zNzM5LTczMjEtOTY1YS0zNzlmYTMyZDgyMWEiLCJpYXQiOjE3NzY5NzExNjcsImV4cCI6MTc3Njk3NDc2N30.DljzLrnehGzzDEoECHj8AWpLAx3pcDNo3zUXYMuSKds",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:54893/api/v1/platform/scenarios/019dbba5-72b7-7601-8b9a-30f68a4fc549/rules/019dbbbd-85e0-7912-9b5d-30f55ec5b655",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "54893",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "scenarios",
+                "019dbba5-72b7-7601-8b9a-30f68a4fc549",
+                "rules",
+                "019dbbbd-85e0-7912-9b5d-30f55ec5b655"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get rules of perticular scenario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJiYy0zNzM5LTczMjEtOTY1YS0zNzlmYTMyZDgyMWEiLCJpYXQiOjE3NzY5NzExNjcsImV4cCI6MTc3Njk3NDc2N30.DljzLrnehGzzDEoECHj8AWpLAx3pcDNo3zUXYMuSKds",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:54893/api/v1/platform/scenarios/019dbba5-72b7-7601-8b9a-30f68a4fc549/rules",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "54893",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "scenarios",
+                "019dbba5-72b7-7601-8b9a-30f68a4fc549",
+                "rules"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     },
     {
-      "name": "get geo ratings by country code",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "delete ratings",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "create compliance officer",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "get all tenant users",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "deactivate tenant user",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "reset password tenant user",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "reactivate tenant user",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "update tenant user",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "change your password (tenant usr)",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "create scenario",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "update scenario",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "delete scenario",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "get scenario by id",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "list all scenarios",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "create global rule",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "update global rule",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "get all global rules",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "get all global rules with alert counts",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "add condition to rule",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "update condition",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "get condition by rule id",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "add rule to scenario",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "get rules of perticular scenario",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
-    },
-    {
-      "name": "update rule in scenario",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
+      "name": "global rules",
+      "item": [
+        {
+          "name": "get all global rules",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJiYy0zNzM5LTczMjEtOTY1YS0zNzlmYTMyZDgyMWEiLCJpYXQiOjE3NzY5NzExNjcsImV4cCI6MTc3Njk3NDc2N30.DljzLrnehGzzDEoECHj8AWpLAx3pcDNo3zUXYMuSKds",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:54893/api/v1/platform/rules",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "54893",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "rules"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create global rule",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJiYy0zNzM5LTczMjEtOTY1YS0zNzlmYTMyZDgyMWEiLCJpYXQiOjE3NzY5NzExNjcsImV4cCI6MTc3Njk3NDc2N30.DljzLrnehGzzDEoECHj8AWpLAx3pcDNo3zUXYMuSKds",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"ruleName\": \"High Volume Transaction Alert\",\r\n  \"conditionLogic\": \"amount > 10000 AND frequency > 5\",\r\n  \"severity\": \"HIGH\",\r\n  \"baseRiskScore\": 85\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:54893/api/v1/platform/rules",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "54893",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "rules"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update global rule",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJiYy0zNzM5LTczMjEtOTY1YS0zNzlmYTMyZDgyMWEiLCJpYXQiOjE3NzY5NzExNjcsImV4cCI6MTc3Njk3NDc2N30.DljzLrnehGzzDEoECHj8AWpLAx3pcDNo3zUXYMuSKds",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"ruleName\": \"Updated Suspicious Activity Rule\",\r\n  \"conditionLogic\": \"transaction_count > 50 AND total_amount > 5000\",\r\n  \"severity\": \"HIGH\",\r\n  \"baseRiskScore\": 95\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:54893/api/v1/platform/rules/019dbbbd-85e0-7912-9b5d-30f55ec5b655",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "54893",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "rules",
+                "019dbbbd-85e0-7912-9b5d-30f55ec5b655"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "add condition to rule",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJiYy0zNzM5LTczMjEtOTY1YS0zNzlmYTMyZDgyMWEiLCJpYXQiOjE3NzY5NzExNjcsImV4cCI6MTc3Njk3NDc2N30.DljzLrnehGzzDEoECHj8AWpLAx3pcDNo3zUXYMuSKds",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"ruleId\": \"019dbbbd-85e0-7912-9b5d-30f55ec5b655\",\r\n  \"attributeName\": \"amount\",\r\n  \"conditionSequence\": 1,\r\n  \"aggregationFunction\": \"SUM\",\r\n  \"lookbackPeriod\": \"P1D\",\r\n  \"operator\": \"GREATER_THAN\",\r\n  \"thresholdValue\": \"10000.00\",\r\n  \"valueDataType\": \"DECIMAL\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:54893/api/v1/platform/rules/conditions",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "54893",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "rules",
+                "conditions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get all global rules with alert counts",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJiYy0zNzM5LTczMjEtOTY1YS0zNzlmYTMyZDgyMWEiLCJpYXQiOjE3NzY5NzExNjcsImV4cCI6MTc3Njk3NDc2N30.DljzLrnehGzzDEoECHj8AWpLAx3pcDNo3zUXYMuSKds",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:54893/api/v1/platform/rules/with-alert-counts",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "54893",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "rules",
+                "with-alert-counts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update condition",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJiYy0zNzM5LTczMjEtOTY1YS0zNzlmYTMyZDgyMWEiLCJpYXQiOjE3NzY5NzExNjcsImV4cCI6MTc3Njk3NDc2N30.DljzLrnehGzzDEoECHj8AWpLAx3pcDNo3zUXYMuSKds",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"attributeName\": \"amount\",\r\n  \"conditionSequence\": 2,\r\n  \"aggregationFunction\": \"COUNT\",\r\n  \"lookbackPeriod\": \"P7D\",\r\n  \"operator\": \"LESS_THAN\",\r\n  \"thresholdValue\": \"500.00\",\r\n  \"valueDataType\": \"DECIMAL\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:54893/api/v1/platform/rules/conditions/019dbbcb-c088-7e2b-bde2-30f86aa526a8",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "54893",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "rules",
+                "conditions",
+                "019dbbcb-c088-7e2b-bde2-30f86aa526a8"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get condition by rule id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4iLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJqdGkiOiIwMTlkYmJiYy0zNzM5LTczMjEtOTY1YS0zNzlmYTMyZDgyMWEiLCJpYXQiOjE3NzY5NzExNjcsImV4cCI6MTc3Njk3NDc2N30.DljzLrnehGzzDEoECHj8AWpLAx3pcDNo3zUXYMuSKds",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:54893/api/v1/platform/rules/019dbbbd-85e0-7912-9b5d-30f55ec5b655/conditions",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "54893",
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "rules",
+                "019dbbbd-85e0-7912-9b5d-30f55ec5b655",
+                "conditions"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }
