@@ -6,10 +6,13 @@ import com.app.aml.feature.ingestion.dto.transactionBatch.response.TransactionBa
 import com.app.aml.feature.ingestion.service.UniversalBatchIngestionService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication; // <-- Use standard Authentication
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,10 +29,9 @@ public class UniversalIngestionController {
     public ResponseEntity<ApiResponse<TransactionBatchResponseDto>> uploadBatchFile(
             @PathVariable BatchFileType fileType,
             @RequestParam("file") MultipartFile file,
-            Authentication authentication, // <-- Inject this instead
+            Authentication authentication,
             HttpServletRequest request) {
 
-        // Extract the ID dynamically based on your Security context.
         UUID uploaderId = extractBankAdminId(authentication);
 
         TransactionBatchResponseDto responseDto = ingestionService.uploadAndRouteBatch(
@@ -49,23 +51,51 @@ public class UniversalIngestionController {
     }
 
     /**
+     * Retrieves the status of a specific batch by its ID.
+     */
+    @GetMapping("/batches/{batchId}")
+    public ResponseEntity<ApiResponse<TransactionBatchResponseDto>> getBatchStatus(
+            @PathVariable UUID batchId,
+            HttpServletRequest request) {
+
+        TransactionBatchResponseDto responseDto = ingestionService.getBatchStatus(batchId);
+
+        ApiResponse<TransactionBatchResponseDto> response = ApiResponse.of(
+                HttpStatus.OK,
+                "Batch status retrieved successfully.",
+                request.getRequestURI(),
+                responseDto
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Retrieves a paginated list of all batches (useful for a Data Ingestion Dashboard).
+     * You can optionally filter by fileType here if needed.
+     */
+    @GetMapping("/batches")
+    public ResponseEntity<ApiResponse<Page<TransactionBatchResponseDto>>> getAllBatches(
+            @RequestParam(required = false) BatchFileType fileType,
+            @PageableDefault(size = 10, sort = "sysCreatedAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable,
+            HttpServletRequest request) {
+
+        Page<TransactionBatchResponseDto> responsePage = ingestionService.getAllBatches(fileType, pageable);
+
+        ApiResponse<Page<TransactionBatchResponseDto>> response = ApiResponse.of(
+                HttpStatus.OK,
+                "Batch history retrieved successfully.",
+                request.getRequestURI(),
+                responsePage
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Helper method to safely extract the UUID from the Authentication object.
      */
     private UUID extractBankAdminId(Authentication authentication) {
-        // Option A: If your JWT filter sets the username/name as the UUID string
-        // return UUID.fromString(authentication.getName());
-
-        // Option B: If you have a specific UserDetails class for Bank Admins (Uncomment and update)
-        /*
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof BankAdminUserDetails adminDetails) {
-            return adminDetails.getId(); // Or whatever method gets the UUID
-        }
-        throw new IllegalStateException("Authenticated user is not a Bank Admin");
-        */
-
-        // For now, I am assuming your JWT sets the principal "name" as the ID string.
-        // Update this based on how your team stores the user ID in the security context!
         return UUID.fromString(authentication.getName());
     }
 }

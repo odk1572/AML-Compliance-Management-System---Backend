@@ -27,11 +27,14 @@ public class Alert extends AuditableEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
+    // Direct reference to the transaction that caused the alert
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_id", nullable = false)
     private Transaction transaction;
 
+    // Cross-Schema IDs are usually kept as raw UUIDs in JPA multitenancy
+    // unless you have a shared persistence unit.
     @NotNull
     @Column(name = "global_scenario_id", nullable = false)
     private UUID globalScenarioId;
@@ -40,6 +43,7 @@ public class Alert extends AuditableEntity {
     @Column(name = "global_rule_id", nullable = false)
     private UUID globalRuleId;
 
+    // Optional local rule reference
     @Column(name = "tenant_rule_id")
     private UUID tenantRuleId;
 

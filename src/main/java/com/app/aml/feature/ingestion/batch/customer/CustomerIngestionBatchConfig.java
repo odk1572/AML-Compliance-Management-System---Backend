@@ -1,9 +1,11 @@
 package com.app.aml.feature.ingestion.batch.customer;
 
-import com.app.aml.feature.ingestion.batch.*;
+import com.app.aml.feature.ingestion.batch.ValidationException;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import com.app.aml.feature.ingestion.repository.CustomerProfileRepository;
+import com.app.aml.multitenency.TenantContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -15,6 +17,7 @@ import org.springframework.batch.item.data.builder.RepositoryItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileParseException;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.item.support.builder.SynchronizedItemStreamReaderBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +26,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
@@ -35,24 +39,48 @@ public class CustomerIngestionBatchConfig {
     private final PlatformTransactionManager transactionManager;
     private final CustomerProfileRepository repository;
     private final CustomerProfileValidationProcessor processor;
-    private final CustomerIngestionJobCompletionListener completionListener;
     private final CustomerValidationSkipListener skipListener;
 
     @Qualifier("batchTaskExecutor")
     private final TaskExecutor batchTaskExecutor;
 
+    /**
+     * Critical: This ensures each background thread knows which schema to use.
+     */
     @Bean
-    public Job customerProfileIngestionJob() {
+    public StepExecutionListener customerTenantStepListener() {
+        return new StepExecutionListener() {
+            @Override
+            public void beforeStep(StepExecution stepExecution) {
+                String tenantId = stepExecution.getJobParameters().getString("tenantId");
+                String schemaName = stepExecution.getJobParameters().getString("schemaName");
 
-        Step validation = validationStep();
-        Step ingestion = ingestionStep();
+                if (tenantId != null && schemaName != null) {
+                    TenantContext.setTenantId(tenantId);
+                    TenantContext.setSchemaName(schemaName);
+                }
+            }
 
+            @Override
+            public ExitStatus afterStep(StepExecution stepExecution) {
+                TenantContext.clear();
+                return null;
+            }
+        };
+    }
+
+    /**
+     * We pass completionListener as a parameter here to avoid
+     * circular dependency issues during startup.
+     */
+    @Bean
+    public Job customerProfileIngestionJob(CustomerIngestionJobCompletionListener completionListener) {
         return new JobBuilder("customerProfileIngestionJob", jobRepository)
                 .listener(completionListener)
-                .start(validation)
-                .on("COMPLETED_WITH_SKIPS").end()     // stop job if validation found errors
-                .from(validation)
-                .on(ExitStatus.COMPLETED.getExitCode()).to(ingestion)
+                .start(validationStep())
+                .on("COMPLETED_WITH_SKIPS").end()
+                .from(validationStep())
+                .on(ExitStatus.COMPLETED.getExitCode()).to(ingestionStep())
                 .end()
                 .build();
     }
@@ -63,16 +91,28 @@ public class CustomerIngestionBatchConfig {
                 .<CustomerProfileCsvDto, CustomerProfile>chunk(CHUNK_SIZE, transactionManager)
                 .reader(customerProfileReader(null))
                 .processor(processor)
-                .writer(items -> {
-                    // No-op: validation only
-                })
+                .writer(items -> { /* Validation Only */ })
                 .faultTolerant()
                 .skip(ValidationException.class)
                 .skip(FlatFileParseException.class)
                 .skipLimit(MAX_SKIP_LIMIT)
                 .listener(skipListener)
                 .listener(validationExitStatusListener())
-                // IMPORTANT: no taskExecutor here (reader is not thread-safe)
+                .listener(customerTenantStepListener())
+                .build();
+    }
+
+    @Bean
+    public Step ingestionStep() {
+        return new StepBuilder("ingestionStep", jobRepository)
+                .<CustomerProfileCsvDto, CustomerProfile>chunk(CHUNK_SIZE, transactionManager)
+                .reader(new SynchronizedItemStreamReaderBuilder<CustomerProfileCsvDto>()
+                        .delegate(customerProfileReader(null))
+                        .build())
+                .processor(processor)
+                .writer(customerProfileWriter())
+                .taskExecutor(batchTaskExecutor)
+                .listener(customerTenantStepListener())
                 .build();
     }
 
@@ -82,6 +122,7 @@ public class CustomerIngestionBatchConfig {
             @Override
             public ExitStatus afterStep(StepExecution stepExecution) {
                 if (stepExecution.getSkipCount() > 0) {
+                    log.warn("Customer validation found {} skips. Aborting ingestion.", stepExecution.getSkipCount());
                     return new ExitStatus("COMPLETED_WITH_SKIPS");
                 }
                 return ExitStatus.COMPLETED;
@@ -90,27 +131,15 @@ public class CustomerIngestionBatchConfig {
     }
 
     @Bean
-    public Step ingestionStep() {
-        return new StepBuilder("ingestionStep", jobRepository)
-                .<CustomerProfileCsvDto, CustomerProfile>chunk(CHUNK_SIZE, transactionManager)
-                // Wrap the reader to make it thread-safe for the TaskExecutor
-                .reader(new org.springframework.batch.item.support.builder.SynchronizedItemStreamReaderBuilder<CustomerProfileCsvDto>()
-                        .delegate(customerProfileReader(null))
-                        .build())
-                .processor(processor)
-                .writer(customerProfileWriter())
-                .taskExecutor(batchTaskExecutor)
-                .build();
-    }
-
-    @Bean
     @StepScope
     public FlatFileItemReader<CustomerProfileCsvDto> customerProfileReader(
             @Value("#{jobParameters['filePath']}") String filePath) {
 
+        // --- UPDATED HEADER (Must match found: [accountNumber...riskScore...lastActivityDate,kycStatus]) ---
         final String expectedHeader =
                 "accountNumber,customerName,customerType,idType,idNumber,nationality," +
-                        "countryOfResidence,monthlyIncome,netWorth,riskRating,isPep,isDormant,accountOpenedOn";
+                        "countryOfResidence,monthlyIncome,netWorth,riskRating,riskScore," + // riskScore added here
+                        "isPep,isDormant,accountOpenedOn,lastActivityDate,kycStatus";      // lastActivityDate added here
 
         return new FlatFileItemReaderBuilder<CustomerProfileCsvDto>()
                 .name("customerProfileReader")
@@ -119,7 +148,7 @@ public class CustomerIngestionBatchConfig {
                 .skippedLinesCallback(headerLine -> {
                     if (!headerLine.trim().equalsIgnoreCase(expectedHeader)) {
                         throw new IllegalArgumentException(
-                                "Header mismatch. Expected: [" + expectedHeader + "] but found: [" + headerLine + "]"
+                                "Customer Header mismatch. Expected: [" + expectedHeader + "] but found: [" + headerLine + "]"
                         );
                     }
                 })
@@ -128,13 +157,11 @@ public class CustomerIngestionBatchConfig {
                 .targetType(CustomerProfileCsvDto.class)
                 .build();
     }
-
     @Bean
     public RepositoryItemWriter<CustomerProfile> customerProfileWriter() {
         return new RepositoryItemWriterBuilder<CustomerProfile>()
                 .repository(repository)
-                .methodName("saveAll")
+                .methodName("save") // Standard method name for single items in RepositoryItemWriter
                 .build();
     }
-
 }

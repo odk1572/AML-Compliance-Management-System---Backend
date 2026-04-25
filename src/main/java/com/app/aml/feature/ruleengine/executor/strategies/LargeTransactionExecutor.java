@@ -3,6 +3,7 @@ package com.app.aml.feature.ruleengine.executor.strategies;
 import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
+import com.app.aml.multitenency.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,10 @@ import java.util.UUID;
 public class LargeTransactionExecutor implements RuleExecutorStrategy {
     private final JdbcTemplate jdbcTemplate;
 
-    @Override public String getRuleType() { return "LARGE_TRANSACTION"; }
+    @Override
+    public String getRuleType() {
+        return "LARGE_TRANSACTION";
+    }
 
     @Override
     public Set<UUID> executeRule(RuleExecutionContextDto rule) {
@@ -26,23 +30,32 @@ public class LargeTransactionExecutor implements RuleExecutorStrategy {
         String lookback = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            if ("NONE".equalsIgnoreCase(cond.getAggregationFunction())) threshold = new BigDecimal(cond.getThresholdValue());
-            if (cond.getLookbackPeriod() != null) lookback = SqlIntervalParser.parse(cond.getLookbackPeriod());
+            if ("NONE".equalsIgnoreCase(cond.getAggregationFunction()) || cond.getAggregationFunction() == null) {
+                threshold = new BigDecimal(cond.getThresholdValue());
+            }
+            if (cond.getLookbackPeriod() != null) {
+                lookback = SqlIntervalParser.parse(cond.getLookbackPeriod());
+            }
         }
 
         if (threshold == null || lookback == null) {
-            throw new IllegalStateException("Missing required global or tenant condition thresholds for Large Transaction Rule.");
+            throw new IllegalStateException("Missing required condition thresholds for Large Transaction Rule.");
         }
 
-        String sql = """
-            SELECT DISTINCT cp.id as customer_id FROM transactions t
-            JOIN customer_profiles cp ON t.originator_account_no = cp.account_number
-            WHERE t.amount >= ? AND t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-        """;
-        
-        List<UUID> results = jdbcTemplate.query(sql, 
-            (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")), 
-            threshold, lookback);
+        String schema = TenantContext.getSchemaName();
+        String sql = String.format("""
+            SELECT DISTINCT cp.id as customer_id 
+            FROM %s.transactions t
+            JOIN %s.customer_profiles cp 
+              ON (t.originator_account_no = cp.account_number OR t.beneficiary_account_no = cp.account_number)
+            WHERE t.amount >= ? 
+              AND t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
+        """, schema, schema);
+
+        List<UUID> results = jdbcTemplate.query(sql,
+                (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),
+                threshold, lookback);
+
         return new HashSet<>(results);
     }
 }

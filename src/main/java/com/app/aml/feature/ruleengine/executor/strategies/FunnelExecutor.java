@@ -3,6 +3,7 @@ package com.app.aml.feature.ruleengine.executor.strategies;
 import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
+import com.app.aml.multitenency.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,10 @@ import java.util.UUID;
 public class FunnelExecutor implements RuleExecutorStrategy {
     private final JdbcTemplate jdbcTemplate;
 
-    @Override public String getRuleType() { return "FUNNEL"; }
+    @Override
+    public String getRuleType() {
+        return "FUNNEL";
+    }
 
     @Override
     public Set<UUID> executeRule(RuleExecutionContextDto rule) {
@@ -25,24 +29,32 @@ public class FunnelExecutor implements RuleExecutorStrategy {
         String lookback = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            if ("COUNT".equalsIgnoreCase(cond.getAggregationFunction())) targetCount = Integer.parseInt(cond.getThresholdValue());
-            if (cond.getLookbackPeriod() != null) lookback = SqlIntervalParser.parse(cond.getLookbackPeriod());
+            if ("COUNT".equalsIgnoreCase(cond.getAggregationFunction())) {
+                targetCount = Integer.parseInt(cond.getThresholdValue());
+            }
+            if (cond.getLookbackPeriod() != null) {
+                lookback = cond.getLookbackPeriod();
+            }
         }
 
-        if (targetCount == 0 || lookback == null) {
-            throw new IllegalStateException("Missing required global or tenant condition thresholds for Funnel Rule.");
+        if (targetCount <= 0 || lookback == null) {
+            throw new IllegalStateException("Required thresholds missing for Funnel Rule execution");
         }
 
-        String sql = """
-            SELECT cp.id as customer_id FROM transactions t
-            JOIN customer_profiles cp ON t.beneficiary_account_no = cp.account_number
+        String schema = TenantContext.getSchemaName();
+        String sql = String.format("""
+            SELECT cp.id as customer_id 
+            FROM %s.transactions t
+            JOIN %s.customer_profiles cp ON t.beneficiary_account_no = cp.account_number
             WHERE t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-            GROUP BY cp.id HAVING COUNT(DISTINCT t.originator_account_no) >= ?
-        """;
-        
-        List<UUID> results = jdbcTemplate.query(sql, 
-            (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")), 
-            lookback, targetCount);
+            GROUP BY cp.id 
+            HAVING COUNT(DISTINCT t.originator_account_no) >= ?
+        """, schema, schema);
+
+        List<UUID> results = jdbcTemplate.query(sql,
+                (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),
+                lookback, targetCount);
+
         return new HashSet<>(results);
     }
 }

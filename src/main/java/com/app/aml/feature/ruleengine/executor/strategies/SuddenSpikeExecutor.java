@@ -3,6 +3,7 @@ package com.app.aml.feature.ruleengine.executor.strategies;
 import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
+import com.app.aml.multitenency.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,10 @@ import java.util.UUID;
 public class SuddenSpikeExecutor implements RuleExecutorStrategy {
     private final JdbcTemplate jdbcTemplate;
 
-    @Override public String getRuleType() { return "SUDDEN_SPIKE"; }
+    @Override
+    public String getRuleType() {
+        return "SUDDEN_SPIKE";
+    }
 
     @Override
     public Set<UUID> executeRule(RuleExecutionContextDto rule) {
@@ -27,7 +31,6 @@ public class SuddenSpikeExecutor implements RuleExecutorStrategy {
         BigDecimal multiplier = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            // Using Aggregation Function to bypass the DB attribute_name constraint
             if ("SUM".equalsIgnoreCase(cond.getAggregationFunction())) {
                 shortWindow = SqlIntervalParser.parse(cond.getLookbackPeriod());
             } else if ("AVG".equalsIgnoreCase(cond.getAggregationFunction())) {
@@ -38,31 +41,37 @@ public class SuddenSpikeExecutor implements RuleExecutorStrategy {
         }
 
         if (shortWindow == null || longWindow == null || multiplier == null) {
-            throw new IllegalStateException("Missing required conditions for Sudden Spike Rule. Ensure conditions with SUM (short window), AVG (long window), and NONE (multiplier) are mapped.");
+            throw new IllegalStateException("Required conditions missing for Sudden Spike Rule execution");
         }
 
-        // Extract numeric days from longWindow for dynamic divisor (e.g., "30 days" → 30)
         int longWindowDays = extractDaysFromInterval(longWindow);
 
-        // FIXED: Changed cp.account_no to cp.account_number
-        String sql = """
+        String schema = TenantContext.getSchemaName();
+        String sql = String.format("""
             WITH historical_avg AS (
                 SELECT originator_account_no, (SUM(amount) / ?) as daily_avg
-                FROM transactions WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL) GROUP BY originator_account_no
+                FROM %s.transactions 
+                WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL) 
+                GROUP BY originator_account_no
             ),
             recent_spike AS (
                 SELECT originator_account_no, SUM(amount) as recent_amount
-                FROM transactions WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL) GROUP BY originator_account_no
+                FROM %s.transactions 
+                WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL) 
+                GROUP BY originator_account_no
             )
-            SELECT cp.id as customer_id FROM recent_spike r
+            SELECT cp.id as customer_id 
+            FROM recent_spike r
             JOIN historical_avg h ON r.originator_account_no = h.originator_account_no
-            JOIN customer_profiles cp ON r.originator_account_no = cp.account_number
-            WHERE h.daily_avg > 0 AND r.recent_amount > (h.daily_avg * ?)
-        """;
+            JOIN %s.customer_profiles cp ON r.originator_account_no = cp.account_number
+            WHERE h.daily_avg > 0 
+              AND r.recent_amount > (h.daily_avg * ?)
+        """, schema, schema, schema);
 
         List<UUID> results = jdbcTemplate.query(sql,
                 (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),
                 longWindowDays, longWindow, shortWindow, multiplier);
+
         return new HashSet<>(results);
     }
 

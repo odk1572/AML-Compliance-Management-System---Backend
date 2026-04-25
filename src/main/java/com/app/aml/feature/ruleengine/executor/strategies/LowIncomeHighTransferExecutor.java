@@ -3,6 +3,7 @@ package com.app.aml.feature.ruleengine.executor.strategies;
 import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
+import com.app.aml.multitenency.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,7 +21,10 @@ import java.util.UUID;
 public class LowIncomeHighTransferExecutor implements RuleExecutorStrategy {
     private final JdbcTemplate jdbcTemplate;
 
-    @Override public String getRuleType() { return "LOW_INCOME_HIGH_TRANSFER"; }
+    @Override
+    public String getRuleType() {
+        return "LOW_INCOME_HIGH_TRANSFER";
+    }
 
     @Override
     public Set<UUID> executeRule(RuleExecutionContextDto rule) {
@@ -37,18 +41,20 @@ public class LowIncomeHighTransferExecutor implements RuleExecutorStrategy {
         }
 
         if (multiplier == null || lookback == null) {
-            throw new IllegalStateException("Missing required global or tenant condition thresholds for Low Income High Transfer Rule.");
+            throw new IllegalStateException("Missing required condition thresholds for Low Income High Transfer Rule.");
         }
 
-        String sql = """
-            SELECT cp.id as customer_id FROM transactions t
-            JOIN customer_profiles cp ON t.originator_account_no = cp.account_number
+        String schema = TenantContext.getSchemaName();
+        String sql = String.format("""
+            SELECT cp.id as customer_id 
+            FROM %s.transactions t
+            JOIN %s.customer_profiles cp ON t.originator_account_no = cp.account_number
             WHERE t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
               AND cp.monthly_income IS NOT NULL
               AND cp.monthly_income > 0
             GROUP BY cp.id, cp.monthly_income
             HAVING SUM(t.amount) > (cp.monthly_income * ?)
-        """;
+        """, schema, schema);
 
         List<UUID> results = jdbcTemplate.query(sql,
                 (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),

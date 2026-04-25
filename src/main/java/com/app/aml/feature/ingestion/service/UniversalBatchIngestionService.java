@@ -11,6 +11,8 @@ import com.app.aml.feature.ingestion.repository.TransactionBatchRepository;
 import com.app.aml.multitenency.TenantContext; // Required to fetch the tenant ID
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -59,14 +61,19 @@ public class UniversalBatchIngestionService {
             TransactionBatch savedBatch = batchRepository.save(batch);
 
             // Fetch the current Tenant ID from the context
-            String currentTenantId = TenantContext.getTenantId();
 
             // Fire the background job using the new Async component
+            // 1. Capture the schema name while still on the request thread
+            String currentTenantId = TenantContext.getTenantId();
+            String currentSchemaName = TenantContext.getSchemaName(); // <-- Capture this
+
+// 2. Pass BOTH the ID and the Schema to the launcher
             asyncBatchLauncher.triggerTargetedBatchJobAsync(
                     savedBatch.getId(),
                     tempFilePath.toAbsolutePath().toString(),
                     fileType,
-                    currentTenantId // Pass the tenant ID so the background thread knows which DB to use!
+                    currentTenantId,
+                    currentSchemaName // <-- ADD THIS 5th ARGUMENT
             );
 
             return batchMapper.toResponseDto(savedBatch);
@@ -92,5 +99,19 @@ public class UniversalBatchIngestionService {
             hexString.append(hex);
         }
         return hexString.toString();
+    }
+    public TransactionBatchResponseDto getBatchStatus(UUID batchId) {
+        TransactionBatch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> new BusinessRuleException("Batch not found with ID: " + batchId));
+
+        return batchMapper.toResponseDto(batch);
+    }
+
+    public Page<TransactionBatchResponseDto> getAllBatches(BatchFileType fileType, Pageable pageable) {
+        // Accepting 'fileType' to match your controller signature,
+        // but fetching all records since the entity lacks a fileType field.
+        Page<TransactionBatch> batchPage = batchRepository.findAll(pageable);
+
+        return batchPage.map(batchMapper::toResponseDto);
     }
 }

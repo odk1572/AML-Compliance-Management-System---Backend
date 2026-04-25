@@ -1,6 +1,7 @@
 package com.app.aml.feature.ingestion.batch.transaction;
 
 import com.app.aml.domain.enums.Channel;
+import com.app.aml.domain.enums.TransactionStatus; // Added import
 import com.app.aml.domain.enums.TransactionType;
 import com.app.aml.feature.ingestion.batch.ValidationException;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
@@ -10,6 +11,7 @@ import com.app.aml.feature.ingestion.repository.CustomerProfileRepository;
 import com.app.aml.feature.ingestion.repository.TransactionBatchRepository;
 import com.app.aml.feature.ingestion.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemProcessor;
@@ -20,6 +22,7 @@ import java.util.UUID;
 
 import static com.app.aml.feature.ingestion.batch.util.BatchValidationUtils.*;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TransactionValidationProcessor implements ItemProcessor<TransactionCsvDto, Transaction> {
@@ -30,13 +33,12 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
 
     private TransactionBatch currentBatch;
 
-    // Intercept the JobParameters to get the current Batch entity once per step
     @BeforeStep
     public void beforeStep(StepExecution stepExecution) {
         String batchIdStr = stepExecution.getJobParameters().getString("batchId");
         if (batchIdStr != null) {
             this.currentBatch = batchRepository.findById(UUID.fromString(batchIdStr))
-                    .orElseThrow(() -> new IllegalStateException("Batch not found"));
+                    .orElseThrow(() -> new IllegalStateException("Batch not found for ID: " + batchIdStr));
         }
     }
 
@@ -55,19 +57,20 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
         }
         txn.setTransactionRef(ref);
 
-        // 3. Amount Validation (Must be > 0)
+        // 3. Amount Validation
         BigDecimal amount = parseBigDecimal(dto.getAmount(), line, "amount");
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ValidationException(line, "amount", "Transaction amount must be strictly positive");
         }
         txn.setAmount(amount);
 
-        // 4. ISO-8601 Timestamp Validation
+        // 4. Timestamp Validation
         txn.setTransactionTimestamp(parseInstant(dto.getTransactionTimestamp(), line, "transactionTimestamp"));
 
-        // 5. Enums
-        txn.setTransactionType(parseEnum(TransactionType.class, dto.getTransactionType(), line, "transactionType"));
-        txn.setChannel(parseEnum(Channel.class, dto.getChannel(), line, "channel"));
+        // 5. Enums (Type & Channel)// Use a default value like TransactionType.TRANSFER or Channel.ONLINE if parsing fails
+        txn.setTransactionType(parseEnum(TransactionType.class, dto.getTransactionType(), line, "transactionType", TransactionType.TRANSFER));
+        //
+        txn.setChannel(parseEnum(Channel.class, dto.getChannel(), line, "channel", Channel.ONLINE));
 
         // 6. Basic String Constraints
         txn.setCurrencyCode(require(dto.getCurrencyCode(), line, "currencyCode", 3));
@@ -75,58 +78,62 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
         txn.setOriginatorName(safe(dto.getOriginatorName(), 255));
         txn.setOriginatorBankCode(safe(dto.getOriginatorBankCode(), 50));
         txn.setOriginatorCountry(safe(dto.getOriginatorCountry(), 3));
-
         txn.setBeneficiaryAccountNo(safe(dto.getBeneficiaryAccountNo(), 50));
         txn.setBeneficiaryName(safe(dto.getBeneficiaryName(), 255));
         txn.setBeneficiaryBankCode(safe(dto.getBeneficiaryBankCode(), 50));
         txn.setBeneficiaryCountry(safe(dto.getBeneficiaryCountry(), 3));
-
-        txn.setReferenceNote(dto.getReferenceNote()); // TEXT field, no severe length limit
-
-// ... (Previous steps 1 to 6 remain the same) ...
+        txn.setReferenceNote(dto.getReferenceNote());
 
         // 7. Strict Tenant Boundary & Customer Resolution
         boolean isOriginatorInternal = false;
         boolean isBeneficiaryInternal = false;
         CustomerProfile primaryCustomer = null;
 
-        // Check Originator
         if (txn.getOriginatorAccountNo() != null) {
             CustomerProfile origProfile = customerRepository.findByAccountNumber(txn.getOriginatorAccountNo()).orElse(null);
             if (origProfile != null) {
                 isOriginatorInternal = true;
-                primaryCustomer = origProfile; // Default to Originator as primary owner
+                primaryCustomer = origProfile;
             }
         }
 
-        // Check Beneficiary
         if (txn.getBeneficiaryAccountNo() != null) {
             CustomerProfile benProfile = customerRepository.findByAccountNumber(txn.getBeneficiaryAccountNo()).orElse(null);
             if (benProfile != null) {
                 isBeneficiaryInternal = true;
                 if (primaryCustomer == null) {
-                    primaryCustomer = benProfile; // Make Beneficiary primary if Originator is external
+                    primaryCustomer = benProfile;
                 }
             }
         }
 
-
-        // Rule A: The "Orphan" Check (Neither belongs to tenant)
+        // Rule A: The "Orphan" Check
+        // CRITICAL: If your customer table is empty, this is why you get 1000 skips!
         if (!isOriginatorInternal && !isBeneficiaryInternal) {
             throw new ValidationException(line, "accountNo", "Invalid Transaction: Neither originator nor beneficiary belongs to this tenant.");
         }
 
-        // Rule B: The "Circular / Internal Transfer" Check
-        // If the transaction claims both sides are within the same bank, BOTH must exist in your DB.
+        // Rule B: Internal Transfer Check
         boolean isSameBank = txn.getOriginatorBankCode() != null &&
                 txn.getOriginatorBankCode().equalsIgnoreCase(txn.getBeneficiaryBankCode());
 
         if (isSameBank && (!isOriginatorInternal || !isBeneficiaryInternal)) {
-            throw new ValidationException(line, "accountNo", "Circular Transfer Validation Failed: Both accounts must exist in the tenant database for internal transfers.");
+            throw new ValidationException(line, "accountNo", "Circular Transfer Validation Failed: Both accounts must exist for internal transfers.");
         }
 
-        // Link the transaction to the verified tenant customer
         txn.setCustomer(primaryCustomer);
+
+        // 8. Status Mapping (New Step)
+        if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
+            try {
+                txn.setStatus(TransactionStatus.valueOf(dto.getStatus().toUpperCase().trim()));
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid status {} at line {}. Defaulting to CLEAN.", dto.getStatus(), line);
+                txn.setStatus(TransactionStatus.CLEAN);
+            }
+        } else {
+            txn.setStatus(TransactionStatus.CLEAN);
+        }
 
         return txn;
     }

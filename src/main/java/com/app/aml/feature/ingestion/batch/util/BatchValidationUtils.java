@@ -77,12 +77,21 @@ public final class BatchValidationUtils {
         throw new ValidationException(line, field, "Invalid boolean value");
     }
 
-    public static <T extends Enum<T>> T parseEnum(Class<T> enumType, String value, int line, String field) {
-        if (value == null || value.isBlank()) throw new ValidationException(line, field, "Cannot be null");
+    public static <T extends Enum<T>> T parseEnum(
+            Class<T> enumType,
+            String value,
+            int line,
+            String field,
+            T defaultValue
+    ) {
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
         try {
             return Enum.valueOf(enumType, value.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ValidationException(line, field, "Invalid value for " + enumType.getSimpleName());
+            // Log a warning instead of stopping the whole process
+            return defaultValue;
         }
     }
 }
