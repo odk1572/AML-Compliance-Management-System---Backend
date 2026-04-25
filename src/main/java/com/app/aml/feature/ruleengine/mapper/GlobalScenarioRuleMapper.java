@@ -1,6 +1,5 @@
 package com.app.aml.feature.ruleengine.mapper;
 
-
 import com.app.aml.feature.ruleengine.dto.globalScenarioRules.request.CreateGlobalScenarioRuleRequestDto;
 import com.app.aml.feature.ruleengine.dto.globalScenarioRules.response.GlobalScenarioRuleResponseDto;
 import com.app.aml.feature.ruleengine.dto.globalScenarioRules.request.UpdateGlobalScenarioRuleRequestDto;
@@ -14,7 +13,6 @@ import java.util.UUID;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface GlobalScenarioRuleMapper {
-
 
     @Mapping(target = "scenarioId", source = "scenario.id")
     @Mapping(target = "ruleId", source = "rule.id")
@@ -30,11 +28,12 @@ public interface GlobalScenarioRuleMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "scenario", ignore = true) // Prevent accidental overwrite during update
+    @Mapping(target = "rule", ignore = true)     // Prevent accidental overwrite during update
     @Mapping(target = "sysCreatedAt", ignore = true)
-    @Mapping(target = "scenario", ignore = true)
-    @Mapping(target = "rule", ignore = true)
     void updateEntityFromDto(UpdateGlobalScenarioRuleRequestDto dto, @MappingTarget GlobalScenarioRule entity);
 
+    // Helper methods to map UUIDs from the request directly to nested Entity objects
     default GlobalScenario mapScenarioIdToScenario(UUID scenarioId) {
         if (scenarioId == null) {
             return null;

@@ -213,7 +213,7 @@ public class GlobalRuleServiceImpl implements GlobalRuleService {
             throw new EntityNotFoundException("Global Rule not found with ID: " + ruleId);
         }
 
-        return condRepo.findByRuleIdOrderByConditionSequenceAsc(ruleId).stream()
+        return condRepo.findByRuleId(ruleId).stream()
                 .map(condMapper::toResponseDto)
                 .toList();
     }

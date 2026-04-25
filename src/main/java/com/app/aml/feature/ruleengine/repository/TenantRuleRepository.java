@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface TenantRuleRepository extends JpaRepository<TenantRule, UUID> {
 
     List<TenantRule> findByTenantScenarioIdAndIsActiveTrue(UUID tenantScenarioId);
+    List<TenantRule> findByTenantScenarioId(UUID tenantScenarioId);
 }

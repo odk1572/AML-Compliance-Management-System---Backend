@@ -1,6 +1,6 @@
-package com.app.aml.feature.ingestion.batch.customer;
+package com.app.aml.feature.ingestion.batch;
 
-import com.app.aml.feature.ingestion.batch.*;
+import com.app.aml.config.AsyncConfig;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import com.app.aml.feature.ingestion.repository.CustomerProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,19 +15,22 @@ import org.springframework.batch.item.data.builder.RepositoryItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileParseException;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @RequiredArgsConstructor
+
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 public class CustomerIngestionBatchConfig {
 
+    private final AsyncConfig asyncConfig;
     private static final int CHUNK_SIZE = 1000;
     private static final int MAX_SKIP_LIMIT = Integer.MAX_VALUE;
 
@@ -35,11 +38,8 @@ public class CustomerIngestionBatchConfig {
     private final PlatformTransactionManager transactionManager;
     private final CustomerProfileRepository repository;
     private final CustomerProfileValidationProcessor processor;
-    private final CustomerIngestionJobCompletionListener completionListener;
-    private final CustomerValidationSkipListener skipListener;
-
-    @Qualifier("batchTaskExecutor")
-    private final TaskExecutor batchTaskExecutor;
+    private final IngestionJobCompletionListener completionListener;
+    private final ValidationSkipListener skipListener;
 
     @Bean
     public Job customerProfileIngestionJob() {
@@ -99,7 +99,7 @@ public class CustomerIngestionBatchConfig {
                         .build())
                 .processor(processor)
                 .writer(customerProfileWriter())
-                .taskExecutor(batchTaskExecutor)
+                .taskExecutor(asyncConfig.batchtaskExecutor())
                 .build();
     }
 
@@ -136,5 +136,6 @@ public class CustomerIngestionBatchConfig {
                 .methodName("saveAll")
                 .build();
     }
+
 
 }

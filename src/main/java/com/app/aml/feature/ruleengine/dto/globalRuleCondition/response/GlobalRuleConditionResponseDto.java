@@ -1,6 +1,5 @@
 package com.app.aml.feature.ruleengine.dto.globalRuleCondition.response;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,13 +15,9 @@ import java.util.UUID;
 public class GlobalRuleConditionResponseDto {
     private UUID id;
     private UUID ruleId; // Flattened for the API
-    private String attributeName;
-    private Integer conditionSequence;
     private String aggregationFunction;
     private String lookbackPeriod;
-    private String operator;
     private String thresholdValue;
-    private String valueDataType;
     private Instant sysCreatedAt;
     private Instant sysUpdatedAt;
 }

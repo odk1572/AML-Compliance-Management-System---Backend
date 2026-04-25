@@ -29,8 +29,8 @@ public class ScenarioExecutionService {
 
     @Transactional(readOnly = true)
     public Set<UUID> executeScenario(
-            UUID scenarioId,       
-            UUID tenantRuleId,     
+            UUID scenarioId,
+            UUID tenantRuleId,
             String categoryName,
             GlobalRuleResponseDto ruleInfo,
             List<GlobalRuleConditionResponseDto> globals,
@@ -43,18 +43,20 @@ public class ScenarioExecutionService {
                 scenarioId, tenantRuleId, categoryName, ruleInfo, globals, overrides);
 
         for (ConditionExecutionContextDto cond : executionContext.getConditions()) {
-            log.info("  - attr={}, agg={}, op={}, threshold={}, lookback={}",
-                    cond.getAttributeName(), cond.getAggregationFunction(),
-                    cond.getOperator(), cond.getThresholdValue(), cond.getLookbackPeriod());
+            // FIXED: Removed getAttributeName()
+            log.info("  - agg={}, threshold={}, lookback={}",
+                    cond.getAggregationFunction(),
+                    cond.getThresholdValue(),
+                    cond.getLookbackPeriod());
         }
 
-        // Fetch the correct strategy
-        RuleExecutorStrategy strategy = ruleExecutorFactory.getStrategy(categoryName);
+        // FIXED: Fetch the correct strategy using the specific ruleType instead of generic category
+        RuleExecutorStrategy strategy = ruleExecutorFactory.getStrategy(ruleInfo.getRuleType());
 
         // Print Pre-Execution Header
         log.info("===============================================================");
         log.info("▶ STARTING EXECUTION FOR RULE: {}", ruleInfo.getRuleName());
-        log.info("▶ TYPOLOGY CATEGORY: {}", categoryName);
+        log.info("▶ STRATEGY TYPE: {}", ruleInfo.getRuleType());
         log.info("===============================================================");
 
         // Run the SQL (Returns Entity-Centric Set<UUID> for Customer IDs)
@@ -101,8 +103,7 @@ public class ScenarioExecutionService {
                     .orElse(null);
 
             conditions.add(ConditionExecutionContextDto.builder()
-                    .attributeName(global.getAttributeName())
-                    .operator(global.getOperator())
+                    // FIXED: Removed attributeName completely
                     .aggregationFunction(resolveOverride(
                             override != null ? override.getOverrideAggregationFunction() : null,
                             global.getAggregationFunction()))
@@ -120,8 +121,9 @@ public class ScenarioExecutionService {
                 .tenantRuleId(tenantRuleId)
                 .ruleId(ruleInfo.getId())
                 .ruleName(ruleInfo.getRuleName())
-                .baseRiskScore(ruleInfo.getBaseRiskScore())
-                .conditionLogic(ruleInfo.getConditionLogic())
+                // FIXED: Converted Short to int to satisfy the execution context DTO
+                .baseRiskScore(ruleInfo.getBaseRiskScore() != null ? ruleInfo.getBaseRiskScore().intValue() : 0)
+                // FIXED: Removed conditionLogic() completely
                 .ruleCategory(category)
                 .conditions(conditions)
                 .build();

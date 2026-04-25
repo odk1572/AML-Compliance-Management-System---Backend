@@ -1,4 +1,6 @@
 package com.app.aml.feature.ruleengine.dto.globalScenarioRules.request;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -13,6 +15,7 @@ import lombok.NoArgsConstructor;
 public class UpdateGlobalScenarioRuleRequestDto {
 
     @NotNull(message = "Active status is required")
+    @JsonProperty("isActive")
     private Boolean isActive;
 
     @NotNull(message = "Priority order is required")

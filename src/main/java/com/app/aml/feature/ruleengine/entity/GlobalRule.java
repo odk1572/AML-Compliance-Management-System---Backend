@@ -24,22 +24,22 @@ public class GlobalRule extends SoftDeletableEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
-    @NotBlank
-    @Size(max = 255)
-    @Column(name = "rule_name", nullable = false, length = 255)
+    @NotBlank(message = "Rule name is required")
+    @Size(max = 150, message = "Rule name cannot exceed 150 characters")
+    @Column(name = "rule_name", nullable = false, length = 150)
     private String ruleName;
 
-    @NotBlank
-    @Size(max = 255)
-    @Column(name = "condition_logic", nullable = false, length = 255)
-    private String conditionLogic = "AND";
+    @NotBlank(message = "Rule type is required")
+    @Size(max = 50, message = "Rule type cannot exceed 50 characters")
+    @Column(name = "rule_type", nullable = false, length = 50)
+    private String ruleType;
 
-    @NotNull
+    @NotNull(message = "Severity is required")
     @Enumerated(EnumType.STRING)
-    @Column(name = "severity", nullable = false, length = 50)
+    @Column(name = "severity", nullable = false, length = 10)
     private AlertSeverity severity;
 
-    @NotNull
+    @NotNull(message = "Base risk score is required")
     @Column(name = "base_risk_score", nullable = false)
-    private Integer baseRiskScore = 0;
+    private Short baseRiskScore = 50;
 }

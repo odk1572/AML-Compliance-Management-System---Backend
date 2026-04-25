@@ -8,7 +8,7 @@ import lombok.Data;
 public class ConditionExecutionContextDto {
     private String attributeName;
     private String aggregationFunction;
-    private String operator;
+
     private String thresholdValue;
     private String lookbackPeriod;
 }

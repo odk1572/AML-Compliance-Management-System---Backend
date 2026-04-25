@@ -14,4 +14,5 @@ public interface GlobalScenarioRuleRepository extends JpaRepository<GlobalScenar
     Optional<GlobalScenarioRule> findByScenarioIdAndRuleId(UUID scenarioId, UUID ruleId);
     boolean existsByScenarioIdAndRuleId(UUID scenarioId, UUID ruleId);
     List<GlobalScenarioRule> findByScenarioIdOrderByPriorityOrderAsc(UUID scenarioId);
+    List<GlobalScenarioRule> findByScenarioId(UUID scenarioId);
 }

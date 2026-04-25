@@ -29,16 +29,6 @@ public class AlertEvidence {
     private Alert alert;
 
     @NotBlank
-    @Size(max = 100)
-    @Column(name = "attribute_name", nullable = false, length = 100)
-    private String attributeName;
-
-    @NotBlank
-    @Size(max = 50)
-    @Column(name = "operator", nullable = false, length = 50)
-    private String operator;
-
-    @NotBlank
     @Size(max = 255)
     @Column(name = "threshold_applied", nullable = false, length = 255)
     private String thresholdApplied;

@@ -18,11 +18,13 @@ public class BatchInfrastructureConfig extends DefaultBatchConfiguration {
 
     @Override
     protected DataSource getDataSource() {
-        return dataSource; // Forces Batch to use your TenantAwareDataSource
+        // Explicitly hands your database connection to Spring Batch
+        return this.dataSource;
     }
 
     @Override
     protected PlatformTransactionManager getTransactionManager() {
-        return transactionManager; // Forces Batch to use your custom transaction manager
+        // Explicitly hands your transaction manager to Spring Batch
+        return this.transactionManager;
     }
 }

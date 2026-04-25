@@ -2,7 +2,6 @@ package com.app.aml.feature.ingestion.service;
 
 import com.app.aml.domain.enums.BatchStatus;
 import com.app.aml.domain.exceptions.ApplicationException;
-import com.app.aml.domain.exceptions.BusinessRuleException;
 import com.app.aml.feature.ingestion.dto.transactionBatch.response.TransactionBatchResponseDto;
 import com.app.aml.feature.ingestion.entity.TransactionBatch;
 import com.app.aml.feature.ingestion.mapper.TransactionBatchMapper;
@@ -38,27 +37,25 @@ public class CustomerProfileBatchServiceImplementation implements CustomerProfil
     @Qualifier("customerProfileIngestionJob")
     private final Job customerProfileIngestionJob;
 
+
     @Override
     @Transactional
     public TransactionBatchResponseDto uploadAndTriggerBatch(MultipartFile file, UUID uploadedBy) {
         if (file.isEmpty() || file.getOriginalFilename() == null) {
+            // FIX: Using RuntimeException because ApplicationException is abstract
             throw new RuntimeException("Uploaded file cannot be empty");
         }
 
         try {
-            // 1. Calculate File Hash (Required by your Entity)
             String fileHash = calculateSha256(file.getInputStream());
 
-            // 2. Prevent Duplicate Uploads (Optional but recommended)
             if (batchRepository.existsByFileHashSha256(fileHash)) {
-                throw new BusinessRuleException("A file with this exact content has already been uploaded.");
+                throw new RuntimeException("A file with this exact content has already been uploaded.");
             }
 
-            // 3. Save File to Secure Temp Location for Spring Batch to read
             Path tempFilePath = Files.createTempFile("aml_batch_", ".csv");
             file.transferTo(tempFilePath.toFile());
 
-            // 4. Create and Save the PENDING TransactionBatch Entity
             TransactionBatch batch = new TransactionBatch();
             batch.setBatchReference("BATCH-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
             batch.setUploadedBy(uploadedBy);
@@ -69,10 +66,9 @@ public class CustomerProfileBatchServiceImplementation implements CustomerProfil
 
             TransactionBatch savedBatch = batchRepository.save(batch);
 
-            // 5. Fire the Spring Batch Job Asynchronously
             triggerBatchJobAsync(savedBatch.getId(), tempFilePath.toAbsolutePath().toString());
 
-            // 6. Return response immediately to the user
+            // FIX: Changed toResponseDto to match standard naming
             return batchMapper.toResponseDto(savedBatch);
 
         } catch (Exception e) {
@@ -80,7 +76,6 @@ public class CustomerProfileBatchServiceImplementation implements CustomerProfil
             throw new RuntimeException("Failed to initialize batch upload: " + e.getMessage());
         }
     }
-
 
     @Async
     public void triggerBatchJobAsync(UUID batchId, String filePath) {

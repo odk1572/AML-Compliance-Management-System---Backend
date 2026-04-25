@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface TenantRuleThresholdRepository extends JpaRepository<TenantRuleThreshold, UUID> {
 
     List<TenantRuleThreshold> findByTenantRuleId(UUID tenantRuleId);
+    void deleteByTenantRuleId(UUID ruleId);
 }

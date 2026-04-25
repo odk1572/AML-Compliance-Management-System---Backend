@@ -18,17 +18,18 @@ import lombok.NoArgsConstructor;
 public class UpdateGlobalRuleRequestDto {
 
     @NotBlank(message = "Rule name is required")
-    @Size(max = 255)
+    @Size(max = 150, message = "Rule name cannot exceed 150 characters")
     private String ruleName;
 
-    @NotBlank(message = "Condition logic is required")
-    @Size(max = 255)
-    private String conditionLogic;
+    @NotBlank(message = "Rule type is required")
+    @Size(max = 50, message = "Rule type cannot exceed 50 characters")
+    private String ruleType;
 
     @NotNull(message = "Severity is required")
     private AlertSeverity severity;
 
     @NotNull(message = "Base risk score is required")
-    @Min(0) @Max(100)
-    private Integer baseRiskScore;
+    @Min(value = 0, message = "Risk score cannot be less than 0")
+    @Max(value = 100, message = "Risk score cannot exceed 100")
+    private Short baseRiskScore;
 }

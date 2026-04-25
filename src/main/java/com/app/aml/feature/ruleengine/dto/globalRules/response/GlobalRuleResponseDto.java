@@ -16,9 +16,9 @@ import java.util.UUID;
 public class GlobalRuleResponseDto {
     private UUID id;
     private String ruleName;
-    private String conditionLogic;
+    private String ruleType;
     private AlertSeverity severity;
-    private Integer baseRiskScore;
+    private Short baseRiskScore;
     private Instant sysCreatedAt;
     private Instant sysUpdatedAt;
 }

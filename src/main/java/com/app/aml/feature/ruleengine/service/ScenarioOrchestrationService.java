@@ -156,7 +156,7 @@ public class ScenarioOrchestrationService {
 
         // ... (rest of the data fetching logic remains the same)
         List<GlobalRuleCondition> globalConditions = globalRuleConditionRepository
-                .findByRuleIdOrderByConditionSequenceAsc(globalRule.getId());
+                .findByRuleId(globalRule.getId());
         List<GlobalRuleConditionResponseDto> globalConditionDtos = globalRuleConditionMapper
                 .toResponseDtoList(globalConditions);
 
