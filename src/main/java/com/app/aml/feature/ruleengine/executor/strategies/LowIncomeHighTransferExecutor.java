@@ -28,7 +28,6 @@ public class LowIncomeHighTransferExecutor implements RuleExecutorStrategy {
         String lookback = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            // Using Aggregation Function to safely map the Multiplier past DB constraints
             if ("NONE".equalsIgnoreCase(cond.getAggregationFunction()) || cond.getAggregationFunction() == null) {
                 multiplier = new BigDecimal(cond.getThresholdValue());
             }
@@ -41,8 +40,6 @@ public class LowIncomeHighTransferExecutor implements RuleExecutorStrategy {
             throw new IllegalStateException("Missing required global or tenant condition thresholds for Low Income High Transfer Rule.");
         }
 
-        // FIXED: Changed cp.account_no to cp.account_number
-        // FIXED: Changed cp.declared_annual_income to cp.monthly_income
         String sql = """
             SELECT cp.id as customer_id FROM transactions t
             JOIN customer_profiles cp ON t.originator_account_no = cp.account_number

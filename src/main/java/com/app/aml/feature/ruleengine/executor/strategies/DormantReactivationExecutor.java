@@ -41,7 +41,6 @@ public class DormantReactivationExecutor implements RuleExecutorStrategy {
             throw new IllegalStateException("Missing required conditions for Dormant Reactivation Rule. Need: MIN (dormant period), MAX (reactivation window), NONE (threshold).");
         }
 
-        // FIXED: Changed cp.account_no to cp.account_number
         // Logic: Has transactions > threshold in the recent window, but NO transactions in the dormant period before that
         String sql = """
             SELECT cp.id as customer_id FROM transactions t
