@@ -14,8 +14,6 @@ import java.sql.Statement;
 /**
  * Utility class responsible for physically creating a new PostgreSQL schema
  * and triggering the Flyway migrations to populate it.
- * * Note: This is NOT a Spring @Component. It is instantiated programmatically
- * by the TenantService during the bank onboarding process.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -34,7 +32,6 @@ public class TenantSchemaProvisioner {
         log.info("Starting provisioning process for schema: {}", schemaName);
 
         // 1. Strict Validation to prevent SQL Injection
-        // Schema names cannot be parameterized in JDBC, so we MUST validate the string.
         validateSchemaName(schemaName);
 
         // 2. Physically create the schema in PostgreSQL
@@ -50,8 +47,6 @@ public class TenantSchemaProvisioner {
      * Executes the CREATE SCHEMA SQL command.
      */
     private void createSchema(String schemaName) {
-        // Standard JDBC is used here because we are operating outside
-        // the standard JPA/Hibernate context for DDL operations.
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {
 

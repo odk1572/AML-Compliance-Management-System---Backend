@@ -1,10 +1,9 @@
 package com.app.aml.faker;
+
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import com.app.aml.feature.ingestion.repository.CustomerProfileRepository;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,9 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Slf4j
 @RestController
@@ -33,38 +35,40 @@ public class FakerController {
     public ResponseEntity<byte[]> generateCustomers(@RequestParam(defaultValue = "100") int count) {
         log.info("Generating Faker CSV for {} customers", count);
 
-        byte[] csvBytes = customerCsvGenerator.generate(count);
+        List<FakeCustomer> fakeCustomers = customerCsvGenerator.generateCustomerList(count);
+        byte[] csvBytes = customerCsvGenerator.generateCsvBytes(fakeCustomers);
 
         HttpHeaders headers = new HttpHeaders();
-        // Notice the escaped quotes around the filename - this helps browsers force the save dialog
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"faker_customers_" + count + ".csv\"");
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
 
         return new ResponseEntity<>(csvBytes, headers, HttpStatus.OK);
     }
 
-
-    //hit on postman exactly this request
-    //http://localhost:8080/api/v1/dev/faker/transactions?count=500&withAccounts=false
     @GetMapping(value = "/transactions", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> generateTransactions(
             @RequestParam(defaultValue = "500") int count,
             @RequestParam(defaultValue = "true") boolean withAccounts) {
 
         log.info("Generating Faker CSV for {} transactions. withAccounts={}", count, withAccounts);
-        List<String> accountPool;
+        List<FakeCustomer> accountPool;
 
         if (withAccounts) {
-            accountPool = customerProfileRepository.findAll()
-                    .stream()
-                    .map(CustomerProfile::getAccountNumber)
-                    .collect(Collectors.toList());
-
-            if (accountPool.isEmpty()) {
-                accountPool = generateDummyAccountPool();
+            // Fetch real DB profiles and map them to the FakeCustomer DTO format
+            List<CustomerProfile> dbProfiles = customerProfileRepository.findAll();
+            if (!dbProfiles.isEmpty()) {
+                accountPool = dbProfiles.stream()
+                        .map(p -> FakeCustomer.builder()
+                                .accountNumber(p.getAccountNumber())
+                                .customerName(p.getCustomerName()) // Adjust to match your entity getter
+                                .countryOfResidence(p.getCountryOfResidence() != null ? p.getCountryOfResidence() : "IND")
+                                .build())
+                        .collect(Collectors.toList());
+            } else {
+                accountPool = customerCsvGenerator.generateCustomerList(20);
             }
         } else {
-            accountPool = generateDummyAccountPool();
+            accountPool = customerCsvGenerator.generateCustomerList(20);
         }
 
         byte[] csvBytes = transactionCsvGenerator.generate(count, accountPool);
@@ -76,9 +80,44 @@ public class FakerController {
         return new ResponseEntity<>(csvBytes, headers, HttpStatus.OK);
     }
 
-    private List<String> generateDummyAccountPool() {
-        return IntStream.range(1, 20)
-                .mapToObj(i -> "DUMMY_ACCT_" + i)
-                .collect(Collectors.toList());
+    /**
+     * NEW: Generates both CSVs perfectly synced together and downloads as a ZIP.
+     * http://localhost:8080/api/v1/dev/faker/dataset?customerCount=100&txnCount=1000
+     */
+    @GetMapping(value = "/dataset", produces = "application/zip")
+    public ResponseEntity<byte[]> generateCohesiveDataset(
+            @RequestParam(defaultValue = "100") int customerCount,
+            @RequestParam(defaultValue = "1000") int txnCount) throws IOException {
+
+        log.info("Generating Cohesive ZIP Dataset: {} customers, {} transactions", customerCount, txnCount);
+
+        // 1. Generate the shared memory pool
+        List<FakeCustomer> sharedCustomers = customerCsvGenerator.generateCustomerList(customerCount);
+
+        // 2. Generate both CSV byte arrays from the EXACT same pool
+        byte[] customerCsvBytes = customerCsvGenerator.generateCsvBytes(sharedCustomers);
+        byte[] transactionCsvBytes = transactionCsvGenerator.generate(txnCount, sharedCustomers);
+
+        // 3. Zip them together
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            // Add Customers CSV
+            ZipEntry customerEntry = new ZipEntry("faker_customers.csv");
+            zos.putNextEntry(customerEntry);
+            zos.write(customerCsvBytes);
+            zos.closeEntry();
+
+            // Add Transactions CSV
+            ZipEntry txnEntry = new ZipEntry("faker_transactions.csv");
+            zos.putNextEntry(txnEntry);
+            zos.write(transactionCsvBytes);
+            zos.closeEntry();
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"aml_dataset_" + System.currentTimeMillis() + ".zip\"");
+        headers.setContentType(MediaType.valueOf("application/zip"));
+
+        return new ResponseEntity<>(baos.toByteArray(), headers, HttpStatus.OK);
     }
 }

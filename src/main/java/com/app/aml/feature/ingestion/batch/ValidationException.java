@@ -1,5 +1,6 @@
 package com.app.aml.feature.ingestion.batch;
 
+
 import lombok.Getter;
 
 @Getter

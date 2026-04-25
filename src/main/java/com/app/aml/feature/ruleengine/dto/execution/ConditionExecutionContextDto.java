@@ -6,7 +6,6 @@ import lombok.Data;
 @Data
 @Builder
 public class ConditionExecutionContextDto {
-    private String attributeName;
     private String aggregationFunction;
 
     private String thresholdValue;

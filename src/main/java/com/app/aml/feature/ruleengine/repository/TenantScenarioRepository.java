@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface TenantScenarioRepository extends JpaRepository<TenantScenario, UUID> {
     boolean existsByGlobalScenarioId(UUID globalScenarioId);
     List<TenantScenario> findByStatus(RuleStatus status);
+    List<TenantScenario> findAllByStatus(RuleStatus status);
 }
