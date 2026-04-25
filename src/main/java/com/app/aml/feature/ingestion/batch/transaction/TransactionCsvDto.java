@@ -1,10 +1,16 @@
 package com.app.aml.feature.ingestion.batch.transaction;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class TransactionCsvDto {
+    // This is used by the SkipListener to track which row failed
     private int lineNumber;
+
     private String transactionRef;
     private String originatorAccountNo;
     private String originatorName;
@@ -20,4 +26,7 @@ public class TransactionCsvDto {
     private String channel;
     private String transactionTimestamp;
     private String referenceNote;
+
+    // --- ADDED TO MATCH CSV AND ENTITY ---
+    private String status;
 }

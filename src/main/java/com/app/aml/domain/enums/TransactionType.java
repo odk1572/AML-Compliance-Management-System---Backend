@@ -1,5 +1,13 @@
 package com.app.aml.domain.enums;
 
 public enum TransactionType {
-    WIRE, SWIFT, ACH, INTERNAL, CASH
+    CASH,
+    TRANSFER,
+    NEFT,   // <--- Add this
+    RTGS,   // <--- Add this
+    IMPS,   // <--- Add this
+    CARD,   // <--- Add this
+    CHEQUE,
+    DEPOSIT,
+    WITHDRAWAL
 }

@@ -3,16 +3,19 @@ package com.app.aml.feature.ingestion.batch.customer;
 import com.app.aml.feature.ingestion.batch.ValidationException;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.SkipListener;
+import org.springframework.batch.item.file.FlatFileParseException;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 @Component
 public class CustomerValidationSkipListener implements SkipListener<CustomerProfileCsvDto, CustomerProfile> {
 
@@ -25,45 +28,35 @@ public class CustomerValidationSkipListener implements SkipListener<CustomerProf
 
     @Override
     public void onSkipInProcess(CustomerProfileCsvDto item, Throwable t) {
+        log.error("Customer Validation Skip [Row {}]: {}", item.getLineNumber(), t.getMessage());
         if (t instanceof ValidationException ex) {
-            handleValidationError(ex);
+            handleError(ex.getRow(), "Col: " + ex.getColumn() + " -> " + ex.getMessage());
         }
     }
 
     @Override
     public void onSkipInRead(Throwable t) {
-        if (t instanceof org.springframework.batch.item.file.FlatFileParseException parseEx) {
-            handleParseError(parseEx);
+        if (t instanceof FlatFileParseException parseEx) {
+            log.error("Customer Read Skip [Line {}]: {}", parseEx.getLineNumber(), parseEx.getMessage());
+            handleError(parseEx.getLineNumber(), "Malformed CSV structure");
         }
     }
 
-    private void handleValidationError(ValidationException ex) {
-        int current = errorCount.getAndIncrement();
-
-        if (current < MAX_ERRORS_TO_COLLECT) {
-            validationErrors
-                    .computeIfAbsent(ex.getRow(), k -> Collections.synchronizedList(new ArrayList<>()))
-                    .add("Col: " + ex.getColumn() + " -> " + ex.getMessage());
-
-        } else if (current == MAX_ERRORS_TO_COLLECT) {
-            validationErrors
-                    .computeIfAbsent(SYSTEM_KEY, k -> Collections.synchronizedList(new ArrayList<>()))
-                    .add("SYSTEM WARNING: More than " + MAX_ERRORS_TO_COLLECT + " errors. Truncated.");
-        }
+    @Override
+    public void onSkipInWrite(CustomerProfile item, Throwable t) {
+        log.error("Customer Database Write Skip [Acc: {}]: {}", item.getAccountNumber(), t.getMessage());
     }
 
-    private void handleParseError(org.springframework.batch.item.file.FlatFileParseException ex) {
+    private void handleError(int lineNumber, String message) {
         int current = errorCount.getAndIncrement();
-
         if (current < MAX_ERRORS_TO_COLLECT) {
             validationErrors
-                    .computeIfAbsent(ex.getLineNumber(), k -> Collections.synchronizedList(new ArrayList<>()))
-                    .add("Malformed CSV or invalid structure");
-
+                    .computeIfAbsent(lineNumber, k -> Collections.synchronizedList(new ArrayList<>()))
+                    .add(message);
         } else if (current == MAX_ERRORS_TO_COLLECT) {
             validationErrors
                     .computeIfAbsent(SYSTEM_KEY, k -> Collections.synchronizedList(new ArrayList<>()))
-                    .add("SYSTEM WARNING: More than " + MAX_ERRORS_TO_COLLECT + " errors. Truncated.");
+                    .add("SYSTEM WARNING: Error limit reached. Truncating report.");
         }
     }
 

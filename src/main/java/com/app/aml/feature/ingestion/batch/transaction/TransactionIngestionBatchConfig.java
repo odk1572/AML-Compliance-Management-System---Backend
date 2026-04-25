@@ -3,7 +3,9 @@ package com.app.aml.feature.ingestion.batch.transaction;
 import com.app.aml.feature.ingestion.batch.ValidationException;
 import com.app.aml.feature.ingestion.entity.Transaction;
 import com.app.aml.feature.ingestion.repository.TransactionRepository;
+import com.app.aml.multitenency.TenantContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -23,10 +25,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
-
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 public class TransactionIngestionBatchConfig {
 
     private static final int CHUNK_SIZE = 1000;
@@ -36,21 +37,43 @@ public class TransactionIngestionBatchConfig {
     private final PlatformTransactionManager transactionManager;
     private final TransactionRepository repository;
     private final TransactionValidationProcessor processor;
-
-    private final TransactionJobCompletionListener completionListener;
     private final TransactionValidationSkipListener skipListener;
 
     @Qualifier("batchTaskExecutor")
     private final TaskExecutor batchTaskExecutor;
 
     @Bean
-    public Job transactionIngestionJob() {
+    public StepExecutionListener tenantContextStepListener() {
+        return new StepExecutionListener() {
+            @Override
+            public void beforeStep(StepExecution stepExecution) {
+                String tenantId = stepExecution.getJobParameters().getString("tenantId");
+                String schemaName = stepExecution.getJobParameters().getString("schemaName");
+
+                if (tenantId != null && schemaName != null) {
+                    TenantContext.setTenantId(tenantId);
+                    TenantContext.setSchemaName(schemaName);
+                }
+            }
+            @Override
+            public ExitStatus afterStep(StepExecution stepExecution) {
+                TenantContext.clear();
+                return null;
+            }
+        };
+    }
+
+    @Bean
+    public Job transactionIngestionJob(TransactionJobCompletionListener completionListener) {
         return new JobBuilder("transactionIngestionJob", jobRepository)
                 .listener(completionListener)
                 .start(transactionValidationStep())
-                .on("COMPLETED_WITH_SKIPS").end()
-                .from(transactionValidationStep())
+                // Only proceed to ingestion if validation was SUCCESSFUL and had 0 skips
                 .on(ExitStatus.COMPLETED.getExitCode()).to(transactionIngestionStep())
+                // If validation finished but had skips, stop here
+                .from(transactionValidationStep()).on("COMPLETED_WITH_SKIPS").end()
+                // Fail if anything else happens
+                .from(transactionValidationStep()).on("*").fail()
                 .end()
                 .build();
     }
@@ -59,14 +82,15 @@ public class TransactionIngestionBatchConfig {
     public Step transactionValidationStep() {
         return new StepBuilder("transactionValidationStep", jobRepository)
                 .<TransactionCsvDto, Transaction>chunk(CHUNK_SIZE, transactionManager)
-                .reader(transactionReader(null)) // Single thread for validation
+                .reader(transactionReader(null))
                 .processor(processor)
-                .writer(items -> { /* No-op: validation only phase */ })
+                .writer(items -> { /* Just validation, no DB write yet */ })
                 .faultTolerant()
                 .skip(ValidationException.class)
                 .skip(FlatFileParseException.class)
                 .skipLimit(MAX_SKIP_LIMIT)
                 .listener(skipListener)
+                .listener(tenantContextStepListener())
                 .listener(transactionValidationExitListener())
                 .build();
     }
@@ -75,13 +99,14 @@ public class TransactionIngestionBatchConfig {
     public Step transactionIngestionStep() {
         return new StepBuilder("transactionIngestionStep", jobRepository)
                 .<TransactionCsvDto, Transaction>chunk(CHUNK_SIZE, transactionManager)
-                // Wrap reader for thread-safety during parallel ingestion
                 .reader(new SynchronizedItemStreamReaderBuilder<TransactionCsvDto>()
                         .delegate(transactionReader(null))
                         .build())
                 .processor(processor)
                 .writer(transactionWriter())
+                // Use taskExecutor only if you are SURE your DB handles concurrent tenant writes
                 .taskExecutor(batchTaskExecutor)
+                .listener(tenantContextStepListener())
                 .build();
     }
 
@@ -90,7 +115,9 @@ public class TransactionIngestionBatchConfig {
         return new StepExecutionListenerSupport() {
             @Override
             public ExitStatus afterStep(StepExecution stepExecution) {
-                if (stepExecution.getSkipCount() > 0) {
+                // If any records were skipped due to errors, we block the save step
+                if (stepExecution.getSkipCount() > 0 || stepExecution.getProcessSkipCount() > 0) {
+                    log.warn("Validation failed with {} skips. Saving aborted.", stepExecution.getSkipCount());
                     return new ExitStatus("COMPLETED_WITH_SKIPS");
                 }
                 return ExitStatus.COMPLETED;
@@ -106,7 +133,7 @@ public class TransactionIngestionBatchConfig {
         final String expectedHeader =
                 "transactionRef,originatorAccountNo,originatorName,originatorBankCode,originatorCountry," +
                         "beneficiaryAccountNo,beneficiaryName,beneficiaryBankCode,beneficiaryCountry," +
-                        "amount,currencyCode,transactionType,channel,transactionTimestamp,referenceNote";
+                        "amount,currencyCode,transactionType,channel,transactionTimestamp,referenceNote,status";
 
         return new FlatFileItemReaderBuilder<TransactionCsvDto>()
                 .name("transactionReader")
@@ -114,9 +141,7 @@ public class TransactionIngestionBatchConfig {
                 .linesToSkip(1)
                 .skippedLinesCallback(headerLine -> {
                     if (!headerLine.trim().equalsIgnoreCase(expectedHeader)) {
-                        throw new IllegalArgumentException(
-                                "Transaction Header mismatch. Expected: [" + expectedHeader + "] but found: [" + headerLine + "]"
-                        );
+                        throw new IllegalArgumentException("Header mismatch.");
                     }
                 })
                 .delimited()
@@ -129,7 +154,7 @@ public class TransactionIngestionBatchConfig {
     public RepositoryItemWriter<Transaction> transactionWriter() {
         return new RepositoryItemWriterBuilder<Transaction>()
                 .repository(repository)
-                .methodName("saveAll")
+                .methodName("save") // Use "save" for RepositoryItemWriter (it calls it per item/list)
                 .build();
     }
 }

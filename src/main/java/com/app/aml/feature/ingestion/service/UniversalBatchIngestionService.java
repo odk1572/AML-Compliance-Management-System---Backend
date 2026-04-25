@@ -59,14 +59,19 @@ public class UniversalBatchIngestionService {
             TransactionBatch savedBatch = batchRepository.save(batch);
 
             // Fetch the current Tenant ID from the context
-            String currentTenantId = TenantContext.getTenantId();
 
             // Fire the background job using the new Async component
+            // 1. Capture the schema name while still on the request thread
+            String currentTenantId = TenantContext.getTenantId();
+            String currentSchemaName = TenantContext.getSchemaName(); // <-- Capture this
+
+// 2. Pass BOTH the ID and the Schema to the launcher
             asyncBatchLauncher.triggerTargetedBatchJobAsync(
                     savedBatch.getId(),
                     tempFilePath.toAbsolutePath().toString(),
                     fileType,
-                    currentTenantId // Pass the tenant ID so the background thread knows which DB to use!
+                    currentTenantId,
+                    currentSchemaName // <-- ADD THIS 5th ARGUMENT
             );
 
             return batchMapper.toResponseDto(savedBatch);

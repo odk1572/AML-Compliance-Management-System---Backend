@@ -1,5 +1,12 @@
 package com.app.aml.domain.enums;
 
 public enum Channel {
-    ONLINE, BRANCH, ATM, UPI
+    ATM,
+    MOBILE,  // <--- Add this
+    ONLINE,
+    BRANCH,
+    CASH,    // <--- Add this
+    POS,
+    INTERNET_BANKING,
+    UPI
 }
