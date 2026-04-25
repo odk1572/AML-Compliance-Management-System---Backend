@@ -10,5 +10,3 @@ CREATE TABLE alert_evidence (
 );
 
 CREATE INDEX idx_alert_evidence_alert_id ON alert_evidence(alert_id);
-
-CREATE INDEX idx_alert_evidence_attribute ON alert_evidence(attribute_name);

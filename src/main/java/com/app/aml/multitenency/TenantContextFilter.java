@@ -32,33 +32,28 @@ public class TenantContextFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        // 1. Extract the tenant ID from the JWT claims (via Security Context)
         String tenantId = extractTenantId(request);
 
         try {
             if (tenantId != null) {
-                // Optional fail-fast: Validate the tenant actually has a schema mapped.
-                // If this throws an exception, it prevents the request from proceeding further.
-                tenantSchemaResolver.resolveSchema(tenantId);
+                // 1. Resolve the schema name from the tenant ID
+                // I'm assuming resolveSchema returns the String name of the schema.
+                String schemaName = tenantSchemaResolver.resolveSchema(tenantId);
 
-                // Bind the ID to the current thread
+                // 2. BIND BOTH to the TenantContext
                 TenantContext.setTenantId(tenantId);
-                log.trace("TenantContext bound for tenantId: {}", tenantId);
+                TenantContext.setSchemaName(schemaName); // 👈 THIS WAS MISSING
+
+                log.trace("TenantContext bound: ID={}, Schema={}", tenantId, schemaName);
             }
 
-            // 2. Continue down the filter chain (Controller -> Service -> Repo -> DataSource)
             filterChain.doFilter(request, response);
 
         } finally {
-            // 3. CRITICAL: Clear the context
-            // Spring uses a thread pool (like Tomcat's NIO threads).
-            // If we don't clear this, the next request processed by this thread
-            // will inherit the previous bank's Tenant ID, causing a massive data breach.
+            // 3. Clear everything
             TenantContext.clear();
-            log.trace("TenantContext cleared for thread: {}", Thread.currentThread().getName());
         }
     }
-
     /**
      * Helper method to extract the tenantId.
      * Since the JwtAuthenticationFilter runs BEFORE this filter, the JWT claims
