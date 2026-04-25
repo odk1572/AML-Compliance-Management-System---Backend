@@ -1,10 +1,12 @@
 package com.app.aml.feature.ruleengine.executor.strategies;
 
+import com.app.aml.domain.constants.RuleAttributeConstants;
 import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
 import com.app.aml.multitenency.TenantContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RoundAmountExecutor implements RuleExecutorStrategy {
@@ -26,40 +29,64 @@ public class RoundAmountExecutor implements RuleExecutorStrategy {
     @Override
     public Set<UUID> executeRule(RuleExecutionContextDto rule) {
         int divisor = 0;
-        int threshold = 0;
-        String lookback = null;
+        int targetCount = 0;
+        String scenarioLookbackRaw = null;
+        String ruleTimeWindowRaw = null;
 
+        // 1. Extract variables using existing constants
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            if ("NONE".equalsIgnoreCase(cond.getAggregationFunction()) || cond.getAggregationFunction() == null) {
-                divisor = (int) Double.parseDouble(cond.getThresholdValue());
-            }
-            else if ("COUNT".equalsIgnoreCase(cond.getAggregationFunction())) {
-                threshold = (int) Double.parseDouble(cond.getThresholdValue());
-            }
+            if (cond.getAttributeName() == null) continue;
 
-            if (cond.getLookbackPeriod() != null) {
-                lookback = SqlIntervalParser.parse(cond.getLookbackPeriod());
+            switch (cond.getAttributeName().toUpperCase()) {
+                case RuleAttributeConstants.TRANSACTION_AMOUNT ->
+                        divisor = Integer.parseInt(cond.getThresholdValue());
+                case RuleAttributeConstants.TRANSACTION_COUNT ->
+                        targetCount = Integer.parseInt(cond.getThresholdValue());
+                case RuleAttributeConstants.LOOKBACK_WINDOW ->
+                        scenarioLookbackRaw = cond.getThresholdValue();
+                case RuleAttributeConstants.TIME_WINDOW ->
+                        ruleTimeWindowRaw = cond.getThresholdValue();
             }
         }
 
-        if (divisor == 0 || threshold == 0 || lookback == null) {
-            throw new IllegalStateException("Missing required condition thresholds for Round Amount Rule.");
+        // 2. Validation
+        if (divisor <= 0 || targetCount <= 0 || scenarioLookbackRaw == null || ruleTimeWindowRaw == null) {
+            throw new IllegalStateException(String.format(
+                    "Missing required conditions for rule: %s.", rule.getRuleName()));
         }
 
+        SqlIntervalParser.validateCoverage(scenarioLookbackRaw, rule.getRuleName(), ruleTimeWindowRaw);
+
+        // 3. Prepare SQL values
+        String scenarioLookback = SqlIntervalParser.parse(scenarioLookbackRaw);
+        String ruleTimeWindow = SqlIntervalParser.parse(ruleTimeWindowRaw);
         String schema = TenantContext.getSchemaName();
+
+        // 4. Dual-Timeframe SQL Logic
         String sql = String.format("""
+            WITH scenario_context AS (
+                SELECT originator_account_no, amount, transaction_timestamp 
+                FROM %s.transactions
+                WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
+            )
             SELECT cp.id as customer_id 
-            FROM %s.transactions t
+            FROM scenario_context t
             JOIN %s.customer_profiles cp ON t.originator_account_no = cp.account_number
-            WHERE MOD(t.amount, ?) = 0 
-              AND t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
+            WHERE t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
+              AND MOD(t.amount, ?) = 0 
             GROUP BY cp.id 
-            HAVING COUNT(t.id) >= ?
+            HAVING COUNT(*) >= ?
         """, schema, schema);
+
+        log.debug("Executing Round Amount Rule for tenant: {}", schema);
 
         List<UUID> results = jdbcTemplate.query(sql,
                 (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),
-                divisor, lookback, threshold);
+                scenarioLookback,
+                ruleTimeWindow,
+                divisor,
+                targetCount
+        );
 
         return new HashSet<>(results);
     }

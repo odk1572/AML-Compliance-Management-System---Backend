@@ -27,24 +27,16 @@ public class TenantRuleThreshold extends AuditableEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
-    @NotNull
+    @NotNull(message = "Tenant rule mapping is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tenant_rule_id", nullable = false)
     private TenantRule tenantRule;
 
-    @NotNull
+    @NotNull(message = "Global condition mapping is required")
     @Column(name = "global_condition_id", nullable = false)
     private UUID globalConditionId;
 
-    @Size(max = 255)
+    @Size(max = 255, message = "Override value cannot exceed 255 characters")
     @Column(name = "override_value", length = 255)
     private String overrideValue;
-
-    @Size(max = 50)
-    @Column(name = "override_lookback_period", length = 50)
-    private String overrideLookbackPeriod;
-
-    @Size(max = 50)
-    @Column(name = "override_aggregation_function", length = 50)
-    private String overrideAggregationFunction;
 }

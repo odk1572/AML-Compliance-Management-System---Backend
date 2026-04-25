@@ -17,8 +17,6 @@ public class TenantRuleThresholdResponseDto {
     private UUID tenantRuleId;
     private UUID globalConditionId;
     private String overrideValue;
-    private String overrideLookbackPeriod;
-    private String overrideAggregationFunction;
     private Instant sysCreatedAt;
     private Instant sysUpdatedAt;
 }

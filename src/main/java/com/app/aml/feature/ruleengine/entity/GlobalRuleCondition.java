@@ -13,13 +13,7 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Entity
-@Table(
-        name = "global_rule_conditions",
-        schema = "common_schema",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uq_grc_rule_sequence", columnNames = {"rule_id", "condition_sequence"})
-        }
-)
+@Table(name = "global_rule_conditions", schema = "common_schema")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -34,18 +28,18 @@ public class GlobalRuleCondition extends AuditableEntity {
     @JoinColumn(name = "rule_id", nullable = false)
     private GlobalRule rule;
 
-    @NotBlank(message = "Aggregation function is required")
-    @Size(max = 10, message = "Aggregation function cannot exceed 10 characters")
-    @Column(name = "aggregation_function", nullable = false, length = 10)
-    private String aggregationFunction = "NONE";
-
-    @Size(max = 10, message = "Lookback period cannot exceed 10 characters")
-    @Column(name = "lookback_period", length = 10)
-    private String lookbackPeriod;
+    @NotBlank(message = "Attribute name is required")
+    @Size(max = 100, message = "Attribute name cannot exceed 100 characters")
+    @Column(name = "attribute_name", nullable = false, length = 100)
+    private String attributeName;
 
     @NotBlank(message = "Threshold value is required")
     @Size(max = 255, message = "Threshold value cannot exceed 255 characters")
     @Column(name = "threshold_value", nullable = false, length = 255)
     private String thresholdValue;
 
+    @NotBlank(message = "Value data type is required")
+    @Size(max = 50, message = "Value data type cannot exceed 50 characters")
+    @Column(name = "value_data_type", nullable = false, length = 50)
+    private String valueDataType;
 }

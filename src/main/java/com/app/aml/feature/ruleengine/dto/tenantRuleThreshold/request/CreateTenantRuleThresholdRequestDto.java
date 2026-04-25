@@ -24,9 +24,4 @@ public class CreateTenantRuleThresholdRequestDto {
     @Size(max = 255, message = "Override value cannot exceed 255 characters")
     private String overrideValue;
 
-    @Size(max = 50, message = "Override lookback period cannot exceed 50 characters")
-    private String overrideLookbackPeriod;
-
-    @Size(max = 50, message = "Override aggregation function cannot exceed 50 characters")
-    private String overrideAggregationFunction;
 }

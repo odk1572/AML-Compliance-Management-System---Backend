@@ -36,4 +36,43 @@ public final class SqlIntervalParser {
 
         return value + " " + unit;
     }
+
+
+    public static void validateCoverage(String primary, String ruleName, String... subIntervals) {
+        double primaryDays = convertToDays(primary);
+        double totalSubDays = 0;
+
+        for (String sub : subIntervals) {
+            if (sub != null) {
+                totalSubDays += convertToDays(sub);
+            }
+        }
+
+        if (primaryDays < totalSubDays) {
+            throw new IllegalArgumentException(String.format(
+                    "Rule [%s] Validation Failed: The Scenario LOOKBACK_WINDOW (%s) is too short. " +
+                            "It must cover the sum of rule timeframes provided (%s days required vs ~%.1f days provided).",
+                    ruleName, primary, String.format("%.1f", totalSubDays), primaryDays
+            ));
+        }
+    }
+
+    private static double convertToDays(String input) {
+        Matcher m = LOOKBACK_PATTERN.matcher(input.trim().toLowerCase());
+        if (!m.matches()) return 0;
+
+        double value = Double.parseDouble(m.group(1));
+        return switch (m.group(2)) {
+            case "h" -> value / 24.0;
+            case "d" -> value;
+            case "w" -> value * 7.0;
+            case "m" -> value * 30.0;
+            case "y" -> value * 365.0;
+            default -> 0;
+        };
+    }
+
+    public static double getDays(String input) {
+        return convertToDays(input);
+    }
 }

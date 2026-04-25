@@ -42,15 +42,14 @@ public class ScenarioExecutionService {
         RuleExecutionContextDto executionContext = buildExecutionContext(
                 scenarioId, tenantRuleId, categoryName, ruleInfo, globals, overrides);
 
+        // Log the newly mapped pure-attribute parameters
         for (ConditionExecutionContextDto cond : executionContext.getConditions()) {
-            // FIXED: Removed getAttributeName()
-            log.info("  - agg={}, threshold={}, lookback={}",
-                    cond.getAggregationFunction(),
-                    cond.getThresholdValue(),
-                    cond.getLookbackPeriod());
+            log.info("  - attribute={}, threshold={}",
+                    cond.getAttributeName(),
+                    cond.getThresholdValue());
         }
 
-        // FIXED: Fetch the correct strategy using the specific ruleType instead of generic category
+        // Fetch the correct strategy using the specific ruleType
         RuleExecutorStrategy strategy = ruleExecutorFactory.getStrategy(ruleInfo.getRuleType());
 
         // Print Pre-Execution Header
@@ -102,17 +101,12 @@ public class ScenarioExecutionService {
                     .findFirst()
                     .orElse(null);
 
+            // Create the context mapping purely based on the attribute name
             conditions.add(ConditionExecutionContextDto.builder()
-                    // FIXED: Removed attributeName completely
-                    .aggregationFunction(resolveOverride(
-                            override != null ? override.getOverrideAggregationFunction() : null,
-                            global.getAggregationFunction()))
+                    .attributeName(global.getAttributeName())
                     .thresholdValue(resolveOverride(
                             override != null ? override.getOverrideValue() : null,
                             global.getThresholdValue()))
-                    .lookbackPeriod(resolveOverride(
-                            override != null ? override.getOverrideLookbackPeriod() : null,
-                            global.getLookbackPeriod()))
                     .build());
         }
 
@@ -121,9 +115,7 @@ public class ScenarioExecutionService {
                 .tenantRuleId(tenantRuleId)
                 .ruleId(ruleInfo.getId())
                 .ruleName(ruleInfo.getRuleName())
-                // FIXED: Converted Short to int to satisfy the execution context DTO
                 .baseRiskScore(ruleInfo.getBaseRiskScore() != null ? ruleInfo.getBaseRiskScore().intValue() : 0)
-                // FIXED: Removed conditionLogic() completely
                 .ruleCategory(category)
                 .conditions(conditions)
                 .build();

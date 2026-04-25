@@ -13,11 +13,18 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GlobalRuleConditionResponseDto {
+
     private UUID id;
+
     private UUID ruleId; // Flattened for the API
-    private String aggregationFunction;
-    private String lookbackPeriod;
+
+    private String attributeName;
+
     private String thresholdValue;
+
+    private String valueDataType;
+
     private Instant sysCreatedAt;
+
     private Instant sysUpdatedAt;
 }
