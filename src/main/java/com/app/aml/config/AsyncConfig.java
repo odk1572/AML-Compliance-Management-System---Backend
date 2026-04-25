@@ -2,7 +2,6 @@ package com.app.aml.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -12,8 +11,8 @@ import java.util.concurrent.Executor;
 @EnableAsync
 public class AsyncConfig {
 
-    @Bean(name = "asyncTaskExecutor")
-    public Executor taskExecutor() {
+    @Bean(name = "asyncExecutor")
+    public Executor asyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(10);
         executor.setMaxPoolSize(50);
@@ -24,15 +23,6 @@ public class AsyncConfig {
         return executor;
     }
 
-    @Bean(name="batchTaskExecutor")
-    public TaskExecutor batchtaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("batch-worker-");
-        executor.setCorePoolSize(5);
-        executor.setMaxPoolSize(10);
-        executor.setQueueCapacity(200);
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.initialize();
-        return executor;
-    }
+    // 👇 REMOVED the batchTaskExecutor bean from here because
+    // it already exists in BatchTaskExecutorConfig.java!
 }

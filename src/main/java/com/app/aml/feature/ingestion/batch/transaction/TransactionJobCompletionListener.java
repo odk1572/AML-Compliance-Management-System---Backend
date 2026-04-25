@@ -4,6 +4,7 @@ import com.app.aml.domain.enums.BatchStatus;
 import com.app.aml.feature.ingestion.entity.TransactionBatch;
 import com.app.aml.feature.ingestion.repository.TransactionBatchRepository;
 import com.app.aml.feature.notification.service.interfaces.MailService;
+import com.app.aml.multitenency.TenantContext; // <-- 1. ADDED IMPORT
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -42,53 +43,73 @@ public class TransactionJobCompletionListener implements JobExecutionListener {
     public void afterJob(JobExecution jobExecution) {
         String batchIdStr = jobExecution.getJobParameters().getString("batchId");
         String filePath = jobExecution.getJobParameters().getString("filePath");
+        String tenantId = jobExecution.getJobParameters().getString("tenantId"); // <-- 2. FETCH TENANT ID
 
         if (batchIdStr == null) return;
 
-        UUID batchId = UUID.fromString(batchIdStr);
-        TransactionBatch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new IllegalStateException("Batch not found: " + batchId));
-
-        Map<Integer, List<String>> errors = skipListener.getValidationErrors();
-
-        if (!errors.isEmpty()) {
-            // --- FAILURE PATH ---
-            try {
-                String failureJson = objectMapper.writeValueAsString(errors);
-                batch.setFailureDetails(failureJson);
-            } catch (JsonProcessingException e) {
-                log.error("Failed to parse Transaction batch errors to JSON", e);
+        try {
+            // 3. FORCE TENANT CONTEXT for the background thread
+            if (tenantId != null) {
+                TenantContext.setTenantId(tenantId);
             }
-            batch.setBatchStatus(BatchStatus.FAILED);
-            batch.setProcessedAt(Instant.now());
-            batchRepository.save(batch);
 
-            jobExecution.setExitStatus(ExitStatus.FAILED);
+            UUID batchId = UUID.fromString(batchIdStr);
 
-            mailService.sendEmail(
-                    "admin@yourdomain.com",
-                    "Transaction Batch Failed: " + batch.getFileName(),
-                    "Validation failed for " + errors.size() + " lines. Please check the system dashboard for the detailed JSON error report."
-            );
+            // This will now successfully find the table!
+            TransactionBatch batch = batchRepository.findById(batchId)
+                    .orElseThrow(() -> new IllegalStateException("Batch not found: " + batchId));
 
-            log.warn("Transaction Batch {} failed with {} validation errors.", batch.getBatchReference(), errors.size());
+            Map<Integer, List<String>> errors = skipListener.getValidationErrors();
 
-        } else {
-            // --- SUCCESS PATH ---
-            batch.setBatchStatus(BatchStatus.PROCESSED);
-            batch.setProcessedAt(Instant.now());
-            batchRepository.save(batch);
+            if (!errors.isEmpty()) {
+                // --- FAILURE PATH ---
+                try {
+                    String failureJson = objectMapper.writeValueAsString(errors);
+                    batch.setFailureDetails(failureJson);
+                } catch (JsonProcessingException e) {
+                    log.error("Failed to parse Transaction batch errors to JSON", e);
+                }
+                batch.setBatchStatus(BatchStatus.FAILED);
+                batch.setProcessedAt(Instant.now());
+                batchRepository.save(batch);
 
-            log.info("Transaction Batch {} successfully processed and ingested.", batch.getBatchReference());
-        }
+                jobExecution.setExitStatus(ExitStatus.FAILED);
 
-        // --- DISK CLEANUP ---
-        if (filePath != null) {
-            try {
-                Files.deleteIfExists(Path.of(filePath));
-                log.info("Deleted temporary transaction batch file: {}", filePath);
-            } catch (java.io.IOException e) {
-                log.error("Failed to delete local temp file: {}", filePath, e);
+                mailService.sendEmail(
+                        "admin@yourdomain.com",
+                        "Transaction Batch Failed: " + batch.getFileName(),
+                        "Validation failed for " + errors.size() + " lines. Please check the system dashboard for the detailed JSON error report."
+                );
+
+                log.warn("Transaction Batch {} failed with {} validation errors.", batch.getBatchReference(), errors.size());
+
+            } else {
+                // --- SUCCESS PATH ---
+                batch.setBatchStatus(BatchStatus.PROCESSED);
+                batch.setProcessedAt(Instant.now());
+                batchRepository.save(batch);
+
+                log.info("Transaction Batch {} successfully processed and ingested.", batch.getBatchReference());
+            }
+
+        } finally {
+            // 4. ALWAYS CLEAR CONTEXT to prevent thread leakage
+            if (tenantId != null) {
+                TenantContext.clear();
+            }
+
+            // 5. SMART DISK CLEANUP (Prevents the InvalidPathException crash)
+            if (filePath != null) {
+                if (filePath.toLowerCase().startsWith("http")) {
+                    log.info("Batch source is remote (Cloudinary). Skipping local file cleanup.");
+                } else {
+                    try {
+                        Files.deleteIfExists(Path.of(filePath));
+                        log.info("Deleted temporary transaction batch file: {}", filePath);
+                    } catch (java.io.IOException e) {
+                        log.error("Failed to delete local temp file: {}", filePath, e);
+                    }
+                }
             }
         }
     }
