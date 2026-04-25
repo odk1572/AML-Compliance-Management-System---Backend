@@ -4,10 +4,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+public final class SqlIntervalParser {
 
-public class SqlIntervalParser {
-
-    private static final Pattern LOOKBACK_PATTERN = Pattern.compile("^(\\d+)(h|d|w|m|y)$");
+    private static final Pattern LOOKBACK_PATTERN = Pattern.compile("^(\\d+)\\s*(h|d|w|m|y)$");
 
     private static final Map<String, String> UNIT_MAP = Map.of(
             "h", "hours",
@@ -17,9 +16,13 @@ public class SqlIntervalParser {
             "y", "years"
     );
 
+    private SqlIntervalParser() {
+        throw new UnsupportedOperationException("Utility class cannot be instantiated");
+    }
+
     public static String parse(String dbLookback) {
         if (dbLookback == null || dbLookback.isBlank()) {
-            throw new IllegalArgumentException("Lookback period cannot be null or blank.");
+            throw new IllegalArgumentException("Lookback period cannot be null or blank");
         }
 
         Matcher matcher = LOOKBACK_PATTERN.matcher(dbLookback.trim().toLowerCase());
@@ -30,6 +33,7 @@ public class SqlIntervalParser {
 
         String value = matcher.group(1);
         String unit = UNIT_MAP.get(matcher.group(2));
+
         return value + " " + unit;
     }
 }

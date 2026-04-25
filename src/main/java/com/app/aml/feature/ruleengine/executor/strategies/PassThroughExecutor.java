@@ -3,6 +3,7 @@ package com.app.aml.feature.ruleengine.executor.strategies;
 import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
+import com.app.aml.multitenency.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,10 @@ import java.util.UUID;
 public class PassThroughExecutor implements RuleExecutorStrategy {
     private final JdbcTemplate jdbcTemplate;
 
-    @Override public String getRuleType() { return "PASS_THROUGH"; }
+    @Override
+    public String getRuleType() {
+        return "PASS_THROUGH";
+    }
 
     @Override
     public Set<UUID> executeRule(RuleExecutionContextDto rule) {
@@ -26,7 +30,6 @@ public class PassThroughExecutor implements RuleExecutorStrategy {
         BigDecimal margin = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            // Using Aggregation Function to safely map the Margin percentage past DB constraints
             if ("NONE".equalsIgnoreCase(cond.getAggregationFunction()) || cond.getAggregationFunction() == null) {
                 margin = new BigDecimal(cond.getThresholdValue());
             }
@@ -36,22 +39,24 @@ public class PassThroughExecutor implements RuleExecutorStrategy {
         }
 
         if (margin == null || lookback == null) {
-            throw new IllegalStateException("Missing required global or tenant condition thresholds for Pass Through Rule.");
+            throw new IllegalStateException("Missing required condition thresholds for Pass Through Rule.");
         }
 
-        // FIXED: Changed cp.account_no to cp.account_number to match actual DB schema
-        String sql = """
+        String schema = TenantContext.getSchemaName();
+        String sql = String.format("""
             SELECT cp.id as customer_id FROM (
                 SELECT beneficiary_account_no as account_no, amount as incoming, 0 as outgoing
-                FROM transactions WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
+                FROM %s.transactions WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
                 UNION ALL
                 SELECT originator_account_no as account_no, 0 as incoming, amount as outgoing
-                FROM transactions WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
+                FROM %s.transactions WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
             ) flow_data
-            JOIN customer_profiles cp ON flow_data.account_no = cp.account_number
+            JOIN %s.customer_profiles cp ON flow_data.account_no = cp.account_number
             GROUP BY cp.id
-            HAVING SUM(incoming) > 0 AND SUM(outgoing) > 0 AND ABS(SUM(incoming) - SUM(outgoing)) <= (SUM(incoming) * ?)
-        """;
+            HAVING SUM(incoming) > 0 
+               AND SUM(outgoing) > 0 
+               AND ABS(SUM(incoming) - SUM(outgoing)) <= (SUM(incoming) * ?)
+        """, schema, schema, schema);
 
         List<UUID> results = jdbcTemplate.query(sql,
                 (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),

@@ -3,6 +3,7 @@ package com.app.aml.feature.ruleengine.executor.strategies;
 import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
+import com.app.aml.multitenency.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,10 @@ import java.util.UUID;
 public class RoundAmountExecutor implements RuleExecutorStrategy {
     private final JdbcTemplate jdbcTemplate;
 
-    @Override public String getRuleType() { return "ROUND_AMOUNT"; }
+    @Override
+    public String getRuleType() {
+        return "ROUND_AMOUNT";
+    }
 
     @Override
     public Set<UUID> executeRule(RuleExecutionContextDto rule) {
@@ -26,7 +30,6 @@ public class RoundAmountExecutor implements RuleExecutorStrategy {
         String lookback = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            // Using Aggregation Function to map thresholds safely past DB constraints
             if ("NONE".equalsIgnoreCase(cond.getAggregationFunction()) || cond.getAggregationFunction() == null) {
                 divisor = (int) Double.parseDouble(cond.getThresholdValue());
             }
@@ -40,15 +43,19 @@ public class RoundAmountExecutor implements RuleExecutorStrategy {
         }
 
         if (divisor == 0 || threshold == 0 || lookback == null) {
-            throw new IllegalStateException("Missing required global or tenant condition thresholds for Round Amount Rule.");
+            throw new IllegalStateException("Missing required condition thresholds for Round Amount Rule.");
         }
 
-        String sql = """
-            SELECT cp.id as customer_id FROM transactions t
-            JOIN customer_profiles cp ON t.originator_account_no = cp.account_number
-            WHERE MOD(t.amount, ?) = 0 AND t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-            GROUP BY cp.id HAVING COUNT(t.id) >= ?
-        """;
+        String schema = TenantContext.getSchemaName();
+        String sql = String.format("""
+            SELECT cp.id as customer_id 
+            FROM %s.transactions t
+            JOIN %s.customer_profiles cp ON t.originator_account_no = cp.account_number
+            WHERE MOD(t.amount, ?) = 0 
+              AND t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
+            GROUP BY cp.id 
+            HAVING COUNT(t.id) >= ?
+        """, schema, schema);
 
         List<UUID> results = jdbcTemplate.query(sql,
                 (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),

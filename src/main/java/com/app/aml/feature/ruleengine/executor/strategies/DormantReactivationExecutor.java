@@ -3,7 +3,7 @@ package com.app.aml.feature.ruleengine.executor.strategies;
 import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
-import com.app.aml.multitenency.TenantContext; // Assumed helper
+import com.app.aml.multitenency.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -21,20 +21,22 @@ import java.util.UUID;
 public class DormantReactivationExecutor implements RuleExecutorStrategy {
     private final JdbcTemplate jdbcTemplate;
 
-    @Override public String getRuleType() { return "DORMANT_REACTIVATION"; }
+    @Override
+    public String getRuleType() {
+        return "DORMANT_REACTIVATION";
+    }
 
     @Override
     public Set<UUID> executeRule(RuleExecutionContextDto rule) {
-        String dormantPeriod = null;      // e.g., '180 days'
-        String reactivationWindow = null; // e.g., '7 days'
+        String dormantPeriod = null;
+        String reactivationWindow = null;
         BigDecimal threshold = null;
 
-        // 1. Robust Parameter Extraction
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
             if ("MIN".equalsIgnoreCase(cond.getAggregationFunction())) {
-                dormantPeriod = cond.getLookbackPeriod();
+                dormantPeriod = SqlIntervalParser.parse(cond.getLookbackPeriod());
             } else if ("MAX".equalsIgnoreCase(cond.getAggregationFunction())) {
-                reactivationWindow = cond.getLookbackPeriod();
+                reactivationWindow = SqlIntervalParser.parse(cond.getLookbackPeriod());
             } else {
                 threshold = new BigDecimal(cond.getThresholdValue());
             }
@@ -44,9 +46,6 @@ public class DormantReactivationExecutor implements RuleExecutorStrategy {
             throw new IllegalStateException("Missing conditions for rule: " + rule.getRuleName());
         }
 
-        // 2. Schema-Aware SQL
-        // We use the account_number from both sides (Originator/Beneficiary)
-        // to catch all "activity"
         String schema = TenantContext.getSchemaName();
         String sql = String.format("""
             SELECT cp.id as customer_id 
@@ -66,14 +65,13 @@ public class DormantReactivationExecutor implements RuleExecutorStrategy {
 
         log.debug("Executing Dormant Reactivation for tenant: {}", schema);
 
-        // 3. Execution
         List<UUID> results = jdbcTemplate.query(sql,
                 (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),
-                reactivationWindow, // Activity window
-                threshold,          // Min amount
-                reactivationWindow, // End of dormancy gap
-                reactivationWindow, // Start of dormancy gap
-                dormantPeriod       // Duration of dormancy
+                reactivationWindow,
+                threshold,
+                reactivationWindow,
+                reactivationWindow,
+                dormantPeriod
         );
 
         return new HashSet<>(results);
