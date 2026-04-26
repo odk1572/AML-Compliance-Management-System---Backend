@@ -48,7 +48,8 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
 
         TenantScenario tenantScenario = new TenantScenario();
         tenantScenario.setGlobalScenarioId(globalScenarioId);
-        tenantScenario.setStatus(RuleStatus.ACTIVE);
+        // Fix: Convert Enum to String
+        tenantScenario.setStatus(RuleStatus.ACTIVE.name());
 
         TenantScenario savedScenario = tenantScenarioRepo.save(tenantScenario);
 
@@ -61,7 +62,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
                     rule.setTenantScenario(savedScenario);
                     rule.setGlobalRuleId(globalLink.getRule().getId());
                     rule.setRuleName(globalLink.getRule().getRuleName());
-                    rule.setRuleCode(UUID.randomUUID().toString().substring(0, 8).toUpperCase()); // Placeholder
+                    rule.setRuleCode(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
                     rule.setActive(true);
                     return rule;
                 })
@@ -93,8 +94,10 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
         TenantScenario scenario = tenantScenarioRepo.findById(tenantScenarioId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant Scenario not found"));
 
-        RuleStatus oldStatus = scenario.getStatus();
-        scenario.setStatus(RuleStatus.PAUSED);
+        // Fix: Get status as String
+        String oldStatus = scenario.getStatus();
+        // Fix: Set status as String
+        scenario.setStatus(RuleStatus.PAUSED.name());
         TenantScenario savedScenario = tenantScenarioRepo.save(scenario);
 
         TenantScenarioResponseDto response = tenantScenarioMapper.toResponseDto(savedScenario);
@@ -106,7 +109,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
                 "TenantScenario",
                 scenario.getId(),
                 "{\"status\":\"" + oldStatus + "\"}",
-                "{\"status\":\"" + RuleStatus.PAUSED + "\"}"
+                "{\"status\":\"" + RuleStatus.PAUSED.name() + "\"}"
         );
 
         return response;
@@ -120,12 +123,13 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
         TenantScenario scenario = tenantScenarioRepo.findById(tenantScenarioId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant Scenario not found"));
 
-        if (scenario.getStatus() == RuleStatus.ACTIVE) {
+        // Fix: String comparison instead of ==
+        if (RuleStatus.ACTIVE.name().equals(scenario.getStatus())) {
             throw new IllegalStateException("Scenario is already active.");
         }
 
-        RuleStatus oldStatus = scenario.getStatus();
-        scenario.setStatus(RuleStatus.ACTIVE);
+        String oldStatus = scenario.getStatus();
+        scenario.setStatus(RuleStatus.ACTIVE.name());
         TenantScenario savedScenario = tenantScenarioRepo.save(scenario);
 
         TenantScenarioResponseDto response = tenantScenarioMapper.toResponseDto(savedScenario);
@@ -137,7 +141,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
                 "TenantScenario",
                 scenario.getId(),
                 "{\"status\":\"" + oldStatus + "\"}",
-                "{\"status\":\"" + RuleStatus.ACTIVE + "\"}"
+                "{\"status\":\"" + RuleStatus.ACTIVE.name() + "\"}"
         );
 
         return response;
@@ -191,6 +195,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
     public List<TenantScenarioWithRulesDto> listActiveScenariosWithRules() {
         log.debug("Fetching all active tenant scenarios with their rules");
 
+        // Fix: Use String literal for repository query
         List<TenantScenario> activeScenarios = tenantScenarioRepo.findByStatus(RuleStatus.ACTIVE);
 
         return activeScenarios.stream().map(scenario -> {

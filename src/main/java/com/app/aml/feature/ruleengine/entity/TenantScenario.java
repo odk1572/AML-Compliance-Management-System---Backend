@@ -1,24 +1,27 @@
 package com.app.aml.feature.ruleengine.entity;
 
-import com.app.aml.domain.enums.RuleStatus;
 import com.app.aml.shared.audit.AuditableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;
 
+/**
+ * Entity representing a tenant's activation of a Global Scenario.
+ * This lives in the tenant-specific schema.
+ */
 @Entity
 @Table(
         name = "tenant_scenarios",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uk_tenant_global_scenario", columnNames = {"global_scenario_id"})
-        }
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_tenant_global_scenario",
+                columnNames = {"global_scenario_id"}
+        )
 )
 @Getter
 @Setter
@@ -29,20 +32,46 @@ public class TenantScenario extends AuditableEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
-    @NotNull
+    /**
+     * Reference to the GlobalScenario ID in common_schema.
+     * No physical Foreign Key is used to maintain cross-schema isolation.
+     */
+    @NotNull(message = "Global scenario reference is required")
     @Column(name = "global_scenario_id", nullable = false)
     private UUID globalScenarioId;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 50)
-    private RuleStatus status = RuleStatus.ACTIVE;
-
+    /**
+     * Current status of the scenario for this tenant.
+     * Allowed values: ACTIVE, PAUSED.
+     */
     @NotBlank
-    @Size(max = 10)
-    @Column(name = "condition_logic", nullable = false, length = 10)
-    private String conditionLogic = "AND";
+    @Column(name = "status", nullable = false, length = 20)
+    private String status = "PAUSED";
 
+    /**
+     * Audit field identifying the bank admin who last activated this scenario.
+     */
     @Column(name = "sys_activated_by")
     private UUID sysActivatedBy;
+
+    // ============================================================
+    // Business Logic Methods
+    // ============================================================
+
+    /**
+     * Activates the scenario for transaction monitoring.
+     * @param adminId The ID of the admin performing the activation.
+     */
+    public void activate(UUID adminId) {
+        this.status = "ACTIVE";
+        this.sysActivatedBy = adminId;
+    }
+
+    /**
+     * Pauses the scenario. Monitoring for this scenario will cease
+     * until reactivated.
+     */
+    public void pause() {
+        this.status = "PAUSED";
+    }
 }

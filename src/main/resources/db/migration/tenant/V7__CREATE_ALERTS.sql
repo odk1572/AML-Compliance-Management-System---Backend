@@ -1,6 +1,14 @@
 CREATE TABLE alerts (
                         id UUID PRIMARY KEY,
+
+    -- The primary customer associated with the alert
+                        customer_profile_id UUID NOT NULL REFERENCES customer_profiles(id) ON DELETE RESTRICT,
+
+    -- The primary/triggering transaction associated with the alert
                         transaction_id UUID NOT NULL REFERENCES transactions(id) ON DELETE RESTRICT,
+
+    -- Local Scenario Execution Context
+                        tenant_scenario_id UUID NOT NULL REFERENCES tenant_scenarios(id) ON DELETE RESTRICT,
 
     -- Cross-Schema FKs: Links to the Global Library for reporting and analytics
                         global_scenario_id UUID NOT NULL REFERENCES common_schema.global_scenarios(id) ON DELETE RESTRICT,
@@ -25,14 +33,11 @@ CREATE TRIGGER trg_alerts_updated_at
     EXECUTE FUNCTION update_sys_updated_at_column();
 
 
+CREATE INDEX idx_alerts_customer_profile_id ON alerts(customer_profile_id);
 CREATE INDEX idx_alerts_transaction_id ON alerts(transaction_id);
-
+CREATE INDEX idx_alerts_tenant_scenario_id ON alerts(tenant_scenario_id);
 CREATE INDEX idx_alerts_status_severity ON alerts(status, severity);
-
 CREATE INDEX idx_alerts_typology ON alerts(typology_triggered);
-
 CREATE INDEX idx_alerts_tenant_rule_id ON alerts(tenant_rule_id);
-
 CREATE INDEX idx_alerts_created_at ON alerts(sys_created_at);
-
 CREATE INDEX idx_alerts_reference ON alerts(alert_reference);

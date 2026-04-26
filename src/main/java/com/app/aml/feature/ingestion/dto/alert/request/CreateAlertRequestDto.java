@@ -19,8 +19,14 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CreateAlertRequestDto {
 
+    @NotNull(message = "Customer Profile ID is required")
+    private UUID customerProfileId;
+
     @NotNull(message = "Transaction ID is required")
     private UUID transactionId;
+
+    @NotNull(message = "Tenant Scenario ID is required")
+    private UUID tenantScenarioId;
 
     @NotNull(message = "Global Scenario ID is required")
     private UUID globalScenarioId;
@@ -28,7 +34,7 @@ public class CreateAlertRequestDto {
     @NotNull(message = "Global Rule ID is required")
     private UUID globalRuleId;
 
-    private UUID tenantRuleId; // Optional, only present if a tenant custom rule triggered it
+    private UUID tenantRuleId; // Optional
 
     @NotBlank(message = "Alert reference is required")
     @Size(max = 50)

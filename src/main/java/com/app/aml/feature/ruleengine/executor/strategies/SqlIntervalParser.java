@@ -31,12 +31,8 @@ public final class SqlIntervalParser {
                     + "'. Expected format: <number><unit> (e.g., 24h, 30d, 2w, 3m, 1y).");
         }
 
-        String value = matcher.group(1);
-        String unit = UNIT_MAP.get(matcher.group(2));
-
-        return value + " " + unit;
+        return matcher.group(1) + " " + UNIT_MAP.get(matcher.group(2));
     }
-
 
     public static void validateCoverage(String primary, String ruleName, String... subIntervals) {
         double primaryDays = convertToDays(primary);
@@ -58,6 +54,8 @@ public final class SqlIntervalParser {
     }
 
     private static double convertToDays(String input) {
+        if (input == null || input.isBlank()) return 0;
+
         Matcher m = LOOKBACK_PATTERN.matcher(input.trim().toLowerCase());
         if (!m.matches()) return 0;
 

@@ -4,15 +4,22 @@ import com.app.aml.domain.enums.AlertSeverity;
 import com.app.aml.shared.audit.SoftDeletableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Entity representing a specific AML Rule.
+ * The ruleType field maps directly to the RuleExecutor Strategy identifiers.
+ */
 @Entity
 @Table(name = "global_rules", schema = "common_schema")
 @Getter
@@ -25,21 +32,30 @@ public class GlobalRule extends SoftDeletableEntity {
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
     @NotBlank(message = "Rule name is required")
-    @Size(max = 150, message = "Rule name cannot exceed 150 characters")
+    @Size(max = 150)
     @Column(name = "rule_name", nullable = false, length = 150)
     private String ruleName;
 
+    /**
+     * Maps to Strategy identifiers (e.g., "STRUCTURING", "VELOCITY").
+     * Used by RuleExecutorFactory to route execution.
+     */
     @NotBlank(message = "Rule type is required")
-    @Size(max = 50, message = "Rule type cannot exceed 50 characters")
+    @Size(max = 50)
     @Column(name = "rule_type", nullable = false, length = 50)
     private String ruleType;
 
-    @NotNull(message = "Severity is required")
     @Enumerated(EnumType.STRING)
     @Column(name = "severity", nullable = false, length = 10)
-    private AlertSeverity severity;
+    private AlertSeverity severity = AlertSeverity.MEDIUM;
 
-    @NotNull(message = "Base risk score is required")
+    @Min(0)
+    @Max(100)
     @Column(name = "base_risk_score", nullable = false)
-    private Short baseRiskScore = 50;
+    private int baseRiskScore = 50;
+
+    public void softDelete() {
+        this.setSysIsDeleted(true);
+        this.setSysDeletedAt(Instant.now());
+    }
 }

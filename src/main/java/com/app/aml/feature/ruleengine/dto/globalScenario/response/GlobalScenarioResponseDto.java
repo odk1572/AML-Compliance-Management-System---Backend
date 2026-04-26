@@ -20,4 +20,6 @@ public class GlobalScenarioResponseDto {
     private UUID createdBy;
     private Instant sysCreatedAt;
     private Instant sysUpdatedAt;
+    private Boolean sysIsDeleted;
+    private Instant sysDeletedAt;
 }

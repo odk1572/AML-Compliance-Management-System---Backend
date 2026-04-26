@@ -17,7 +17,9 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AlertResponseDto {
     private UUID id;
-    private UUID transactionId; // Flattened from the Transaction object
+    private UUID customerProfileId;
+    private UUID transactionId;
+    private UUID tenantScenarioId;
     private UUID globalScenarioId;
     private UUID globalRuleId;
     private UUID tenantRuleId;

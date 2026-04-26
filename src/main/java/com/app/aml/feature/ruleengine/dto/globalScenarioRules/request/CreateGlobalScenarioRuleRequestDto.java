@@ -23,7 +23,7 @@ public class CreateGlobalScenarioRuleRequestDto {
     private UUID ruleId;
 
     @NotNull(message = "Active status is required")
-    @JsonProperty("isActive") // Prevents Jackson from renaming this to "active" in JSON
+    @JsonProperty("isActive")
     private Boolean isActive;
 
     @NotNull(message = "Priority order is required")

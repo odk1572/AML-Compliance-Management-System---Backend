@@ -1,6 +1,5 @@
 package com.app.aml.feature.ruleengine.executor.strategies;
 
-import com.app.aml.domain.constants.RuleAttributeConstants;
 import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
@@ -20,6 +19,7 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class StructuringRuleExecutor implements RuleExecutorStrategy {
+
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -32,71 +32,45 @@ public class StructuringRuleExecutor implements RuleExecutorStrategy {
         BigDecimal singleLimit = null;
         BigDecimal totalThreshold = null;
         int splitCount = 0;
-        String scenarioLookbackRaw = null;
-        String ruleTimeWindowRaw = null;
+        String lookback = null;
 
-        // 1. Extract variables using your specific Typology Attributes
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            if (cond.getAttributeName() == null) continue;
+            String agg = cond.getAggregationFunction() != null ? cond.getAggregationFunction().toUpperCase() : "NONE";
+            if (cond.getLookbackPeriod() != null) {
+                lookback = cond.getLookbackPeriod();
+            }
 
-            switch (cond.getAttributeName().toUpperCase()) {
-                case RuleAttributeConstants.SINGLE_TRANSACTION_LIMIT ->
-                        singleLimit = new BigDecimal(cond.getThresholdValue());
-                case RuleAttributeConstants.TOTAL_STRUCTURED_AMOUNT ->
-                        totalThreshold = new BigDecimal(cond.getThresholdValue());
-                case RuleAttributeConstants.SPLIT_TRANSACTION_COUNT ->
-                        splitCount = Integer.parseInt(cond.getThresholdValue());
-                case RuleAttributeConstants.LOOKBACK_WINDOW ->
-                        scenarioLookbackRaw = cond.getThresholdValue();
-                case RuleAttributeConstants.TIME_WINDOW ->
-                        ruleTimeWindowRaw = cond.getThresholdValue();
+            switch (agg) {
+                case "NONE" -> singleLimit = new BigDecimal(cond.getThresholdValue());
+                case "SUM" -> totalThreshold = new BigDecimal(cond.getThresholdValue());
+                case "COUNT" -> splitCount = Integer.parseInt(cond.getThresholdValue());
             }
         }
 
-        // 2. Validation
-        if (singleLimit == null || totalThreshold == null || splitCount <= 0
-                || scenarioLookbackRaw == null || ruleTimeWindowRaw == null) {
-            throw new IllegalStateException(String.format(
-                    "Missing required conditions for rule: %s.", rule.getRuleName()));
+        if (singleLimit == null || totalThreshold == null || splitCount <= 0 || lookback == null) {
+            throw new IllegalStateException("Required semantic parameters missing for rule: " + rule.getTypologyLabel());
         }
 
-        SqlIntervalParser.validateCoverage(scenarioLookbackRaw, rule.getRuleName(), ruleTimeWindowRaw);
-
-        // 3. Prepare SQL Values
-        String scenarioLookback = SqlIntervalParser.parse(scenarioLookbackRaw);
-        String ruleTimeWindow = SqlIntervalParser.parse(ruleTimeWindowRaw);
+        String interval = SqlIntervalParser.parse(lookback);
         String schema = TenantContext.getSchemaName();
 
-        // 4. The 2-Step SQL Logic
         String sql = String.format("""
-            -- STEP 1: Scenario boundary
-            WITH scenario_context AS (
-                SELECT originator_account_no, amount, transaction_timestamp 
-                FROM %s.transactions
-                WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-            )
-            -- STEP 2: Rule logic for 'Splits'
             SELECT cp.id as customer_id 
-            FROM scenario_context t
+            FROM %s.transactions t
             JOIN %s.customer_profiles cp ON t.originator_account_no = cp.account_number
-            WHERE t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-              AND t.amount < ? 
+            WHERE t.amount < ? 
+              AND t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
             GROUP BY cp.id 
             HAVING SUM(t.amount) >= ? 
-               AND COUNT(*) >= ?
+               AND COUNT(t.id) >= ?
         """, schema, schema);
-
-        log.debug("Executing Structuring for tenant: {} (Total: >= {}, Limit: < {})",
-                schema, totalThreshold, singleLimit);
 
         List<UUID> results = jdbcTemplate.query(sql,
                 (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),
-                scenarioLookback,
-                ruleTimeWindow,
                 singleLimit,
+                interval,
                 totalThreshold,
-                splitCount
-        );
+                splitCount);
 
         return new HashSet<>(results);
     }

@@ -1,6 +1,5 @@
 package com.app.aml.feature.ruleengine.mapper;
 
-
 import com.app.aml.feature.ruleengine.dto.tenantRuleThreshold.request.CreateTenantRuleThresholdRequestDto;
 import com.app.aml.feature.ruleengine.dto.tenantRuleThreshold.response.TenantRuleThresholdResponseDto;
 import com.app.aml.feature.ruleengine.dto.tenantRuleThreshold.request.UpdateTenantRuleThresholdRequestDto;
@@ -25,10 +24,13 @@ public interface TenantRuleThresholdMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "tenantRule", ignore = true)
-    @Mapping(target = "globalConditionId", ignore = true)
+    @Mapping(target = "tenantRule", ignore = true) // Protect relationship from accidental overwrite
+    @Mapping(target = "globalConditionId", ignore = true) // Condition association is immutable
     void updateEntityFromDto(UpdateTenantRuleThresholdRequestDto dto, @MappingTarget TenantRuleThreshold entity);
 
+    /**
+     * Maps a UUID from the DTO to a JPA proxy/entity for TenantRule.
+     */
     default TenantRule mapTenantRuleIdToRule(UUID tenantRuleId) {
         if (tenantRuleId == null) {
             return null;

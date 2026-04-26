@@ -23,7 +23,7 @@ public class CreateGlobalRuleRequestDto {
 
     @NotBlank(message = "Rule type is required")
     @Size(max = 50, message = "Rule type cannot exceed 50 characters")
-    private String ruleType;
+    private String ruleType; // e.g., "STRUCTURING", "VELOCITY"
 
     @NotNull(message = "Severity is required")
     private AlertSeverity severity;
@@ -31,5 +31,5 @@ public class CreateGlobalRuleRequestDto {
     @NotNull(message = "Base risk score is required")
     @Min(value = 0, message = "Risk score cannot be negative")
     @Max(value = 100, message = "Risk score cannot exceed 100")
-    private Short baseRiskScore;
+    private Integer baseRiskScore;
 }

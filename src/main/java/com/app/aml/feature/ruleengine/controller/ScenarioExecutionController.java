@@ -1,11 +1,19 @@
 package com.app.aml.feature.ruleengine.controller;
 
+import com.app.aml.domain.api.ApiResponse;
 import com.app.aml.feature.ruleengine.service.ScenarioOrchestrationService;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.Builder;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -18,40 +26,58 @@ public class ScenarioExecutionController {
     private final ScenarioOrchestrationService orchestrationService;
 
     /**
-     * Executes all active rules mapped to a specific Tenant Scenario.
-     * * @param tenantScenarioId The UUID of the TenantScenario to execute
-     * @return A Set of Customer UUIDs that breached the scenario thresholds
+     * Executes all active rules for a Tenant Scenario.
+     * Accessible by SUPER_ADMIN and BANK_ADMIN.
      */
     @PostMapping("/{tenantScenarioId}/execute")
-    public ResponseEntity<Set<UUID>> executeScenario(@PathVariable UUID tenantScenarioId) {
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN')")
+    public ResponseEntity<ApiResponse<ScenarioExecutionSummary>> executeScenario(
+            @PathVariable UUID tenantScenarioId,
+            HttpServletRequest request) {
+
         log.info("=========================================================================");
-        log.info("RECEIVED API REQUEST: Execute Tenant Scenario [{}]", tenantScenarioId);
+        log.info("STARTING EXECUTION: Tenant Scenario [{}]", tenantScenarioId);
         log.info("=========================================================================");
 
         long startTime = System.currentTimeMillis();
 
-        try {
-            // Trigger the orchestration service
-            Set<UUID> breachingCustomers = orchestrationService.executeFullScenario(tenantScenarioId);
+        // 1. Core Logic Call
+        Set<UUID> breachingCustomers = orchestrationService.executeFullScenario(tenantScenarioId);
 
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("=========================================================================");
-            log.info("SCENARIO EXECUTION COMPLETE [{}]", tenantScenarioId);
-            log.info("Result: {} Breaching Customers Found", breachingCustomers.size());
-            log.info("Execution Time: {} ms", duration);
-            log.info("=========================================================================");
+        long duration = System.currentTimeMillis() - startTime;
 
-            // Note: If you want to use your custom ApiResponse class, you can wrap the Set
-            // e.g., return ResponseEntity.ok(ApiResponse.success(breachingCustomers));
-            return ResponseEntity.ok(breachingCustomers);
+        // 2. Prepare Data DTO
+        ScenarioExecutionSummary summary = ScenarioExecutionSummary.builder()
+                .tenantScenarioId(tenantScenarioId)
+                .executionTimestamp(LocalDateTime.now())
+                .totalBreachesFound(breachingCustomers.size())
+                .breachingCustomerIds(breachingCustomers)
+                .processingTimeMs(duration)
+                .status("SUCCESS")
+                .build();
 
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            log.error("VALIDATION ERROR during scenario execution [{}]: {}", tenantScenarioId, e.getMessage());
-            return ResponseEntity.badRequest().build();
+        log.info("=========================================================================");
+        log.info("EXECUTION COMPLETE: {} customers flagged in {} ms", breachingCustomers.size(), duration);
+        log.info("=========================================================================");
 
-        } catch (Exception e) {
-            log.error("SYSTEM ERROR during scenario execution [{}]", tenantScenarioId, e);
-            return ResponseEntity.internalServerError().build();
-        }
+        // 3. Build Response using ApiResponse.of(...)
+        return ResponseEntity.ok(ApiResponse.of(
+                HttpStatus.OK,
+                "Scenario execution completed successfully.",
+                request.getRequestURI(),
+                summary
+        ));
+    }
+
+    // --- Summary DTO ---
+    @Data
+    @Builder
+    public static class ScenarioExecutionSummary {
+        private UUID tenantScenarioId;
+        private LocalDateTime executionTimestamp;
+        private int totalBreachesFound;
+        private Set<UUID> breachingCustomerIds;
+        private long processingTimeMs;
+        private String status;
     }
 }

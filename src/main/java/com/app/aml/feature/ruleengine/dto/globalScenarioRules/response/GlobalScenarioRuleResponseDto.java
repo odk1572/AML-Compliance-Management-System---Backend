@@ -22,5 +22,7 @@ public class GlobalScenarioRuleResponseDto {
     private Boolean isActive;
 
     private Integer priorityOrder;
+
+    // Converted to Instant for API consistency despite LocalDateTime in Entity
     private Instant sysCreatedAt;
 }

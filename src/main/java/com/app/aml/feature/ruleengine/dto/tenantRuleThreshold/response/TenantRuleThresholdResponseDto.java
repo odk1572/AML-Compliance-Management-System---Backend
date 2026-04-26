@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -17,6 +16,9 @@ public class TenantRuleThresholdResponseDto {
     private UUID tenantRuleId;
     private UUID globalConditionId;
     private String overrideValue;
-    private Instant sysCreatedAt;
-    private Instant sysUpdatedAt;
+    private String overrideLookbackPeriod;
+    private String overrideAggregationFunction;
+
+    // Note: sysCreatedAt/UpdatedAt removed as the entity
+    // does not carry audit fields per your class documentation.
 }

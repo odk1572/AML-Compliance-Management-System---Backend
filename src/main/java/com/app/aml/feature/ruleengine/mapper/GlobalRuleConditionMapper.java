@@ -19,17 +19,18 @@ public interface GlobalRuleConditionMapper {
     List<GlobalRuleConditionResponseDto> toResponseDtoList(List<GlobalRuleCondition> entities);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "sysCreatedAt", ignore = true)
+    @Mapping(target = "sysUpdatedAt", ignore = true)
     @Mapping(target = "rule", source = "ruleId")
-        // Note: sysCreatedAt, sysUpdatedAt, sysCreatedBy, etc., are safely ignored
-        // automatically by unmappedTargetPolicy = ReportingPolicy.IGNORE
     GlobalRuleCondition toEntity(CreateGlobalRuleConditionRequestDto dto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "rule", ignore = true) // Protects the relationship from being overwritten on update
+    @Mapping(target = "sysCreatedAt", ignore = true)
+    @Mapping(target = "sysUpdatedAt", ignore = true)
+    @Mapping(target = "rule", ignore = true)
     void updateEntityFromDto(UpdateGlobalRuleConditionRequestDto dto, @MappingTarget GlobalRuleCondition entity);
 
-    // Helper method to turn a UUID from the JSON payload into a JPA proxy entity
     default GlobalRule mapRuleIdToGlobalRule(UUID ruleId) {
         if (ruleId == null) {
             return null;

@@ -1,8 +1,8 @@
 package com.app.aml.feature.ruleengine.mapper;
 
 import com.app.aml.feature.ruleengine.dto.globalRules.request.CreateGlobalRuleRequestDto;
-import com.app.aml.feature.ruleengine.dto.globalRules.response.GlobalRuleResponseDto;
 import com.app.aml.feature.ruleengine.dto.globalRules.request.UpdateGlobalRuleRequestDto;
+import com.app.aml.feature.ruleengine.dto.globalRules.response.GlobalRuleResponseDto;
 import com.app.aml.feature.ruleengine.entity.GlobalRule;
 import org.mapstruct.*;
 
@@ -16,11 +16,18 @@ public interface GlobalRuleMapper {
     List<GlobalRuleResponseDto> toResponseDtoList(List<GlobalRule> entities);
 
     @Mapping(target = "id", ignore = true)
-        // Inherited SoftDeletableEntity/AuditableEntity fields are safely ignored
-        // because of ReportingPolicy.IGNORE
+    @Mapping(target = "sysCreatedAt", ignore = true)
+    @Mapping(target = "sysUpdatedAt", ignore = true)
+    @Mapping(target = "sysIsDeleted", ignore = true)
+    @Mapping(target = "sysDeletedAt", ignore = true)
     GlobalRule toEntity(CreateGlobalRuleRequestDto dto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "sysCreatedAt", ignore = true)
+    @Mapping(target = "sysUpdatedAt", ignore = true)
+    @Mapping(target = "sysIsDeleted", ignore = true)
+    @Mapping(target = "sysDeletedAt", ignore = true)
+        // Note: scenarioId was removed as it is not present in the provided GlobalRule entity
     void updateEntityFromDto(UpdateGlobalRuleRequestDto dto, @MappingTarget GlobalRule entity);
 }

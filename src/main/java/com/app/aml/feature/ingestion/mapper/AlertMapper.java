@@ -19,22 +19,31 @@ public interface AlertMapper {
     List<AlertResponseDto> toResponseDtoList(List<Alert> entities);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "status", ignore = true) // Defaults to NEW in entity
     @Mapping(target = "transaction", source = "transactionId")
+    @Mapping(target = "sysCreatedAt", ignore = true)
+    @Mapping(target = "sysUpdatedAt", ignore = true)
     Alert toEntity(CreateAlertRequestDto dto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "customerProfileId", ignore = true)
     @Mapping(target = "transaction", ignore = true)
+    @Mapping(target = "tenantScenarioId", ignore = true)
     @Mapping(target = "globalScenarioId", ignore = true)
     @Mapping(target = "globalRuleId", ignore = true)
+    @Mapping(target = "tenantRuleId", ignore = true)
     @Mapping(target = "alertReference", ignore = true)
     @Mapping(target = "severity", ignore = true)
     @Mapping(target = "typologyTriggered", ignore = true)
     @Mapping(target = "riskScore", ignore = true)
+    @Mapping(target = "sysCreatedAt", ignore = true)
+    @Mapping(target = "sysUpdatedAt", ignore = true)
     void updateStatus(UpdateAlertStatusRequestDto dto, @MappingTarget Alert entity);
 
-
+    /**
+     * Maps a UUID to a JPA Transaction proxy.
+     */
     default Transaction mapTransactionIdToTransaction(UUID transactionId) {
         if (transactionId == null) {
             return null;

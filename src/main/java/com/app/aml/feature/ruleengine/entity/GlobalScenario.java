@@ -9,7 +9,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
+
 
 @Entity
 @Table(name = "global_scenarios", schema = "common_schema")
@@ -22,13 +25,13 @@ public class GlobalScenario extends SoftDeletableEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
-    @NotBlank
-    @Size(max = 255)
+    @NotBlank(message = "Scenario name is required")
+    @Size(max = 255, message = "Scenario name cannot exceed 255 characters")
     @Column(name = "scenario_name", unique = true, nullable = false, length = 255)
     private String scenarioName;
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank(message = "Category is required")
+    @Size(max = 100, message = "Category cannot exceed 100 characters")
     @Column(name = "category", nullable = false, length = 100)
     private String category;
 
@@ -37,4 +40,10 @@ public class GlobalScenario extends SoftDeletableEntity {
 
     @Column(name = "created_by")
     private UUID createdBy;
+
+
+    public void softDelete() {
+        this.setSysIsDeleted(true);
+        this.setSysDeletedAt(Instant.now());
+    }
 }

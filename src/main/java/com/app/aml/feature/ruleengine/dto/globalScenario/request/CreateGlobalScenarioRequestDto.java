@@ -19,7 +19,7 @@ public class CreateGlobalScenarioRequestDto {
 
     @NotBlank(message = "Category is required")
     @Size(max = 100, message = "Category cannot exceed 100 characters")
-    private String category; // e.g., "STRUCTURING", "VELOCITY", "SANCTIONS"
+    private String category;
 
     private String description;
 }

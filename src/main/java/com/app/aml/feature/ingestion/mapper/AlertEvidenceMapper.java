@@ -1,12 +1,10 @@
 package com.app.aml.feature.ingestion.mapper;
 
-import com.app.aml.feature.ingestion.dto.alertEvidence.response.AlertEvidenceResponseDto;
 import com.app.aml.feature.ingestion.dto.alertEvidence.request.CreateAlertEvidenceRequestDto;
+import com.app.aml.feature.ingestion.dto.alertEvidence.response.AlertEvidenceResponseDto;
 import com.app.aml.feature.ingestion.entity.Alert;
 import com.app.aml.feature.ingestion.entity.AlertEvidence;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +22,10 @@ public interface AlertEvidenceMapper {
     @Mapping(target = "alert", source = "alertId")
     AlertEvidence toEntity(CreateAlertEvidenceRequestDto dto);
 
+    /**
+     * Maps a UUID to a JPA Alert proxy to avoid unnecessary database lookups
+     * when creating evidence records.
+     */
     default Alert mapAlertIdToAlert(UUID alertId) {
         if (alertId == null) {
             return null;

@@ -1,7 +1,5 @@
 package com.app.aml.feature.ruleengine.dto.tenantScenario.response;
 
-
-import com.app.aml.domain.enums.RuleStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,9 +15,10 @@ import java.util.UUID;
 public class TenantScenarioResponseDto {
     private UUID id;
     private UUID globalScenarioId;
-    private RuleStatus status;
-    private String conditionLogic;
+    private String status;
     private UUID sysActivatedBy;
+
+    // From AuditableEntity
     private Instant sysCreatedAt;
     private Instant sysUpdatedAt;
 }

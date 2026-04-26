@@ -1,6 +1,5 @@
 package com.app.aml.feature.ingestion.dto.alert.request;
 
-
 import com.app.aml.domain.enums.AlertStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

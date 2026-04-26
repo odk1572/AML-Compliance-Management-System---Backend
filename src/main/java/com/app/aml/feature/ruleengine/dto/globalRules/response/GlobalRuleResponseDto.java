@@ -18,7 +18,15 @@ public class GlobalRuleResponseDto {
     private String ruleName;
     private String ruleType;
     private AlertSeverity severity;
-    private Short baseRiskScore;
+
+    // Changed to Integer to match the 'int' type in GlobalRule entity
+    private Integer baseRiskScore;
+
+    // Audit fields from AuditableEntity
     private Instant sysCreatedAt;
     private Instant sysUpdatedAt;
+
+    // Soft delete fields inherited from SoftDeletableEntity
+    private Boolean sysIsDeleted;
+    private Instant sysDeletedAt;
 }

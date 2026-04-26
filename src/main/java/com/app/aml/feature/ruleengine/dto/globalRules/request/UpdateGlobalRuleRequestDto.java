@@ -29,7 +29,7 @@ public class UpdateGlobalRuleRequestDto {
     private AlertSeverity severity;
 
     @NotNull(message = "Base risk score is required")
-    @Min(value = 0, message = "Risk score cannot be less than 0")
+    @Min(value = 0, message = "Risk score cannot be negative")
     @Max(value = 100, message = "Risk score cannot exceed 100")
-    private Short baseRiskScore;
+    private Integer baseRiskScore;
 }

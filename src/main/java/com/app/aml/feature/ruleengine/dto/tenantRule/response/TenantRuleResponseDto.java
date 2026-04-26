@@ -14,12 +14,16 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TenantRuleResponseDto {
     private UUID id;
-    private UUID tenantScenarioId; // Flattened from the TenantScenario object
-    private UUID globalRuleId;     // Soft reference
+    private UUID tenantScenarioId;
+    private UUID globalRuleId;
     private String ruleCode;
     private String ruleName;
     private boolean isActive;
+
+    // Audit & Soft Delete Info
     private UUID sysCreatedBy;
     private Instant sysCreatedAt;
     private Instant sysUpdatedAt;
+    private Boolean sysIsDeleted;
+    private Instant sysDeletedAt;
 }

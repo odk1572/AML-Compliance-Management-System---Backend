@@ -17,6 +17,13 @@ public class UpdateGlobalRuleConditionRequestDto {
     @Size(max = 100, message = "Attribute name cannot exceed 100 characters")
     private String attributeName;
 
+    @NotBlank(message = "Aggregation function tag is required")
+    @Size(max = 10, message = "Aggregation function tag cannot exceed 10 characters")
+    private String aggregationFunction;
+
+    @Size(max = 10, message = "Lookback period cannot exceed 10 characters")
+    private String lookbackPeriod;
+
     @NotBlank(message = "Threshold value is required")
     @Size(max = 255, message = "Threshold value cannot exceed 255 characters")
     private String thresholdValue;
@@ -24,5 +31,4 @@ public class UpdateGlobalRuleConditionRequestDto {
     @NotBlank(message = "Value data type is required")
     @Size(max = 50, message = "Value data type cannot exceed 50 characters")
     private String valueDataType;
-
 }

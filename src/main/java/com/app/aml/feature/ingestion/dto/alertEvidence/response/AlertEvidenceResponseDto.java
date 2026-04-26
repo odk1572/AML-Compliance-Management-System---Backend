@@ -14,7 +14,10 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AlertEvidenceResponseDto {
     private UUID id;
-    private UUID alertId; // Flattened from the Alert object
+    private UUID alertId;
+    private String attributeName;
+    private String aggregationFunction;
+    private String operator;
     private String thresholdApplied;
     private String actualEvaluatedValue;
     private Instant sysCreatedAt;
