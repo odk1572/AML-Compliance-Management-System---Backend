@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Suspicious Transaction Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 10px;
+            }
+        }
+        body { font-family: 'Arial', sans-serif; color: #333; line-height: 1.4; }
+        .header { text-align: center; border-bottom: 2px solid #004a99; padding-bottom: 10px; }
+        .section { margin-top: 20px; }
+        .section-title { background: #f2f2f2; padding: 5px 10px; font-weight: bold; text-transform: uppercase; border-left: 4px solid #004a99; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+        th { background-color: #f9f9f9; }
+        .narrative { white-space: pre-wrap; font-style: italic; background: #fafafa; padding: 10px; border: 1px solid #eee; }
+        .confidential { color: red; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <p class="confidential">STRICTLY CONFIDENTIAL - REGULATORY DOCUMENT</p>
+    <h1>Suspicious Transaction Report (STR)</h1>
+    <p><strong>Reference:</strong> <span th:text="${filing.filingReference}">STR-12345</span></p>
+</div>
+
+<div class="section">
+    <div class="section-title">Filing Information</div>
+    <table>
+        <tr>
+            <th>Regulatory Body</th>
+            <td th:text="${filing.regulatoryBody}">FIU</td>
+            <th>Typology</th>
+            <td th:text="${filing.typologyCategory}">Money Laundering</td>
+        </tr>
+        <tr>
+            <th>Filed By</th>
+            <td th:text="${filing.filedBy}">CO-UUID</td>
+            <th>Filing Date</th>
+            <td th:text="${formattedCreatedAt}">26-04-2026 18:00</td>
+        </tr>
+    </table>
+</div>
+
+<div class="section">
+    <div class="section-title">Subject Profile</div>
+    <table>
+        <tr>
+            <th>Subject Name</th>
+            <td th:text="${filing.subjectName}">John Doe</td>
+            <th>Account Number</th>
+            <td th:text="${filing.subjectAccountNo}">123456789</td>
+        </tr>
+    </table>
+</div>
+
+<div class="section">
+    <div class="section-title">Suspicion Narrative</div>
+    <div class="narrative" th:text="${filing.suspicionNarrative}">
+        Explanation of why this activity is suspicious...
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-title">Linked Transactions (Evidence)</div>
+    <table>
+        <thead>
+        <tr>
+            <th>Transaction ID</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Currency</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="txn : ${transactions}">
+            <td th:text="${txn.id}">ID</td>
+            <td th:text="${txn.transactionTimestamp != null ? dateHelper.format(txn.transactionTimestamp) : 'N/A'}">Time</td>
+            <td th:text="${txn.amount}">0.00</td>
+            <td th:text="${txn.currencyCode}">USD</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <div class="section-title">Investigator Notes</div>
+    <div th:each="note : ${notes}" style="margin-bottom: 10px; padding: 5px; border-bottom: 1px dashed #ccc;">
+        <p style="font-size: 11px; margin: 0;">
+            <strong th:text="${note.noteType}">TYPE</strong> -
+            <span th:text="${note.sysCreatedAt != null ? dateHelper.format(note.sysCreatedAt) : 'N/A'}">Date</span>
+        </p>
+        <p style="margin: 5px 0;" th:text="${note.noteContent}">Content</p>
+    </div>
+</div>
+
+</body>
+</html>

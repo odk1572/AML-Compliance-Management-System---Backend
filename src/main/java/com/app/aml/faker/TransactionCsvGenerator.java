@@ -5,8 +5,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -20,46 +21,151 @@ public class TransactionCsvGenerator {
     private static final String HEADER = "transactionRef,originatorAccountNo,originatorName,originatorBankCode,originatorCountry,beneficiaryAccountNo,beneficiaryName,beneficiaryBankCode,beneficiaryCountry,amount,currencyCode,transactionType,channel,transactionTimestamp,referenceNote,status\n";
 
     private static final String[] BLACKLIST_COUNTRIES = {"PRK", "IRN", "MMR"};
-    private static final String[] GREYLIST_COUNTRIES = {"SYR", "YEM", "SSD", "HTI"};
     private static final String[] LOW_RISK_COUNTRIES = {"IND", "USA", "GBR", "SGP", "ARE"};
     private static final String[] CURRENCIES = {"INR", "USD", "EUR", "GBP", "AED"};
     private static final String[] TXN_TYPES = {"WIRE", "ACH", "CARD", "CASH", "RTGS", "NEFT"};
     private static final String[] CHANNELS = {"ONLINE", "BRANCH", "MOBILE", "UPI", "ATM"};
 
-    public byte[] generate(int count, List<FakeCustomer> customers) {
-        if (customers == null || customers.size() < 2) {
-            throw new IllegalArgumentException("Customer pool must contain at least 2 profiles.");
+    private static final String[] STRATEGIES = {
+            "STRUCTURING", "VELOCITY", "LARGE_TRANSACTION", "ROUND_AMOUNT",
+            "PASS_THROUGH", "FUNNEL", "SUDDEN_SPIKE", "DORMANT_REACTIVATION", "LOW_INCOME_HIGH_TRANSFER"
+    };
+
+    public byte[] generate(int noiseCount, List<FakeCustomer> customers) {
+        if (customers == null || customers.size() < 5) {
+            throw new IllegalArgumentException("Customer pool must contain at least 5 profiles for complex typologies.");
         }
 
+        List<String[]> allTransactions = new ArrayList<>();
+
+        // 1. Generate normal background noise
+        for (int i = 1; i <= noiseCount; i++) {
+            allTransactions.add(buildNoiseRow(i, customers));
+        }
+
+        // 2. Inject Random Breaches
+        // Let's guarantee ALL strategies run at least once for thorough testing
+        for (String strategy : STRATEGIES) {
+            allTransactions.addAll(injectBreach(strategy, customers));
+        }
+
+        // 3. Compile to CSV
         StringBuilder csvBuilder = new StringBuilder();
         csvBuilder.append(HEADER);
-
-        for (int i = 1; i <= count; i++) {
-            String[] row = buildRow(i, customers);
+        for (String[] row : allTransactions) {
             csvBuilder.append(String.join(",", row)).append("\n");
         }
 
         return csvBuilder.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    private String[] buildRow(int index, List<FakeCustomer> customers) {
-        String transactionRef = "TXN" + Instant.now().toEpochMilli() + faker.number().digits(6);
+    // ====================================================================
+    // TYPOLOGY INJECTORS (The "Bad Actor" logic)
+    // ====================================================================
+    private List<String[]> injectBreach(String strategy, List<FakeCustomer> customers) {
+        List<String[]> breachTxns = new ArrayList<>();
+        FakeCustomer primary = getRandomCustomer(customers, null);
 
-        // Pick a primary customer from our generated DB
+        // Use OffsetDateTime to guarantee correct timezone parsing in PostgreSQL
+        OffsetDateTime now = OffsetDateTime.now();
+
+        switch (strategy) {
+            case "VELOCITY" -> {
+                // High frequency: 15 transactions in 15 minutes (Beats standard threshold of 10)
+                FakeCustomer target = findSpecificTarget(customers, "BRK-VELOCITY-01", primary);
+                for (int i = 0; i < 15; i++) {
+                    breachTxns.add(createCustomTxn(target, getRandomCustomer(customers, target), "500.00", now.minus(i, ChronoUnit.MINUTES), "ATM"));
+                }
+            }
+            case "STRUCTURING" -> {
+                // Smurfing: 8 transactions of $9000 (total $72k) over 3 days (Beats standard threshold of $50k / 5 txns)
+                FakeCustomer target = findSpecificTarget(customers, "BRK-STRUCT-01", primary);
+                for (int i = 0; i < 8; i++) {
+                    breachTxns.add(createCustomTxn(target, getRandomCustomer(customers, target), "9000.00", now.minus(i * 5L, ChronoUnit.HOURS), "CASH"));
+                }
+            }
+            case "DORMANT_REACTIVATION" -> {
+                // 1 large transaction exactly 1 hour ago for a previously sleeping account
+                FakeCustomer target = findSpecificTarget(customers, "BRK-DORMANT-01", primary);
+                breachTxns.add(createCustomTxn(target, getRandomCustomer(customers, target), "25000.00", now.minus(1, ChronoUnit.HOURS), "WIRE"));
+            }
+            case "LOW_INCOME_HIGH_TRANSFER" -> {
+                // Income is $800, but moves $50,000
+                FakeCustomer target = findSpecificTarget(customers, "BRK-LOW-INCOME-01", primary);
+                breachTxns.add(createCustomTxn(target, getRandomCustomer(customers, target), "50000.00", now.minus(30, ChronoUnit.MINUTES), "WIRE"));
+            }
+            case "SUDDEN_SPIKE" -> {
+                // Normally does small amounts, suddenly does huge amount
+                FakeCustomer target = findSpecificTarget(customers, "BRK-SPIKE-01", primary);
+                breachTxns.add(createCustomTxn(target, getRandomCustomer(customers, target), "95000.00", now.minus(12, ChronoUnit.HOURS), "RTGS"));
+            }
+            case "PASS_THROUGH" -> {
+                // Money in, money out almost immediately
+                FakeCustomer middleMan = primary;
+                FakeCustomer sender = getRandomCustomer(customers, middleMan);
+                FakeCustomer ultimateReceiver = getRandomCustomer(customers, middleMan);
+                breachTxns.add(createCustomTxn(sender, middleMan, "80000.00", now.minus(2, ChronoUnit.HOURS), "WIRE"));
+                breachTxns.add(createCustomTxn(middleMan, ultimateReceiver, "79950.00", now.minus(1, ChronoUnit.HOURS), "WIRE")); // Leaves $50
+            }
+            case "FUNNEL" -> {
+                // Many to One: 4 different people send large amounts to 1 person in a short time
+                FakeCustomer funnelTarget = primary;
+                for (int i = 0; i < 4; i++) {
+                    FakeCustomer sender = getRandomCustomer(customers, funnelTarget);
+                    breachTxns.add(createCustomTxn(sender, funnelTarget, "9500.00", now.minus(i * 30L, ChronoUnit.MINUTES), "ONLINE"));
+                }
+            }
+            case "LARGE_TRANSACTION" ->
+                    breachTxns.add(createCustomTxn(primary, getRandomCustomer(customers, primary), "750000.00", now.minus(2, ChronoUnit.DAYS), "WIRE"));
+            case "ROUND_AMOUNT" ->
+                    breachTxns.add(createCustomTxn(primary, getRandomCustomer(customers, primary), "50000.00", now.minus(5, ChronoUnit.DAYS), "ONLINE"));
+        }
+        return breachTxns;
+    }
+
+    // ====================================================================
+    // HELPER METHODS
+    // ====================================================================
+
+    private String[] createCustomTxn(FakeCustomer orig, FakeCustomer ben, String amount, OffsetDateTime timestamp, String type) {
+        String ref = "TXN-BRCH-" + System.currentTimeMillis() + random.nextInt(999);
+        return new String[]{
+                ref, orig.getAccountNumber(), orig.getCustomerName(), "OUR_BANK", orig.getCountryOfResidence(),
+                ben.getAccountNumber(), ben.getCustomerName(), "OUR_BANK", ben.getCountryOfResidence(),
+                amount, "USD", type, "ONLINE", timestamp.toString(), "Suspicious Activity", "CLEAN"
+        };
+    }
+
+    private FakeCustomer findSpecificTarget(List<FakeCustomer> customers, String targetAcct, FakeCustomer fallback) {
+        return customers.stream()
+                .filter(c -> c.getAccountNumber().equals(targetAcct))
+                .findFirst()
+                .orElse(fallback);
+    }
+
+    private FakeCustomer getRandomCustomer(List<FakeCustomer> customers, FakeCustomer exclude) {
+        FakeCustomer c = customers.get(random.nextInt(customers.size()));
+        while (exclude != null && c.getAccountNumber().equals(exclude.getAccountNumber())) {
+            c = customers.get(random.nextInt(customers.size()));
+        }
+        return c;
+    }
+
+    // ====================================================================
+    // BACKGROUND NOISE GENERATOR
+    // ====================================================================
+    private String[] buildNoiseRow(int index, List<FakeCustomer> customers) {
+        String transactionRef = "TXN" + System.currentTimeMillis() + faker.number().digits(6);
         FakeCustomer primaryCustomer = customers.get(random.nextInt(customers.size()));
 
         String originatorAccountNo, originatorName, originatorBankCode, originatorCountry;
         String beneficiaryAccountNo, beneficiaryName, beneficiaryBankCode, beneficiaryCountry;
 
-        // 60% of transactions are internal (between two of our generated customers)
-        // 40% are external (in or out)
+        // 60% internal transfers, 40% external
         boolean isInternalTransfer = random.nextInt(100) < 60;
 
         if (isInternalTransfer) {
-            FakeCustomer secondaryCustomer = customers.get(random.nextInt(customers.size()));
-            while (primaryCustomer.getAccountNumber().equals(secondaryCustomer.getAccountNumber())) {
-                secondaryCustomer = customers.get(random.nextInt(customers.size()));
-            }
+            FakeCustomer secondaryCustomer = getRandomCustomer(customers, primaryCustomer);
 
             originatorAccountNo = primaryCustomer.getAccountNumber();
             originatorName = primaryCustomer.getCustomerName();
@@ -100,19 +206,21 @@ public class TransactionCsvGenerator {
             }
         }
 
-        // --- Rest of your original logic (Amounts, Currencies, Dates, Edge Cases) ---
         int currRoll = random.nextInt(100);
         String currencyCode = currRoll < 60 ? "INR" : currRoll < 85 ? "USD" : CURRENCIES[random.nextInt(CURRENCIES.length)];
-        double amountBase = 100 + (499900 * random.nextDouble());
+
+        // Keep normal amounts safely under $10k most of the time to avoid accidental structuring flags
+        double amountBase = 100 + (8000 * random.nextDouble());
+
         String transactionType = TXN_TYPES[random.nextInt(TXN_TYPES.length)];
         String channel = CHANNELS[random.nextInt(CHANNELS.length)];
 
         // Edge Cases
         if (index % 31 == 0) { amountBase = 9900 + (99 * random.nextDouble()); channel = "CASH"; }
-        if (random.nextInt(100) < 8) { amountBase = 10000 + (490000 * random.nextDouble()); }
+        if (random.nextInt(100) < 8) { amountBase = 10000 + (25000 * random.nextDouble()); }
         if (random.nextInt(100) < 5) {
-            int[] roundMultipliers = {1000, 5000, 10000, 50000};
-            amountBase = roundMultipliers[random.nextInt(roundMultipliers.length)] * (1 + random.nextInt(10));
+            int[] roundMultipliers = {1000, 5000};
+            amountBase = roundMultipliers[random.nextInt(roundMultipliers.length)] * (1 + random.nextInt(5));
         }
 
         if (!isInternalTransfer && index % 43 == 0) {
@@ -123,7 +231,10 @@ public class TransactionCsvGenerator {
         if (channel.equals("UPI")) transactionType = "WIRE";
         if (channel.equals("ATM")) transactionType = "CASH";
 
-        Instant transactionTimestamp = Instant.now().minus(random.nextInt(90), ChronoUnit.DAYS).minus(random.nextInt(24), ChronoUnit.HOURS);
+        // Generate background transactions using OffsetDateTime correctly
+        OffsetDateTime transactionTimestamp = OffsetDateTime.now()
+                .minus(random.nextInt(90), ChronoUnit.DAYS)
+                .minus(random.nextInt(24), ChronoUnit.HOURS);
 
         String referenceNote = "";
         if (index % 89 == 0) referenceNote = "Loan payment";

@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -17,15 +18,18 @@ import java.util.UUID;
 
 @Repository
 public interface AlertRepository extends JpaRepository<Alert, UUID> {
-    @Query("SELECT a FROM Alert a WHERE " +
-            "(:severity IS NULL OR a.severity = :severity) AND " +
-            "(:status IS NULL OR a.status = :status) AND " +
-            "(a.sysCreatedAt BETWEEN :start AND :end)")
+
+    @Query("""
+    SELECT a FROM Alert a 
+    WHERE (:severity IS NULL OR a.severity = :severity) 
+      AND (:status IS NULL OR a.status = :status) 
+      AND (a.sysCreatedAt BETWEEN :start AND :end)
+""")
     Page<Alert> findWithFilters(
             @Param("severity") AlertSeverity severity,
             @Param("status") AlertStatus status,
-            @Param("start") LocalDateTime start,
-            @Param("end") LocalDateTime end,
+            @Param("start") Instant start, // Updated to Instant
+            @Param("end") Instant end,     // Updated to Instant
             Pageable pageable);
 
     @Query("SELECT a.severity, COUNT(a) FROM Alert a WHERE a.status = :status GROUP BY a.severity")

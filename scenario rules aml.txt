@@ -1,0 +1,99 @@
+Structuring
+
+rule:
+{
+  "ruleName": "Suspicious Structuring (Under Threshold Smurfing)",
+  "ruleType": "STRUCTURING",
+  "severity": "HIGH",
+  "baseRiskScore": 85
+}
+conditions:
+1){
+  "ruleId": "your-rule-uuid-here",
+  "attributeName": "Individual Transaction Ceiling",
+  "aggregationFunction": "NONE",
+  "thresholdValue": "10000",
+  "valueDataType": "DECIMAL",
+  "lookbackPeriod": "7 days" 
+}
+2){
+  "ruleId": "your-rule-uuid-here",
+  "attributeName": "Total Cumulative Amount",
+  "aggregationFunction": "SUM",
+  "thresholdValue": "50000",
+  "valueDataType": "DECIMAL"
+}
+3){
+  "ruleId": "your-rule-uuid-here",
+  "attributeName": "Minimum Split Count",
+  "aggregationFunction": "COUNT",
+  "thresholdValue": "5",
+  "valueDataType": "INTEGER"
+}
+
+for tenant override:
+{
+  "tenantRuleId": "019dc8d8-2297-701b-927b-18bd9f842474",
+  "globalConditionId": "a1b2c3d4-e5f6-7890-abcd-111111111111",
+  "overrideValue": "5000",
+  "overrideLookbackPeriod": "30 days",
+  "overrideAggregationFunction": "NONE"
+}
+
+
+Velocity
+
+{
+  "ruleName": "High Frequency Transaction Monitor",
+  "ruleType": "VELOCITY",
+  "severity": "MEDIUM",
+  "baseRiskScore": 50
+}
+
+conditions:
+{
+  "ruleId": "019dc8d4-2969-7884-a327-59d4e2b98d57", 
+  "attributeName": "Transaction Count per Hour",
+  "aggregationFunction": "COUNT",
+  "lookbackPeriod": "1h",
+  "thresholdValue": "10",
+  "valueDataType": "INTEGER"
+}
+
+
+Dormant:
+
+{
+  "ruleName": "Dormant Account Reactivation (High Value)",
+  "ruleType": "DORMANT_REACTIVATION",
+  "severity": "CRITICAL",
+  "baseRiskScore": 85
+}
+
+conditions:
+
+{
+  "ruleId": "uuid-from-step-1",
+  "attributeName": "Silence Period (Dormancy)",
+  "aggregationFunction": "MIN",
+  "lookbackPeriod": "180 days",
+  "thresholdValue": "0",
+  "valueDataType": "STRING"
+}
+{
+  "ruleId": "uuid-from-step-1",
+  "attributeName": "Detection Window (Reactivation)",
+  "aggregationFunction": "MAX",
+  "lookbackPeriod": "7 days",
+  "thresholdValue": "0",
+  "valueDataType": "STRING"
+}
+{
+  "ruleId": "uuid-from-step-1",
+  "attributeName": "Reactivation Amount Threshold",
+  "aggregationFunction": "NONE",
+  "thresholdValue": "5000",
+  "valueDataType": "DECIMAL"
+}
+
+

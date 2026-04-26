@@ -15,7 +15,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "str_filings", schema = "common_schema")
+@Table(name = "str_filings")
 @Getter
 @Setter
 @NoArgsConstructor

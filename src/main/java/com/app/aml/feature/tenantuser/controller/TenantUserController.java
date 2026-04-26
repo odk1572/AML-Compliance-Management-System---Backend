@@ -174,7 +174,7 @@ public class TenantUserController {
      * Administrative password reset (generates temporary password).
      */
     @PostMapping("/{id}/reset-password")
-    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'SUPER_ADMIN','COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
             @PathVariable UUID id,
             HttpServletRequest request) {

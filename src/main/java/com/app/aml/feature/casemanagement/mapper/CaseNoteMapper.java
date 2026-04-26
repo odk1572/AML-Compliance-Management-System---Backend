@@ -1,37 +1,28 @@
 package com.app.aml.feature.casemanagement.mapper;
 
-
 import com.app.aml.feature.casemanagement.dto.caseNote.CaseNoteResponseDto;
-import com.app.aml.feature.casemanagement.dto.caseNote.CreateCaseNoteRequestDto;
+import com.app.aml.feature.casemanagement.dto.request.CaseNoteRequestDto;
 import com.app.aml.feature.casemanagement.entity.CaseNote;
-import com.app.aml.feature.casemanagement.entity.CaseRecord;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
-import java.util.UUID;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CaseNoteMapper {
 
+    // Maps the nested CaseRecord's ID to the flat caseId field in the Response DTO
     @Mapping(target = "caseId", source = "caseRecord.id")
     CaseNoteResponseDto toResponseDto(CaseNote entity);
 
     List<CaseNoteResponseDto> toResponseDtoList(List<CaseNote> entities);
 
+    // Only maps noteType and noteContent from the Request DTO.
+    // Ignores the rest because the Service layer sets them manually.
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "sysCreatedAt", ignore = true)
     @Mapping(target = "authoredBy", ignore = true)
-    @Mapping(target = "caseRecord", source = "caseId")
-    CaseNote toEntity(CreateCaseNoteRequestDto dto);
-
-    default CaseRecord mapCaseIdToCaseRecord(UUID caseId) {
-        if (caseId == null) {
-            return null;
-        }
-        CaseRecord caseRecord = new CaseRecord();
-        caseRecord.setId(caseId);
-        return caseRecord;
-    }
+    @Mapping(target = "caseRecord", ignore = true)
+    CaseNote toEntity(CaseNoteRequestDto dto);
 }

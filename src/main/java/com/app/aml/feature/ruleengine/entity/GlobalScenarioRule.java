@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -56,6 +57,7 @@ public class GlobalScenarioRule {
      * UpdatedAt is excluded as per specific DB requirements for this link table.
      */
     @CreatedDate
+    @CreationTimestamp
     @Column(name = "sys_created_at", nullable = false, updatable = false)
     private LocalDateTime sysCreatedAt;
 }

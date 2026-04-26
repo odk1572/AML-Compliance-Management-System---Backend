@@ -113,4 +113,20 @@ public class NotificationEventListenerImpl implements NotificationEventListener 
 
         mailService.sendEmail(event.getFiledByEmail(), subject, body);
     }
+    @Async
+    @EventListener
+    public void handleCaseEscalated(CaseEscalatedEvent event) {
+        log.info("Caught CaseEscalatedEvent for Case: {}", event.getCaseReference());
+
+        String subject = "ACTION REQUIRED: AML Case Escalated - " + event.getCaseReference();
+        String body = String.format(
+                "Hello,\n\nCase %s has been escalated to you for immediate review.\n\n" +
+                        "Escalation Reason:\n%s\n\n" +
+                        "Please log in to the AML portal to review the investigation details and determine the next steps.\n\n" +
+                        "Thank you,\nAML Platform Security",
+                event.getCaseReference(), event.getReason()
+        );
+
+        mailService.sendEmail(event.getAdminEmail(), subject, body);
+    }
 }

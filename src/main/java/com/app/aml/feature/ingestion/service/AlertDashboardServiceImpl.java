@@ -20,10 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -39,20 +36,24 @@ public class AlertDashboardServiceImpl implements AlertDashboardService {
 
     private final AlertMapper alertMapper;
     private final AlertEvidenceMapper evidenceMapper;
-
     @Override
     @Transactional(readOnly = true)
     public Page<AlertResponseDto> getAlerts(AlertSeverity severity, AlertStatus status,
                                             LocalDate from, LocalDate to, Pageable pageable) {
 
-        var start = (from != null) ? from.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0);
-        var end = (to != null) ? to.atTime(LocalTime.MAX) : LocalDateTime.of(2099, 12, 31, 23, 59);
+        // Convert LocalDate -> ZonedDateTime -> Instant
+        Instant start = (from != null)
+                ? from.atStartOfDay(ZoneId.systemDefault()).toInstant()
+                : Instant.parse("2000-01-01T00:00:00Z");
 
-        // Use a lambda instead of alertMapper::toResponseDto
+        Instant end = (to != null)
+                ? to.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant()
+                : Instant.parse("2099-12-31T23:59:59.999Z");
+
+        // Pass the perfectly formatted Instants to your repository
         return alertRepo.findWithFilters(severity, status, start, end, pageable)
                 .map(alert -> alertMapper.toResponseDto(alert));
     }
-
     @Override
     @Transactional(readOnly = true)
     public AlertDetailResponseDto getAlertDetail(UUID alertId) {
@@ -93,13 +94,16 @@ public class AlertDashboardServiceImpl implements AlertDashboardService {
     @Transactional
     public void closeAlert(UUID alertId, AlertStatus resolution, String comment) {
         Alert alert = alertRepo.findById(alertId)
-                .orElseThrow(() -> new EntityNotFoundException("Alert not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Alert alertId " + alertId + " not found"));
 
+        // 1. Validation: Ensure we are only using "Final" statuses here
         if (resolution != AlertStatus.CLOSED_FALSE_POSITIVE && resolution != AlertStatus.CLOSED_CONFIRMED) {
-            throw new IllegalArgumentException("Invalid closing status for investigation finalization");
+            throw new IllegalArgumentException("Use bundleToCase() for investigations. This method is only for final closure.");
         }
 
+        // 3. Update Status
         alert.setStatus(resolution);
+
         alertRepo.save(alert);
     }
 }

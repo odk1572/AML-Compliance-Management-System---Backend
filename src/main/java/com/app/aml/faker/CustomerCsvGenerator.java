@@ -22,16 +22,28 @@ public class CustomerCsvGenerator {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final String HEADER = "accountNumber,customerName,customerType,idType,idNumber,nationality,countryOfResidence,monthlyIncome,netWorth,riskRating,riskScore,isPep,isDormant,accountOpenedOn,lastActivityDate,kycStatus\n";
 
-    // 1. Generate the Objects in Memory
     public List<FakeCustomer> generateCustomerList(int count) {
         List<FakeCustomer> customers = new ArrayList<>();
-        for (int i = 1; i <= count; i++) {
-            customers.add(buildCustomer(i));
+
+        // ====================================================================
+        // TARGET PERSONAS: Guaranteed Rule Breakers for Testing
+        // ====================================================================
+        customers.add(buildPersona("BRK-VELOCITY-01", "Velocity Breaker LLC", "CORPORATE", "HIGH", "15000.00", false, LocalDate.now().minusYears(2)));
+        customers.add(buildPersona("BRK-STRUCT-01", "Structuring Smurf Inc", "INDIVIDUAL", "HIGH", "5000.00", false, LocalDate.now().minusYears(1)));
+        customers.add(buildPersona("BRK-DORMANT-01", "Rip Van Winkle", "INDIVIDUAL", "MEDIUM", "2000.00", true, LocalDate.now().minusYears(5)));
+        customers.add(buildPersona("BRK-LOW-INCOME-01", "Low Income High Vol", "INDIVIDUAL", "CRITICAL", "800.00", false, LocalDate.now().minusMonths(6)));
+        customers.add(buildPersona("BRK-SPIKE-01", "Steady Eddy", "INDIVIDUAL", "LOW", "4000.00", false, LocalDate.now().minusYears(3)));
+
+        // ====================================================================
+        // NORMAL RANDOMIZED CUSTOMERS (Background Noise)
+        // ====================================================================
+        for (int i = customers.size() + 1; i <= count; i++) {
+            customers.add(buildRandomCustomer(i));
         }
+
         return customers;
     }
 
-    // 2. Convert Objects to CSV Bytes
     public byte[] generateCsvBytes(List<FakeCustomer> customers) {
         StringBuilder csvBuilder = new StringBuilder();
         csvBuilder.append(HEADER);
@@ -41,9 +53,8 @@ public class CustomerCsvGenerator {
         return csvBuilder.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    private FakeCustomer buildCustomer(int index) {
+    private FakeCustomer buildRandomCustomer(int index) {
         String accountNumber = "ACCT" + faker.number().digits(8);
-
         boolean isCorporate = random.nextInt(100) < 20;
         String customerType = isCorporate ? "CORPORATE" : "INDIVIDUAL";
         String customerName = isCorporate ? faker.company().name() : faker.name().fullName();
@@ -51,7 +62,7 @@ public class CustomerCsvGenerator {
 
         String[] idTypes = isCorporate ? new String[]{"CIN", "PAN", "LEI"} : new String[]{"AADHAAR", "PAN", "PASSPORT", "VOTER_ID"};
         String idType = idTypes[random.nextInt(idTypes.length)];
-        String idNumber = faker.regexify("[A-Z0-9]{10}"); // Generic alphanumeric placeholder
+        String idNumber = faker.regexify("[A-Z0-9]{10}");
 
         String nationality = "IND";
         String countryOfResidence = "IND";
@@ -78,12 +89,10 @@ public class CustomerCsvGenerator {
         String[] kycStatuses = {"APPROVED", "PENDING", "REJECTED"};
         String kycStatus = kycStatuses[random.nextInt(100) < 85 ? 0 : random.nextInt(3)];
 
-        // Edge Cases (same as your original logic)
+        // Random Edge Cases
         if (index % 47 == 0) { nationality = "PRK"; countryOfResidence = "IRN"; riskRating = "CRITICAL"; riskScore = 99; }
         if (index % 83 == 0) { isPep = true; monthlyIncomeBase = 500.00; netWorthBase = 95000000.00; riskRating = "HIGH"; }
-        if (index % 113 == 0) { isDormant = true; lastActivityDate = LocalDate.now().minusDays(1); }
         if (index % 137 == 0) { idType = ""; idNumber = ""; kycStatus = "PENDING"; }
-        if (index % 167 == 0) { isCorporate = true; customerType = "CORPORATE"; monthlyIncomeBase = 0.00; netWorthBase = 0.00; accountOpenedOn = LocalDate.now().minusDays(2); }
 
         return FakeCustomer.builder()
                 .accountNumber(accountNumber)
@@ -102,6 +111,29 @@ public class CustomerCsvGenerator {
                 .accountOpenedOn(accountOpenedOn.format(DATE_FORMATTER))
                 .lastActivityDate(lastActivityDate != null ? lastActivityDate.format(DATE_FORMATTER) : "")
                 .kycStatus(kycStatus)
+                .build();
+    }
+
+    // Helper for creating predictable targets dynamically
+    private FakeCustomer buildPersona(String acct, String name, String type, String risk, String income, boolean dormant, LocalDate opened) {
+        LocalDate lastActivity = dormant ? opened.plusDays(10) : LocalDate.now();
+        return FakeCustomer.builder()
+                .accountNumber(acct)
+                .customerName(name)
+                .customerType(type)
+                .idType("PAN")
+                .idNumber(faker.regexify("[A-Z]{5}[0-9]{4}[A-Z]{1}")) // Generates valid-looking PAN format
+                .nationality("IND")
+                .countryOfResidence("IND")
+                .monthlyIncome(income)
+                .netWorth("500000.00")
+                .riskRating(risk)
+                .riskScore(risk.equals("CRITICAL") ? "95" : "75")
+                .isPep("false")
+                .isDormant(String.valueOf(dormant))
+                .accountOpenedOn(opened.format(DATE_FORMATTER))
+                .lastActivityDate(lastActivity.format(DATE_FORMATTER))
+                .kycStatus("APPROVED")
                 .build();
     }
 }

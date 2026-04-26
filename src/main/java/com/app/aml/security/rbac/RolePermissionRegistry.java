@@ -20,7 +20,8 @@ public class RolePermissionRegistry {
                 Permission.TENANT_ONBOARD,
                 Permission.REPORT_CROSS_TENANT,
                 Permission.REPORT_SYSTEM_WIDE,
-                Permission.CASE_NOTE_READ // View only for platform-level audit trails
+                Permission.CASE_NOTE_READ ,
+                Permission.CASE_INVESTIGATE// View only for platform-level audit trails
         ));
 
         // ---------------------------------------------------------

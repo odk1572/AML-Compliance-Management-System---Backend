@@ -31,18 +31,28 @@ public class VelocityRuleExecutor implements RuleExecutorStrategy {
         int threshold = 0;
         String lookback = null;
 
+        // --- ADDED DEBUGGING LOGS ---
+        log.info("Executing Velocity Rule: {}", rule.getTypologyLabel());
+        log.info("Received {} conditions to evaluate.", rule.getConditions().size());
+
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
-            String agg = cond.getAggregationFunction() != null ? cond.getAggregationFunction().toUpperCase() : "NONE";
+            // Print exactly what the database handed us
+            log.info("Condition Dump -> AggFn: '{}', Threshold: '{}', Lookback: '{}'",
+                    cond.getAggregationFunction(), cond.getThresholdValue(), cond.getLookbackPeriod());
+
+            String agg = cond.getAggregationFunction() != null ? cond.getAggregationFunction().toUpperCase().trim() : "NONE";
 
             if ("COUNT".equals(agg)) {
-                threshold = Integer.parseInt(cond.getThresholdValue());
-                if (cond.getLookbackPeriod() != null) {
-                    lookback = cond.getLookbackPeriod();
+                // Use trim() to prevent unseen spaces from breaking the parser
+                threshold = Integer.parseInt(cond.getThresholdValue().trim());
+                if (cond.getLookbackPeriod() != null && !cond.getLookbackPeriod().isBlank()) {
+                    lookback = cond.getLookbackPeriod().trim();
                 }
             }
         }
 
         if (threshold <= 0 || lookback == null) {
+            log.error("CRITICAL DATA MISSING! Threshold resolved to: {}, Lookback resolved to: {}", threshold, lookback);
             throw new IllegalStateException("Required parameters missing for Velocity Rule: " + rule.getTypologyLabel());
         }
 

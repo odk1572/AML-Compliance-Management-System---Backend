@@ -9,4 +9,5 @@ public interface NotificationEventListener {
     void handleAccountLocked(AccountLockedEvent event);
     void handleTenantCreated(TenantCreatedEvent event);
     void handleStrFiled(StrFiledEvent event);
+    void handleCaseEscalated(CaseEscalatedEvent event);
 }

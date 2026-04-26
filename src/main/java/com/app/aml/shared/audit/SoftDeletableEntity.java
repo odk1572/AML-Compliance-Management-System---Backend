@@ -1,18 +1,20 @@
 package com.app.aml.shared.audit;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-
 @Getter
 @Setter
 @MappedSuperclass
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
+@EntityListeners(AuditingEntityListener.class) // Enables automatic timestamping
 public abstract class SoftDeletableEntity extends AuditableEntity {
 
     @Builder.Default

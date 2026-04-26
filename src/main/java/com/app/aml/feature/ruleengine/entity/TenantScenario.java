@@ -1,5 +1,6 @@
 package com.app.aml.feature.ruleengine.entity;
 
+import com.app.aml.domain.enums.RuleStatus;
 import com.app.aml.shared.audit.AuditableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
@@ -44,9 +45,10 @@ public class TenantScenario extends AuditableEntity {
      * Current status of the scenario for this tenant.
      * Allowed values: ACTIVE, PAUSED.
      */
-    @NotBlank
+    @NotNull(message = "Status cannot be null")
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private String status = "PAUSED";
+    private RuleStatus status = RuleStatus.PAUSED;
 
     /**
      * Audit field identifying the bank admin who last activated this scenario.
@@ -63,7 +65,7 @@ public class TenantScenario extends AuditableEntity {
      * @param adminId The ID of the admin performing the activation.
      */
     public void activate(UUID adminId) {
-        this.status = "ACTIVE";
+        this.status = RuleStatus.ACTIVE;
         this.sysActivatedBy = adminId;
     }
 
@@ -72,6 +74,6 @@ public class TenantScenario extends AuditableEntity {
      * until reactivated.
      */
     public void pause() {
-        this.status = "PAUSED";
+        this.status = RuleStatus.PAUSED;
     }
 }

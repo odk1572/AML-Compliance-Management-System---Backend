@@ -1,6 +1,5 @@
 package com.app.aml.feature.ruleengine.executor;
 
-
 import com.app.aml.multitenency.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,10 +37,19 @@ public class GeographicRiskEvaluator {
                 
                 UNION
                 
-                -- 2. Destination of outgoing funds (Optimized with JOIN)
-                SELECT t.beneficiary_country_code AS country_code 
+                -- 2. Destination of OUTGOING funds (Customer sent money)
+                SELECT t.beneficiary_country AS country_code 
                 FROM %s.transactions t
                 JOIN %s.customer_profiles cp ON t.originator_account_no = cp.account_number
+                WHERE cp.id = ?
+                  AND t.transaction_timestamp >= CURRENT_TIMESTAMP - INTERVAL '30 days'
+                  
+                UNION
+                
+                -- 3. Origin of INCOMING funds (Customer received money)
+                SELECT t.originator_country AS country_code 
+                FROM %s.transactions t
+                JOIN %s.customer_profiles cp ON t.beneficiary_account_no = cp.account_number
                 WHERE cp.id = ?
                   AND t.transaction_timestamp >= CURRENT_TIMESTAMP - INTERVAL '30 days'
             )
@@ -58,9 +66,10 @@ public class GeographicRiskEvaluator {
                END,
                gr.basel_aml_index_score DESC
             LIMIT 1
-        """, schema, schema, schema);
+        """, schema, schema, schema, schema, schema);
 
         try {
+            // Note: We now pass customerId 3 times because of the 3 WHERE clauses
             return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
                 String riskTier = rs.getString("risk_tier").toUpperCase();
                 int baselScore = rs.getInt("basel_aml_index_score");
@@ -76,7 +85,7 @@ public class GeographicRiskEvaluator {
                         customerId, riskTier, baselScore, multiplier);
 
                 return multiplier;
-            }, customerId, customerId);
+            }, customerId, customerId, customerId);
 
         } catch (EmptyResultDataAccessException e) {
             // Default to 1.0 if no high-risk countries are found or transaction history is empty

@@ -49,7 +49,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
         TenantScenario tenantScenario = new TenantScenario();
         tenantScenario.setGlobalScenarioId(globalScenarioId);
         // Fix: Convert Enum to String
-        tenantScenario.setStatus(RuleStatus.ACTIVE.name());
+        tenantScenario.setStatus(RuleStatus.ACTIVE);
 
         TenantScenario savedScenario = tenantScenarioRepo.save(tenantScenario);
 
@@ -95,9 +95,9 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
                 .orElseThrow(() -> new EntityNotFoundException("Tenant Scenario not found"));
 
         // Fix: Get status as String
-        String oldStatus = scenario.getStatus();
+        RuleStatus oldStatus = scenario.getStatus();
         // Fix: Set status as String
-        scenario.setStatus(RuleStatus.PAUSED.name());
+        scenario.setStatus(RuleStatus.PAUSED);
         TenantScenario savedScenario = tenantScenarioRepo.save(scenario);
 
         TenantScenarioResponseDto response = tenantScenarioMapper.toResponseDto(savedScenario);
@@ -124,12 +124,12 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
                 .orElseThrow(() -> new EntityNotFoundException("Tenant Scenario not found"));
 
         // Fix: String comparison instead of ==
-        if (RuleStatus.ACTIVE.name().equals(scenario.getStatus())) {
+        if (RuleStatus.ACTIVE.equals(scenario.getStatus())) {
             throw new IllegalStateException("Scenario is already active.");
         }
 
-        String oldStatus = scenario.getStatus();
-        scenario.setStatus(RuleStatus.ACTIVE.name());
+        RuleStatus oldStatus = scenario.getStatus();
+        scenario.setStatus(RuleStatus.ACTIVE);
         TenantScenario savedScenario = tenantScenarioRepo.save(scenario);
 
         TenantScenarioResponseDto response = tenantScenarioMapper.toResponseDto(savedScenario);

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+            line-height: 1.5;
+        }
+        .header {
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .case-title {
+            font-size: 24pt;
+            color: #2c3e50;
+            margin: 0;
+        }
+        .summary-table {
+            width: 100%;
+            margin-bottom: 30px;
+            background-color: #f8f9fa;
+            padding: 10px;
+        }
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .audit-table th {
+            background-color: #2c3e50;
+            color: white;
+            text-align: left;
+            padding: 8px;
+            font-size: 10pt;
+        }
+        .audit-table td {
+            border-bottom: 1px solid #bdc3c7;
+            padding: 8px;
+            font-size: 9pt;
+            vertical-align: top;
+        }
+        .metadata {
+            font-family: monospace;
+            font-size: 8pt;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1 class="case-title">Case Audit Trail</h1>
+    <p th:text="'Generated on: ' + ${generatedOn}">26-Apr-2026</p>
+</div>
+
+<table class="summary-table">
+    <tr>
+        <td><strong>Case Reference:</strong></td>
+        <td th:text="${caseReference}">CAS-12345</td>
+        <td><strong>Current Status:</strong></td>
+        <td th:text="${status}">OPEN</td>
+    </tr>
+</table>
+
+<table class="audit-table">
+    <thead>
+    <tr>
+        <th>Timestamp</th>
+        <th>Action</th>
+        <th>User ID</th>
+        <th>Details</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="trail : ${trails}">
+        <td th:text="${trail.sysCreatedAt}">2026-04-26</td>
+        <td th:text="${trail.eventType}">CASE_CREATED</td>
+        <td th:text="${trail.actorId}">Admin</td>
+        <td class="metadata" th:text="${trail.eventMetadata}">{}</td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

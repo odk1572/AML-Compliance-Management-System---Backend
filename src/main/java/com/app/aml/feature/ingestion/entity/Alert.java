@@ -32,10 +32,10 @@ public class Alert extends AuditableEntity {
     @Column(name = "customer_profile_id", nullable = false)
     private UUID customerProfileId;
 
-    // Direct reference to the primary/triggering transaction that caused the alert
-    @NotNull
+    // Direct reference to the prima
+    // Change this to be optional
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "transaction_id", nullable = false)
+    @JoinColumn(name = "triggering_transaction_id", nullable = true) // Set to true
     private Transaction transaction;
 
     // Local Scenario Execution Context

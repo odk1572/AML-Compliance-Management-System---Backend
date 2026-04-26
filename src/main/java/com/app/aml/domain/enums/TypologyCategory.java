@@ -9,5 +9,6 @@ public enum TypologyCategory {
     FRAUD_ML,
     GEO_RISK,
     TBML,
-    MULE_ACTIVITY
+    MULE_ACTIVITY,
+    VELOCITY
 }
