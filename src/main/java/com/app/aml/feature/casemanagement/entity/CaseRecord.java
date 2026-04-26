@@ -38,6 +38,9 @@ public class CaseRecord extends SoftDeletableEntity {
     @Column(name = "assigned_by")
     private UUID assignedBy;
 
+    @Transient
+    private UUID customerProfileId;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)

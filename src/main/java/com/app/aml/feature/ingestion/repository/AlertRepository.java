@@ -30,4 +30,5 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
 
     @Query("SELECT a.severity, COUNT(a) FROM Alert a WHERE a.status = :status GROUP BY a.severity")
     List<Object[]> countByStatusAndGroupBySeverity(@Param("status") AlertStatus status);
+    List<Alert> findTop5ByCustomerProfileIdOrderBySysCreatedAtDesc(UUID customerProfileId);
 }

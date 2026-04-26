@@ -16,7 +16,6 @@ public interface AlertDashboardService {
                                      LocalDate from, LocalDate to, Pageable pageable);
     AlertDetailResponseDto getAlertDetail(UUID alertId);
     Map<String, Long> getSeverityCounts();
-    void assignAlert(UUID alertId, UUID userId);
     void closeAlert(UUID alertId, AlertStatus resolution, String comment);
 
 }

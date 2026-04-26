@@ -90,17 +90,6 @@ public class AlertDashboardServiceImpl implements AlertDashboardService {
                         row -> (Long) row[1]
                 ));
     }
-
-    @Transactional
-    public void assignAlert(UUID alertId, UUID userId) {
-        Alert alert = alertRepo.findById(alertId)
-                .orElseThrow(() -> new EntityNotFoundException("Alert not found"));
-
-        alert.setSysUpdatedAt(Instant.now());
-        alert.setStatus(AlertStatus.NEW);
-        alertRepo.save(alert);
-    }
-
     @Transactional
     public void closeAlert(UUID alertId, AlertStatus resolution, String comment) {
         Alert alert = alertRepo.findById(alertId)
