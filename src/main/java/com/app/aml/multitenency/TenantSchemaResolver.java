@@ -1,8 +1,8 @@
 package com.app.aml.multitenency;
 
-import com.app.aml.domain.enums.TenantStatus;
-import com.app.aml.domain.exceptions.TenantNotFoundException;
-import com.app.aml.domain.exceptions.TenantSuspendedException;
+import com.app.aml.enums.TenantStatus;
+import com.app.aml.exceptions.TenantNotFoundException;
+import com.app.aml.exceptions.TenantSuspendedException;
 import com.app.aml.feature.tenant.entity.Tenant;
 import com.app.aml.feature.tenant.repository.TenantRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -25,21 +25,17 @@ public class TenantSchemaResolver {
     }
 
     public String resolveSchema(String tenantId) {
-        // Special case for platform operations
         if (tenantId == null || tenantId.trim().isEmpty() || tenantId.equals("common_schema")) {
             return "common_schema";
         }
 
-        // 1. Check cache manually (DO NOT use computeIfAbsent with a DB call lambda)
         String schemaName = schemaCache.get(tenantId);
         if (schemaName != null) {
             return schemaName;
         }
 
-        // 2. Fetch from DB if not in cache
         schemaName = fetchAndValidateTenant(tenantId);
 
-        // 3. Put in cache manually
         schemaCache.put(tenantId, schemaName);
 
         return schemaName;
@@ -59,7 +55,6 @@ public class TenantSchemaResolver {
 
         log.debug("Cache miss. Validating tenant status in DB for: {}", tenantId);
 
-        // Logic to handle if we are passing the Schema Name directly instead of a UUID
         if (tenantId.endsWith("_schema")) {
             return tenantId;
         }
@@ -72,9 +67,6 @@ public class TenantSchemaResolver {
             return "common_schema";
         }
 
-        // CRITICAL FIX: Temporarily suspend the TenantContext.
-        // If we don't do this, the repository call below will trigger the
-        // DataSource again, asking for the schema, causing the infinite loop.
         String originalContext = TenantContext.getTenantId();
         TenantContext.clear();
 
@@ -95,7 +87,6 @@ public class TenantSchemaResolver {
             return tenant.getSchemaName();
 
         } finally {
-            // ALWAYS restore the context, even if the DB lookup fails
             if (originalContext != null) {
                 TenantContext.setTenantId(originalContext);
             }

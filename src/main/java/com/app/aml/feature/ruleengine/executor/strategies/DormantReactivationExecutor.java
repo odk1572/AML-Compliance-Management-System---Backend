@@ -1,24 +1,62 @@
 package com.app.aml.feature.ruleengine.executor.strategies;
 
+import com.app.aml.feature.ingestion.entity.CustomerProfile;
+import com.app.aml.feature.ingestion.entity.Transaction;
+import com.app.aml.feature.ruleengine.dto.RuleBreachResult;
 import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
 import com.app.aml.feature.ruleengine.executor.RuleExecutorStrategy;
 import com.app.aml.multitenency.TenantContext;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.HashSet;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.TemporalAccessor;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
+@Slf4j
 @Component
-@RequiredArgsConstructor
 public class DormantReactivationExecutor implements RuleExecutorStrategy {
 
     private final JdbcTemplate jdbcTemplate;
+    private final ObjectMapper objectMapper;
+
+    @Autowired
+    public DormantReactivationExecutor(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        SimpleModule instantModule = new SimpleModule();
+        instantModule.addDeserializer(Instant.class, new JsonDeserializer<Instant>() {
+            @Override
+            public Instant deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                String text = p.getText();
+                if (text != null && !text.endsWith("Z") && !text.contains("+") && !text.contains("-")) {
+                    text += "Z";
+                }
+                return Instant.parse(text);
+            }
+        });
+        mapper.registerModule(instantModule);
+        mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.objectMapper = mapper;
+    }
 
     @Override
     public String getRuleType() {
@@ -26,7 +64,7 @@ public class DormantReactivationExecutor implements RuleExecutorStrategy {
     }
 
     @Override
-    public Set<UUID> executeRule(RuleExecutionContextDto rule) {
+    public List<RuleBreachResult> executeRule(RuleExecutionContextDto rule) {
         String dormantPeriodRaw = null;
         String reactivationWindowRaw = null;
         BigDecimal thresholdAmount = null;
@@ -51,16 +89,17 @@ public class DormantReactivationExecutor implements RuleExecutorStrategy {
 
         String sql = String.format("""
             WITH scenario_context AS (
-                SELECT originator_account_no, beneficiary_account_no, amount, transaction_timestamp 
-                FROM %s.transactions
+                SELECT * FROM %s.transactions
                 WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL) - CAST(? AS INTERVAL)
             )
-            SELECT cp.id as customer_id 
+            SELECT 
+                row_to_json(cp.*) as customer_json, 
+                json_agg(row_to_json(t.*)) as transactions_json
             FROM scenario_context t
             JOIN %s.customer_profiles cp 
               ON (t.originator_account_no = cp.account_number OR t.beneficiary_account_no = cp.account_number)
             WHERE t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-            GROUP BY cp.id
+            GROUP BY cp.id, cp.account_number
             HAVING SUM(t.amount) >= ?
                AND NOT EXISTS (
                    SELECT 1 FROM scenario_context t2 
@@ -70,8 +109,25 @@ public class DormantReactivationExecutor implements RuleExecutorStrategy {
                )
         """, schema, schema);
 
-        List<UUID> results = jdbcTemplate.query(sql,
-                (rs, rowNum) -> UUID.fromString(rs.getString("customer_id")),
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+                    try {
+                        CustomerProfile customer = objectMapper.readValue(
+                                rs.getString("customer_json"),
+                                CustomerProfile.class
+                        );
+
+                        List<Transaction> transactions = objectMapper.readValue(
+                                rs.getString("transactions_json"),
+                                new TypeReference<List<Transaction>>() {}
+                        );
+
+                        return new RuleBreachResult(customer, transactions);
+
+                    } catch (Exception e) {
+                        log.error("Failed to parse JSON from database for Dormant Reactivation Rule", e);
+                        throw new RuntimeException("Failed to parse JSON from database", e);
+                    }
+                },
                 reactivationWindow,
                 dormantPeriod,
                 reactivationWindow,
@@ -79,7 +135,5 @@ public class DormantReactivationExecutor implements RuleExecutorStrategy {
                 reactivationWindow,
                 reactivationWindow,
                 dormantPeriod);
-
-        return new HashSet<>(results);
     }
 }

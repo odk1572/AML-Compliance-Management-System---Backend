@@ -12,9 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Map;
 
-/**
- * Shared service for handling all external media and document uploads via Cloudinary.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -22,16 +19,8 @@ public class CloudinaryService {
 
     private final Cloudinary cloudinary;
 
-    // Standardized folder paths for the AML Platform
-
-    /**
-     * Local record to encapsulate the Cloudinary response.
-     */
     public record CloudinaryUploadResult(String publicId, String secureUrl) {}
 
-    /**
-     * Uploads a Spring MultipartFile to a specified Cloudinary folder.
-     */
     public CloudinaryUploadResult uploadFile(MultipartFile file, String folder) {
         try {
             return uploadRawBytes(file.getBytes(), file.getOriginalFilename(), folder);
@@ -41,20 +30,15 @@ public class CloudinaryService {
         }
     }
 
-    /**
-     * Uploads raw bytes to Cloudinary. Useful when files are generated in-memory
-     * (e.g., PDF reports) rather than uploaded via HTTP requests.
-     */
     public CloudinaryUploadResult uploadRawBytes(byte[] bytes, String fileName, String folder) {
         try {
-            // Strip the extension from the fileName, Cloudinary handles format implicitly
             String publicId = (fileName != null && fileName.contains("."))
                     ? fileName.substring(0, fileName.lastIndexOf('.'))
                     : fileName;
 
             Map<String, Object> params = ObjectUtils.asMap(
                     "folder", folder,
-                    "resource_type", "auto", // Automatically detects raw (CSV), image (KYC), or video
+                    "resource_type", "auto",
                     "public_id", publicId
             );
 
@@ -72,14 +56,8 @@ public class CloudinaryService {
         }
     }
 
-    /**
-     * Generates a time-limited, watermarked, signed URL for secure document viewing.
-     * Prevents users from sharing permanent links to sensitive KYC/STR data.
-     */
     public String getSignedUrl(String publicId, int expirySeconds) {
         try {
-            // Generates a cryptographic signature so the URL cannot be tampered with.
-            // Adds a faint diagonal "CONFIDENTIAL" watermark to deter screen-capturing.
             return cloudinary.url()
                     .secure(true)
                     .signed(true)
@@ -88,20 +66,14 @@ public class CloudinaryService {
                             .rawTransformation("l_text:Arial_40_bold:CONFIDENTIAL,g_center,o_30,a_45"))
                     .generate(publicId);
 
-            // Note: Native strict time-expiry relies on Cloudinary Premium 'Auth Tokens'.
-            // For MVP, signed URLs paired with your Spring Security context are highly secure.
         } catch (Exception e) {
             log.error("Failed to generate signed URL for publicId: {}", publicId, e);
             throw new RuntimeException("Could not generate secure media URL", e);
         }
     }
 
-    /**
-     * Deletes a file from Cloudinary storage.
-     */
     public void deleteFile(String publicId) {
         try {
-            // For raw files (like CSVs), resource_type must be specified during destruction
             cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("resource_type", "raw"));
             log.info("Deleted file from Cloudinary: {}", publicId);
         } catch (IOException e) {

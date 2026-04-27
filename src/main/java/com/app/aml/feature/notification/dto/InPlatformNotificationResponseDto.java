@@ -1,5 +1,6 @@
 package com.app.aml.feature.notification.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class InPlatformNotificationResponseDto {
 
     private UUID id;
@@ -28,5 +30,5 @@ public class InPlatformNotificationResponseDto {
 
     private Instant readAt;
 
-    private Instant sysCreatedAt; // Important for the UI to show "5 minutes ago"
+    private Instant sysCreatedAt;
 }

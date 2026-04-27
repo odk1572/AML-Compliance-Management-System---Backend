@@ -1,8 +1,7 @@
 package com.app.aml.feature.reporting.dtos;
 
 
-import com.app.aml.domain.enums.CaseStatus;
-import com.app.aml.domain.enums.TypologyCategory;
+import com.app.aml.enums.TypologyCategory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

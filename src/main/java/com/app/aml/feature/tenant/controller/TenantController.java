@@ -1,6 +1,6 @@
 package com.app.aml.feature.tenant.controller;
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.tenant.dto.request.CreateTenantRequestDto;
 import com.app.aml.feature.tenant.dto.request.UpdateTenantRequestDto;
 import com.app.aml.feature.tenant.dto.response.TenantResponseDto;
@@ -97,7 +97,6 @@ public class TenantController {
         return ResponseEntity.ok(ApiResponse.of(HttpStatus.OK, "Admin credentials reset and sent via email", request.getRequestURI(), null));
     }
 
-    // --- Validation Endpoints for Frontend Onboarding Wizard ---
 
     @GetMapping("/validate/tenant-code")
     public ResponseEntity<ApiResponse<Boolean>> checkTenantCodeAvailability(

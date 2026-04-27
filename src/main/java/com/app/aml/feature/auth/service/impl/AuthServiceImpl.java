@@ -62,15 +62,12 @@ public class AuthServiceImpl implements AuthService {
     private long refreshExpirationMs;
 
     public LoginResponseDto login(LoginRequestDto dto) {
-        // 1. Set explicit tenant if provided, else clear for discovery
         if (dto.getTenantId() != null) {
             TenantContext.setTenantId(dto.getTenantId().toString());
         } else {
             TenantContext.clear();
         }
 
-        // 2. Authenticate
-        // This triggers UnifiedUserDetailsService which might perform "Discovery"
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
         );
@@ -96,9 +93,8 @@ public class AuthServiceImpl implements AuthService {
             platformUserRepository.save(user);
 
             finalTenantId = null;
-            sessionSchema = "common_schema"; // Sessions go to common_schema
+            sessionSchema = "common_schema";
 
-            // 4. Process Tenant User
         } else if (principal instanceof TenantUserDetails tenantUserDetails) {
             TenantUser user = tenantUserDetails.getTenantUser();
             if (user.isLocked()) throw new RuntimeException("Account is locked");
@@ -110,7 +106,6 @@ public class AuthServiceImpl implements AuthService {
             user.setLastLoginAt(java.time.Instant.now());
             tenantUserRepository.save(user);
 
-            // Retrieve the schema name (either from DTO or Discovery)
             sessionSchema = TenantContext.getTenantId();
 
             if (finalTenantId == null) {
@@ -122,17 +117,14 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalStateException("Unknown Principal type");
         }
 
-        // 5. Generate Tokens
         String accessToken = tokenProvider.generateToken(userId, finalTenantId != null ? finalTenantId.toString() : null, role);
         String jti = tokenProvider.extractJti(accessToken);
         java.time.Instant expiry = tokenProvider.extractAllClaims(accessToken).getExpiration().toInstant();
 
-        // 6. --- CRITICAL SESSION ROUTING ---
-        // Instead of clearing blindly, we set the context to where the user_sessions table is.
         if (finalTenantId != null && sessionSchema != null) {
-            TenantContext.setTenantId(sessionSchema); // Route to Bank Schema
+            TenantContext.setTenantId(sessionSchema);
         } else {
-            TenantContext.clear(); // Route to common_schema/public
+            TenantContext.clear();
         }
 
         try {
@@ -150,7 +142,6 @@ public class AuthServiceImpl implements AuthService {
                     .isFirstLogin(isFirstLogin)
                     .build();
         } finally {
-            // 7. ALWAYS clear at the very end
             TenantContext.clear();
         }
     }

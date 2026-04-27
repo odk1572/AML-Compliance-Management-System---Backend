@@ -5,11 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.batch.item.ItemCountAware;
 
-/**
- * DTO representing a raw row from the Customer Profile CSV.
- * All fields are kept as String to prevent FlatFileItemReader from crashing on malformed data,
- * allowing the ValidationProcessor to handle errors gracefully.
- */
 @Data
 public class CustomerProfileCsvDto implements ItemCountAware {
     private int lineNumber;
@@ -23,11 +18,11 @@ public class CustomerProfileCsvDto implements ItemCountAware {
     private String monthlyIncome;
     private String netWorth;
     private String riskRating;
-    private String riskScore;        // <-- ADDED
+    private String riskScore;
     private String isPep;
     private String isDormant;
     private String accountOpenedOn;
-    private String lastActivityDate; // <-- ADDED
+    private String lastActivityDate;
     private String kycStatus;
 
     @Override

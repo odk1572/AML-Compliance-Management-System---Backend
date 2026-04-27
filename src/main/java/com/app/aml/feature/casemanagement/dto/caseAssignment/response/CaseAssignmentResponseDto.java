@@ -1,5 +1,6 @@
 package com.app.aml.feature.casemanagement.dto.caseAssignment.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,9 +13,10 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CaseAssignmentResponseDto {
     private UUID id;
-    private UUID caseId; // Flattened from CaseRecord
+    private UUID caseId;
     private UUID assignedFrom;
     private UUID assignedTo;
     private UUID assignedBy;

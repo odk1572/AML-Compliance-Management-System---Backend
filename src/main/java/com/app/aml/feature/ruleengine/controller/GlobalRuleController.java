@@ -1,5 +1,5 @@
 package com.app.aml.feature.ruleengine.controller;
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.ruleengine.dto.globalRuleCondition.request.CreateGlobalRuleConditionRequestDto;
 import com.app.aml.feature.ruleengine.dto.globalRuleCondition.request.UpdateGlobalRuleConditionRequestDto;
 import com.app.aml.feature.ruleengine.dto.globalRuleCondition.response.GlobalRuleConditionResponseDto;

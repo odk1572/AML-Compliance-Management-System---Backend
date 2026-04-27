@@ -1,6 +1,6 @@
 package com.app.aml.feature.tenantuser.controller;
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.tenantuser.dto.ChangePasswordRequestDto;
 import com.app.aml.feature.tenantuser.dto.CreateTenantUserRequestDto;
 import com.app.aml.feature.tenantuser.dto.TenantUserResponseDto;
@@ -30,9 +30,7 @@ public class TenantUserController {
 
     private final TenantUserService tenantUserService;
 
-    /**
-     * Create a new compliance officer (Bank User).
-     */
+
 
     @PatchMapping("/{id}/reactivate")
     @PreAuthorize("hasAnyRole('BANK_ADMIN', 'SUPER_ADMIN')")
@@ -41,7 +39,6 @@ public class TenantUserController {
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader,
             HttpServletRequest request) {
 
-        // If a Super Admin is calling this, they must provide the tenant ID in the header
         if (tenantIdHeader != null) {
             TenantContext.setTenantId(tenantIdHeader);
         }
@@ -55,7 +52,6 @@ public class TenantUserController {
                     null
             ));
         } finally {
-            // Clear if it was manually set via header
             if (tenantIdHeader != null) {
                 TenantContext.clear();
             }
@@ -78,9 +74,7 @@ public class TenantUserController {
                 ));
     }
 
-    /**
-     * Update user profile, role, and lock status.
-     */
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('BANK_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<TenantUserResponseDto>> updateUser(
@@ -97,9 +91,7 @@ public class TenantUserController {
         ));
     }
 
-    /**
-     * Get details of a specific user.
-     */
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('BANK_ADMIN', 'SUPER_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<TenantUserResponseDto>> getUserById(
@@ -115,9 +107,7 @@ public class TenantUserController {
         ));
     }
 
-    /**
-     * List all users with optional role filtering.
-     */
+
     @GetMapping
     @PreAuthorize("hasAnyRole('BANK_ADMIN', 'SUPER_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<Page<TenantUserResponseDto>>> listUsers(
@@ -134,9 +124,6 @@ public class TenantUserController {
         ));
     }
 
-    /**
-     * Soft delete/deactivate a user and unassign their cases.
-     */
     @DeleteMapping("/{id}/deactivate")
     @PreAuthorize("hasAnyRole('BANK_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deactivateUser(
@@ -152,9 +139,6 @@ public class TenantUserController {
         ));
     }
 
-    /**
-     * Explicitly unlock a user account (Alternative to PutMapping).
-     */
     @PatchMapping("/{id}/unlock")
     @PreAuthorize("hasAnyRole('BANK_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> unlockUser(
@@ -170,9 +154,7 @@ public class TenantUserController {
         ));
     }
 
-    /**
-     * Administrative password reset (generates temporary password).
-     */
+
     @PostMapping("/{id}/reset-password")
     @PreAuthorize("hasAnyRole('BANK_ADMIN', 'SUPER_ADMIN','COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
@@ -188,9 +170,6 @@ public class TenantUserController {
         ));
     }
 
-    /**
-     * Self-service password change (required after first login).
-     */
     @PostMapping("/change-password")
     public ResponseEntity<ApiResponse<Void>> changePassword(
             @AuthenticationPrincipal TenantUserDetails currentUser,

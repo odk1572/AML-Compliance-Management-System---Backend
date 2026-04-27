@@ -1,5 +1,6 @@
 package com.app.aml.feature.ruleengine.dto.tenantScenario.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,13 +13,13 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TenantScenarioResponseDto {
     private UUID id;
     private UUID globalScenarioId;
     private String status;
     private UUID sysActivatedBy;
 
-    // From AuditableEntity
     private Instant sysCreatedAt;
     private Instant sysUpdatedAt;
 }

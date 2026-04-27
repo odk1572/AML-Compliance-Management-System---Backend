@@ -19,8 +19,8 @@ public interface TenantMapper {
 
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "status", ignore = true) // Handled by entity default value
-    @Mapping(target = "sysCreatedBy", ignore = true) // Handled by Service layer
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "sysCreatedBy", ignore = true)
     @Mapping(target = "sysDeletedBy", ignore = true)
     Tenant toEntity(CreateTenantRequestDto dto);
 

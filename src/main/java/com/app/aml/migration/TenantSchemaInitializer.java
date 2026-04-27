@@ -17,11 +17,11 @@ import java.util.List;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-@DependsOn("commonSchemaFlyway") // Matches your @Bean name in FlywayConfig
+@DependsOn("commonSchemaFlyway")
 public class TenantSchemaInitializer {
 
     private final DataSource dataSource;
-    private final FlywayConfig flywayConfig; // Inject your new config
+    private final FlywayConfig flywayConfig;
 
     @PostConstruct
     public void migrateTenantSchemas() {
@@ -29,14 +29,12 @@ public class TenantSchemaInitializer {
         List<String> activeSchemas = getActiveTenantSchemas();
 
         for (String schemaName : activeSchemas) {
-            // Use the reusable method from your FlywayConfig
             flywayConfig.runTenantSchemaMigration(schemaName, dataSource);
         }
     }
 
     private List<String> getActiveTenantSchemas() {
         List<String> schemas = new ArrayList<>();
-        // Note: common_schema was migrated by your @Bean before this runs
         String sql = "SELECT schema_name FROM common_schema.tenants WHERE status = 'ACTIVE'";
 
         try (Connection connection = dataSource.getConnection();

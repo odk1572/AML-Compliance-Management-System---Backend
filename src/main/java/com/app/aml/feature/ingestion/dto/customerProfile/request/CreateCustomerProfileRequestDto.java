@@ -1,7 +1,7 @@
 package com.app.aml.feature.ingestion.dto.customerProfile.request;
 
-import com.app.aml.domain.enums.CustomerType;
-import com.app.aml.domain.enums.KycStatus;
+import com.app.aml.enums.CustomerType;
+import com.app.aml.enums.KycStatus;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -50,7 +50,7 @@ public class CreateCustomerProfileRequestDto {
     private BigDecimal netWorth;
 
     @Size(max = 20)
-    private String riskRating; // Can be omitted to rely on entity default "LOW"
+    private String riskRating;
 
     private Integer riskScore;
 
@@ -63,5 +63,5 @@ public class CreateCustomerProfileRequestDto {
 
     private LocalDate lastActivityDate;
 
-    private KycStatus kycStatus; // Can be omitted to rely on entity default "PENDING"
+    private KycStatus kycStatus;
 }

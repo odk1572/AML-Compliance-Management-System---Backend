@@ -40,6 +40,7 @@ for tenant override:
   "overrideAggregationFunction": "NONE"
 }
 
+-------------------------------------------------------------------------------------------
 
 Velocity
 
@@ -61,6 +62,7 @@ conditions:
 }
 
 
+-------------------------------------------------------------------------------------------
 Dormant:
 
 {
@@ -95,5 +97,165 @@ conditions:
   "thresholdValue": "5000",
   "valueDataType": "DECIMAL"
 }
+
+
+-------------------------------------------------------------------------------------------
+Funnel :
+{
+  "ruleName": "Money Mule Funnel Detection (5+ Originators in 7 Days)",
+  "ruleType": "FUNNEL",
+  "severity": "HIGH",
+  "baseRiskScore": 85
+}
+
+Conditions:
+{
+  "ruleId": "REPLACE-WITH-RULE-UUID-FROM-PREVIOUS-RESPONSE",
+  "attributeName": "originator_account_no",
+  "aggregationFunction": "COUNT",
+  "lookbackPeriod": "7d",
+  "thresholdValue": "5",
+  "valueDataType": "INTEGER"
+}
+
+-------------------------------------------------------------------------------------------
+Large transfer:
+{
+  "ruleName": "Large Transaction Alert (>$10,000)",
+  "ruleType": "LARGE_TRANSACTION",
+  "severity": "HIGH",
+  "baseRiskScore": 80
+}
+conditions:
+{
+  "ruleId": "REPLACE-WITH-RULE-UUID-FROM-PREVIOUS-RESPONSE",
+  "attributeName": "amount",
+  "aggregationFunction": "NONE",
+  "lookbackPeriod": "24h",
+  "thresholdValue": "10000.00",
+  "valueDataType": "DECIMAL"
+}
+
+-------------------------------------------------------------------------------------------
+Low income high transfer:
+{
+  "ruleName": "Disproportionate Outflow (Transfers > 3x Monthly Income)",
+  "ruleType": "LOW_INCOME_HIGH_TRANSFER",
+  "severity": "CRITICAL",
+  "baseRiskScore": 95
+}
+
+conditions:
+{
+  "ruleId": "REPLACE-WITH-RULE-UUID-FROM-PREVIOUS-RESPONSE",
+  "attributeName": "monthly_income_multiplier",
+  "aggregationFunction": "NONE",
+  "lookbackPeriod": "30d",
+  "thresholdValue": "3.0",
+  "valueDataType": "DECIMAL"
+}
+
+-------------------------------------------------------------------------------------------
+Pass through:
+{
+  "ruleName": "Pass-Through / Layering Detection (5% Margin)",
+  "ruleType": "PASS_THROUGH",
+  "severity": "CRITICAL",
+  "baseRiskScore": 95
+}
+conditions:
+{
+  "ruleId": "REPLACE-WITH-RULE-UUID-FROM-PREVIOUS-RESPONSE",
+  "attributeName": "balance_margin_percentage",
+  "aggregationFunction": "NONE",
+  "lookbackPeriod": "24h",
+  "thresholdValue": "0.05",
+  "valueDataType": "DECIMAL"
+}
+-------------------------------------------------------------------------------------------
+Round Amount:
+{
+  "ruleName": "Frequent Round Amount Transfers (Multiples of $1,000)",
+  "ruleType": "ROUND_AMOUNT",
+  "severity": "HIGH",
+  "baseRiskScore": 80
+}
+
+
+conditions:
+{
+  "ruleId": "REPLACE-WITH-RULE-UUID-FROM-PREVIOUS-RESPONSE",
+  "attributeName": "amount_divisor",
+  "aggregationFunction": "NONE",
+  "lookbackPeriod": "7d",
+  "thresholdValue": "1000",
+  "valueDataType": "INTEGER"
+}
+
+{
+  "ruleId": "REPLACE-WITH-RULE-UUID-FROM-PREVIOUS-RESPONSE",
+  "attributeName": "transaction_count",
+  "aggregationFunction": "COUNT",
+  "lookbackPeriod": "7d",
+  "thresholdValue": "4",
+  "valueDataType": "INTEGER"
+}
+
+-------------------------------------------------------------------------------------------
+Scatter executor
+rule:
+{
+  "ruleName": "Scatter Disbursement (Sent to 5+ distinct accounts in 24h)",
+  "ruleType": "SCATTER",
+  "severity": "HIGH",
+  "baseRiskScore": 85
+}
+Conditions:
+{
+  "ruleId": "REPLACE-WITH-RULE-UUID-FROM-PREVIOUS-RESPONSE",
+  "attributeName": "distinct_beneficiary_count",
+  "aggregationFunction": "COUNT",
+  "lookbackPeriod": "24h",
+  "thresholdValue": "5",
+  "valueDataType": "INTEGER"
+}
+-------------------------------------------------------------------------------------------
+sudden spike:
+{
+  "ruleName": "Sudden Spike (Recent 24h outflow is > 5x the 30-day daily average)",
+  "ruleType": "SUDDEN_SPIKE",
+  "severity": "CRITICAL",
+  "baseRiskScore": 90
+}
+Conditions:
+{
+  "ruleId": "REPLACE-WITH-RULE-UUID-FROM-PREVIOUS-RESPONSE",
+  "attributeName": "recent_activity_window",
+  "aggregationFunction": "SUM",
+  "lookbackPeriod": "24h",
+  "thresholdValue": "0",
+  "valueDataType": "INTEGER"
+}{
+   "ruleId": "REPLACE-WITH-RULE-UUID-FROM-PREVIOUS-RESPONSE",
+   "attributeName": "historical_baseline_window",
+   "aggregationFunction": "AVG",
+   "lookbackPeriod": "30d",
+   "thresholdValue": "0",
+   "valueDataType": "INTEGER"
+ }
+ {
+   "ruleId": "REPLACE-WITH-RULE-UUID-FROM-PREVIOUS-RESPONSE",
+   "attributeName": "spike_multiplier",
+   "aggregationFunction": "NONE",
+   "lookbackPeriod": "",
+   "thresholdValue": "5.0",
+   "valueDataType": "DECIMAL"
+ }
+-------------------------------------------------------------------------------------------
+
+
+
+
+
 
 

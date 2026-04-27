@@ -5,6 +5,7 @@ import com.app.aml.feature.ingestion.entity.Transaction;
 import com.app.aml.feature.strfiling.entity.StrFiling;
 import com.lowagie.text.DocumentException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -27,6 +28,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StrDocumentGeneratorImpl implements StrDocumentGenerator {
@@ -41,25 +43,14 @@ public class StrDocumentGeneratorImpl implements StrDocumentGenerator {
         context.setVariable("notes", notes);
         context.setVariable("evidence", evidence);
 
-        // --- FORMATTERS ---
-        DateTimeFormatter fullFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
-                .withZone(ZoneId.systemDefault());
+        DateTimeFormatter dmyHm = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm").withZone(ZoneId.systemDefault());
+        DateTimeFormatter dmy = DateTimeFormatter.ofPattern("dd-MM-yyyy").withZone(ZoneId.systemDefault());
 
-        // This is the helper we will use inside the HTML loops (for notes/transactions)
-        DateTimeFormatter dmyFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-                .withZone(ZoneId.systemDefault());
-
-        // 1. Format the main filing date
-        if (filing.getSysCreatedAt() != null) {
-            context.setVariable("formattedCreatedAt", fullFormatter.format(filing.getSysCreatedAt()));
-        } else {
-            context.setVariable("formattedCreatedAt", "N/A");
-        }
-
-        // 2. Pass the date helper to Thymeleaf
-        context.setVariable("dateHelper", dmyFormatter);
-
+        context.setVariable("formattedCreatedAt", filing.getSysCreatedAt() != null ? dmyHm.format(filing.getSysCreatedAt()) : "N/A");
+        context.setVariable("dateHelper", dmy);
         String htmlContent = thymeleaf.process("str/str-report", context);
+
+        htmlContent = sanitizeXmlContent(htmlContent);
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             ITextRenderer renderer = new ITextRenderer();
@@ -68,6 +59,7 @@ public class StrDocumentGeneratorImpl implements StrDocumentGenerator {
             renderer.createPDF(outputStream);
             return outputStream.toByteArray();
         } catch (DocumentException | IOException e) {
+            log.error("Failed to render STR PDF. This is often due to invalid characters like '&' in the data.", e);
             throw new RuntimeException("Error rendering STR PDF", e);
         }
     }
@@ -79,44 +71,31 @@ public class StrDocumentGeneratorImpl implements StrDocumentGenerator {
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
             Document doc = docBuilder.newDocument();
 
-            Element rootElement = doc.createElement("STR");
+            Element rootElement = doc.createElement("STR_Report");
             doc.appendChild(rootElement);
 
-            Element filingRef = doc.createElement("FilingReference");
-            filingRef.appendChild(doc.createTextNode(filing.getFilingReference()));
-            rootElement.appendChild(filingRef);
+            addTextNode(doc, rootElement, "FilingReference", filing.getFilingReference());
+            addTextNode(doc, rootElement, "RegulatoryBody", filing.getRegulatoryBody());
+            addTextNode(doc, rootElement, "TypologyCategory", filing.getTypologyCategory().name());
+            addTextNode(doc, rootElement, "SubjectName", filing.getSubjectName());
+            addTextNode(doc, rootElement, "SubjectAccountNo", filing.getSubjectAccountNo());
+            addTextNode(doc, rootElement, "SuspicionNarrative", filing.getSuspicionNarrative());
 
-            Element regBody = doc.createElement("RegulatoryBody");
-            regBody.appendChild(doc.createTextNode(filing.getRegulatoryBody()));
-            rootElement.appendChild(regBody);
-
-            Element typology = doc.createElement("TypologyCategory");
-            typology.appendChild(doc.createTextNode(filing.getTypologyCategory().name()));
-            rootElement.appendChild(typology);
-
-            Element subjectName = doc.createElement("SubjectName");
-            subjectName.appendChild(doc.createTextNode(filing.getSubjectName()));
-            rootElement.appendChild(subjectName);
-
-            Element subjectAcct = doc.createElement("SubjectAccountNo");
-            subjectAcct.appendChild(doc.createTextNode(filing.getSubjectAccountNo()));
-            rootElement.appendChild(subjectAcct);
-
-            Element narrative = doc.createElement("SuspicionNarrative");
-            narrative.appendChild(doc.createTextNode(filing.getSuspicionNarrative()));
-            rootElement.appendChild(narrative);
-
-            Element transactionsNode = doc.createElement("Transactions");
+            Element transactionsNode = doc.createElement("LinkedTransactions");
             rootElement.appendChild(transactionsNode);
 
             for (Transaction txn : txns) {
                 Element txnNode = doc.createElement("Transaction");
-                Element txnId = doc.createElement("TransactionId");
-                txnId.appendChild(doc.createTextNode(txn.getId().toString()));
-                txnNode.appendChild(txnId);
-                Element amount = doc.createElement("Amount");
-                amount.appendChild(doc.createTextNode(txn.getAmount() != null ? txn.getAmount().toString() : "0"));
-                txnNode.appendChild(amount);
+
+                addTextNode(doc, txnNode, "TransactionId", txn.getId().toString());
+                addTextNode(doc, txnNode, "Reference", txn.getTransactionRef());
+                addTextNode(doc, txnNode, "Amount", txn.getAmount() != null ? txn.getAmount().toString() : "0");
+                addTextNode(doc, txnNode, "Currency", txn.getCurrencyCode());
+                addTextNode(doc, txnNode, "Timestamp", txn.getTransactionTimestamp().toString());
+                addTextNode(doc, txnNode, "OriginatorAccount", txn.getOriginatorAccountNo());
+                addTextNode(doc, txnNode, "BeneficiaryAccount", txn.getBeneficiaryAccountNo());
+
+                // FIX: You were missing this line in your loop!
                 transactionsNode.appendChild(txnNode);
             }
 
@@ -134,5 +113,20 @@ public class StrDocumentGeneratorImpl implements StrDocumentGenerator {
         } catch (ParserConfigurationException | TransformerException e) {
             throw new RuntimeException("Error generating STR XML", e);
         }
+    }
+
+
+    private String sanitizeXmlContent(String html) {
+        if (html == null) return "";
+        return html
+                .replace("&nbsp;", "&#160;") // Flying Saucer hates &nbsp;
+                .replaceAll("&(?![a-zA-Z0-9#]+;)", "&amp;"); // Escapes any '&' NOT followed by an existing entity
+    }
+
+    private void addTextNode(Document doc, Element parent, String tagName, String content) {
+        Element node = doc.createElement(tagName);
+        // doc.createTextNode automatically handles escaping for XML nodes
+        node.appendChild(doc.createTextNode(content != null ? content : ""));
+        parent.appendChild(node);
     }
 }

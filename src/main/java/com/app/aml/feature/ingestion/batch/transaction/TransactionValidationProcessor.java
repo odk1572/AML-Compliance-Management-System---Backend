@@ -1,8 +1,8 @@
 package com.app.aml.feature.ingestion.batch.transaction;
 
-import com.app.aml.domain.enums.Channel;
-import com.app.aml.domain.enums.TransactionStatus; // Added import
-import com.app.aml.domain.enums.TransactionType;
+import com.app.aml.enums.Channel;
+import com.app.aml.enums.TransactionStatus; // Added import
+import com.app.aml.enums.TransactionType;
 import com.app.aml.feature.ingestion.batch.ValidationException;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import com.app.aml.feature.ingestion.entity.Transaction;
@@ -47,32 +47,25 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
         int line = dto.getLineNumber();
         Transaction txn = new Transaction();
 
-        // 1. Batch Assignment
         txn.setBatch(currentBatch);
 
-        // 2. Transaction Reference & Idempotency Check
         String ref = require(dto.getTransactionRef(), line, "transactionRef", 100);
         if (transactionRepository.existsByTransactionRef(ref)) {
             throw new ValidationException(line, "transactionRef", "Duplicate transaction reference found in system");
         }
         txn.setTransactionRef(ref);
 
-        // 3. Amount Validation
         BigDecimal amount = parseBigDecimal(dto.getAmount(), line, "amount");
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ValidationException(line, "amount", "Transaction amount must be strictly positive");
         }
         txn.setAmount(amount);
 
-        // 4. Timestamp Validation
         txn.setTransactionTimestamp(parseInstant(dto.getTransactionTimestamp(), line, "transactionTimestamp"));
 
-        // 5. Enums (Type & Channel)// Use a default value like TransactionType.TRANSFER or Channel.ONLINE if parsing fails
         txn.setTransactionType(parseEnum(TransactionType.class, dto.getTransactionType(), line, "transactionType", TransactionType.TRANSFER));
-        //
         txn.setChannel(parseEnum(Channel.class, dto.getChannel(), line, "channel", Channel.ONLINE));
 
-        // 6. Basic String Constraints
         txn.setCurrencyCode(require(dto.getCurrencyCode(), line, "currencyCode", 3));
         txn.setOriginatorAccountNo(safe(dto.getOriginatorAccountNo(), 50));
         txn.setOriginatorName(safe(dto.getOriginatorName(), 255));
@@ -84,7 +77,6 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
         txn.setBeneficiaryCountry(safe(dto.getBeneficiaryCountry(), 3));
         txn.setReferenceNote(dto.getReferenceNote());
 
-        // 7. Strict Tenant Boundary & Customer Resolution
         boolean isOriginatorInternal = false;
         boolean isBeneficiaryInternal = false;
         CustomerProfile primaryCustomer = null;
@@ -107,13 +99,10 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
             }
         }
 
-        // Rule A: The "Orphan" Check
-        // CRITICAL: If your customer table is empty, this is why you get 1000 skips!
         if (!isOriginatorInternal && !isBeneficiaryInternal) {
             throw new ValidationException(line, "accountNo", "Invalid Transaction: Neither originator nor beneficiary belongs to this tenant.");
         }
 
-        // Rule B: Internal Transfer Check
         boolean isSameBank = txn.getOriginatorBankCode() != null &&
                 txn.getOriginatorBankCode().equalsIgnoreCase(txn.getBeneficiaryBankCode());
 
@@ -123,7 +112,7 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
 
         txn.setCustomer(primaryCustomer);
 
-        // 8. Status Mapping (New Step)
+
         if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
             try {
                 txn.setStatus(TransactionStatus.valueOf(dto.getStatus().toUpperCase().trim()));

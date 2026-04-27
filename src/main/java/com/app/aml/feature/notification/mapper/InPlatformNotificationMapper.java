@@ -11,22 +11,10 @@ import java.util.List;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface InPlatformNotificationMapper {
 
-    /**
-     * Maps Entity to Response DTO.
-     * MapStruct automatically picks up sysCreatedAt from the parent AuditableEntity.
-     */
     InPlatformNotificationResponseDto toResponseDto(InPlatformNotification entity);
 
-    /**
-     * Maps a list of Entities to a list of Response DTOs.
-     * Useful for the Inbox/Bell notification list.
-     */
     List<InPlatformNotificationResponseDto> toResponseDtoList(List<InPlatformNotification> entities);
 
-    /**
-     * Updates only the 'isRead' status of an existing notification.
-     * Use this in the Service layer before calling markAsRead() logic.
-     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "recipientId", ignore = true)
     @Mapping(target = "notificationType", ignore = true)

@@ -1,13 +1,11 @@
 package com.app.aml.feature.ingestion.service;
 
-import com.app.aml.domain.enums.BatchStatus;
-import com.app.aml.domain.exceptions.ApplicationException;
-import com.app.aml.domain.exceptions.BusinessRuleException;
+import com.app.aml.enums.BatchStatus;
+import com.app.aml.exceptions.BusinessRuleException;
 import com.app.aml.feature.ingestion.dto.transactionBatch.response.TransactionBatchResponseDto;
 import com.app.aml.feature.ingestion.entity.TransactionBatch;
 import com.app.aml.feature.ingestion.mapper.TransactionBatchMapper;
 import com.app.aml.feature.ingestion.repository.TransactionBatchRepository;
-import com.app.aml.feature.ingestion.service.CustomerProfileBatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -52,11 +50,9 @@ public class CustomerProfileBatchServiceImplementation implements CustomerProfil
                 throw new BusinessRuleException("A file with this exact content has already been uploaded.");
             }
 
-            // 3. Save File to Secure Temp Location for Spring Batch to read
             Path tempFilePath = Files.createTempFile("aml_batch_", ".csv");
             file.transferTo(tempFilePath.toFile());
 
-            // 4. Create and Save the PENDING TransactionBatch Entity
             TransactionBatch batch = new TransactionBatch();
             batch.setBatchReference("BATCH-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
             batch.setUploadedBy(uploadedBy);
@@ -85,7 +81,6 @@ public class CustomerProfileBatchServiceImplementation implements CustomerProfil
             JobParameters parameters = new JobParametersBuilder()
                     .addString("batchId", batchId.toString())
                     .addString("filePath", filePath)
-                    // Adding timestamp guarantees unique Job Instances in Spring Batch
                     .addLong("executionTime", System.currentTimeMillis())
                     .toJobParameters();
 
@@ -93,7 +88,6 @@ public class CustomerProfileBatchServiceImplementation implements CustomerProfil
 
         } catch (Exception e) {
             log.error("Spring Batch Job execution failed for batchId: {}", batchId, e);
-            // Fallback status update if the job completely fails to launch
             batchRepository.findById(batchId).ifPresent(batch -> {
                 batch.setBatchStatus(BatchStatus.FAILED);
                 batch.setFailureDetails("{\"system_error\": \"Job failed to launch inside thread.\"}");
@@ -102,7 +96,6 @@ public class CustomerProfileBatchServiceImplementation implements CustomerProfil
         }
     }
 
-    // Helper method to hash the file
     private String calculateSha256(InputStream is) throws Exception {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] buffer = new byte[8192];

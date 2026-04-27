@@ -1,6 +1,6 @@
 package com.app.aml.feature.casemanagement.service;
 
-import com.app.aml.domain.enums.CaseStatus;
+import com.app.aml.enums.CaseStatus;
 import com.app.aml.feature.casemanagement.dto.caseAuditTrail.CaseAuditTrailResponseDto;
 import com.app.aml.feature.casemanagement.dto.request.CaseNoteRequestDto;
 import com.app.aml.feature.casemanagement.entity.CaseAlertLink;
@@ -11,11 +11,8 @@ import com.app.aml.feature.casemanagement.repository.CaseAlertLinkRepository;
 import com.app.aml.feature.casemanagement.repository.CaseAuditTrailRepository;
 import com.app.aml.feature.casemanagement.repository.CaseNoteRepository;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
-import com.app.aml.feature.casemanagement.service.CaseInvestigationService;
-import com.app.aml.feature.ingestion.dto.alert.response.AlertResponseDto;
-import com.app.aml.feature.ingestion.mapper.AlertMapper;
-import com.lowagie.text.DocumentException;
-import org.xhtmlrenderer.pdf.ITextRenderer;
+import com.app.aml.feature.alert.dto.alert.response.AlertResponseDto;
+import com.app.aml.feature.alert.mapper.AlertMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,8 +32,8 @@ public class CaseInvestigationServiceImpl implements CaseInvestigationService {
     private final CaseRecordRepository caseRepo;
     private final CaseNoteRepository noteRepo;
     private final CaseAuditTrailRepository trailRepo;
-    private final CaseAlertLinkRepository linkRepo; // Added for Alert Links
-    private final AlertMapper alertMapper;          // Added for DTO mapping
+    private final CaseAlertLinkRepository linkRepo;
+    private final AlertMapper alertMapper;
     private final TemplateEngine templateEngine;
 
     @Override
@@ -104,11 +101,6 @@ public class CaseInvestigationServiceImpl implements CaseInvestigationService {
     @Override
     @Transactional(readOnly = true)
     public byte[] exportAuditTrailAsPdf(UUID caseId) {
-        // 1. RECOVERY: Fixes the "Relation not found" error
-        if (com.app.aml.multitenency.TenantContext.getTenantId() == null) {
-            // Fallback to the schema name for Hamilton/Tenant
-            com.app.aml.multitenency.TenantContext.setTenantId("hdfc_bank_04_schema");
-        }
 
         CaseRecord caseRecord = caseRepo.findById(caseId)
                 .orElseThrow(() -> new EntityNotFoundException("Case not found"));
@@ -120,7 +112,6 @@ public class CaseInvestigationServiceImpl implements CaseInvestigationService {
         context.setVariable("status", caseRecord.getStatus().name());
         context.setVariable("trails", trails);
 
-        // 2. FIX: Format date in Java to avoid Thymeleaf #instants null errors
         String formattedDate = java.time.LocalDateTime.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm:ss"));
         context.setVariable("generatedOn", formattedDate);
@@ -138,11 +129,9 @@ public class CaseInvestigationServiceImpl implements CaseInvestigationService {
         }
     }
 
-    // NEW: Implementation for fetching linked alerts
     @Override
     @Transactional(readOnly = true)
     public List<AlertResponseDto> getAlertsForCase(UUID caseId) {
-        // Ensure the case exists
         if (!caseRepo.existsById(caseId)) {
             throw new EntityNotFoundException("Case not found");
         }

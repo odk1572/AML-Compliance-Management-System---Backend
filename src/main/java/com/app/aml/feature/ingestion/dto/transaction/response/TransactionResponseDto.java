@@ -1,8 +1,9 @@
 package com.app.aml.feature.ingestion.dto.transaction.response;
 
-import com.app.aml.domain.enums.Channel;
-import com.app.aml.domain.enums.TransactionStatus;
-import com.app.aml.domain.enums.TransactionType;
+import com.app.aml.enums.Channel;
+import com.app.aml.enums.TransactionStatus;
+import com.app.aml.enums.TransactionType;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,10 +17,11 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransactionResponseDto {
     private UUID id;
-    private UUID batchId;     // Flattened from TransactionBatch
-    private UUID customerId;  // Flattened from CustomerProfile
+    private UUID batchId;
+    private UUID customerId;
     private String transactionRef;
     private String originatorAccountNo;
     private String originatorName;

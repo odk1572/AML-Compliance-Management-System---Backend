@@ -1,12 +1,10 @@
 package com.app.aml.feature.tenant.service;
 
-import com.app.aml.domain.enums.TenantStatus;
+import com.app.aml.enums.TenantStatus;
 import com.app.aml.multitenency.TenantSchemaResolver;
 import jakarta.persistence.EntityManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.PlatformTransactionManager;
 import com.app.aml.feature.notification.event.TenantCreatedEvent;
 import com.app.aml.feature.notification.service.interfaces.MailService;
@@ -59,14 +57,11 @@ public class TenantServiceImpl implements TenantService {
     private final EntityManager entityManager; // <--- Add this!
 
     @Override
-    // REMOVE @Transactional from here so we can control the boundaries manually
     public TenantResponseDto createTenant(CreateTenantRequestDto requestDto) {
         TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
 
-        // --- CRITICAL FIX 1: Force a brand new transaction/connection ---
         txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
-        // 1. PHASE 1: Platform Level (Common Schema)
         Tenant savedTenant = txTemplate.execute(status -> {
             if (tenantRepository.existsByTenantCode(requestDto.getTenantCode())) {
                 throw new EntityExistsException("Tenant code already exists");
@@ -81,17 +76,14 @@ public class TenantServiceImpl implements TenantService {
             return tenantRepository.save(tenant);
         });
 
-        // 2. PHASE 2: Infrastructure (Flyway)
         provisioner.provision(savedTenant.getSchemaName());
 
         String rawPassword = generateSecurePassword();
 
-        // 3. PHASE 3: Tenant Level (Specific Schema)
         TenantContext.setTenantId(savedTenant.getSchemaName());
         try {
             txTemplate.executeWithoutResult(status -> {
 
-                // --- CRITICAL FIX 2: Clear Hibernate's cache so it "forgets" the common_schema ---
                 entityManager.clear();
 
                 TenantUser bankAdmin = TenantUser.builder()
@@ -103,14 +95,12 @@ public class TenantServiceImpl implements TenantService {
                         .role(Role.BANK_ADMIN)
                         .build();
 
-                // Force flush to ensure the INSERT happens while the connection is routed
                 tenantUserRepository.saveAndFlush(bankAdmin);
             });
         } finally {
             TenantContext.clear();
         }
 
-        // 4. PHASE 4: Post-Process
         sendOnboardingEmail(savedTenant, rawPassword);
 
         eventPublisher.publishEvent(new TenantCreatedEvent(
@@ -138,7 +128,6 @@ public class TenantServiceImpl implements TenantService {
         Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant not found with ID: " + id));
 
-        // Snapshot previous state for the audit log
         TenantResponseDto prevState = tenantMapper.toResponseDto(tenant);
 
         tenantMapper.updateEntityFromDto(requestDto, tenant);
@@ -146,7 +135,6 @@ public class TenantServiceImpl implements TenantService {
 
         TenantResponseDto nextState = tenantMapper.toResponseDto(updatedTenant);
 
-        // Detailed Platform Audit Log with Prev & Next states
         auditLog.logPlatform(null, "TENANT_MGMT", "UPDATE_TENANT", "TENANT", updatedTenant.getId(), prevState, nextState);
 
         return nextState;
@@ -156,31 +144,23 @@ public class TenantServiceImpl implements TenantService {
     @Override
     @Transactional
     public void deactivateTenant(UUID id) {
-        // 1. Find the tenant in common_schema
         Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant not found with ID: " + id));
 
         TenantResponseDto prevState = tenantMapper.toResponseDto(tenant);
 
-        // 2. Update status in common_schema
         tenant.setStatus(TenantStatus.SUSPENDED);
         Tenant updatedTenant = tenantRepository.save(tenant);
 
-        // 3. Switch Context for Routing, but pass the UUID for Logic
-        // This tells the DataSource: "Go to hdfc_bank_01_schema"
         TenantContext.setTenantId(tenant.getSchemaName());
         try {
-            // This tells the Deactivator: "Here is the UUID of the bank you are cleaning up"
-            // Passing tenant.getId().toString() fixes the IllegalArgumentException
             deactivator.deactivate(tenant.getId().toString());
         } finally {
             TenantContext.clear();
         }
 
-        // 4. Evict the Resolver Cache
         schemaResolver.evict(id.toString());
 
-        // 5. Audit Logging
         TenantResponseDto nextState = tenantMapper.toResponseDto(updatedTenant);
         auditLog.logPlatform(null, "TENANT_MGMT", "DEACTIVATE_TENANT", "TENANT",
                 tenant.getId(), prevState, nextState);
@@ -202,9 +182,6 @@ public class TenantServiceImpl implements TenantService {
         return tenantMapper.toResponseDto(tenant);
     }
 
-    /**
-     * Used by the Auth/Routing layer to resolve a tenant's details by their unique code.
-     */
     @Override
     @Transactional(readOnly = true)
     public TenantResponseDto getTenantByCode(String tenantCode) {
@@ -213,9 +190,6 @@ public class TenantServiceImpl implements TenantService {
         return tenantMapper.toResponseDto(tenant);
     }
 
-    /**
-     * Reverses the deactivation process.
-     */
     @Override
     @Transactional
     public TenantResponseDto reactivateTenant(UUID id) {
@@ -227,18 +201,12 @@ public class TenantServiceImpl implements TenantService {
         tenant.setStatus(TenantStatus.ACTIVE);
         Tenant updatedTenant = tenantRepository.save(tenant);
 
-        // You might need a corresponding provisioner.reactivate(tenant.getSchemaName())
-        // if your deactivator actually locks the DB schema.
-
         TenantResponseDto nextState = tenantMapper.toResponseDto(updatedTenant);
         auditLog.logPlatform(null, "TENANT_MGMT", "REACTIVATE_TENANT", "TENANT", id, prevState, nextState);
 
         return nextState;
     }
 
-    /**
-     * Quick check for frontend validation during the onboarding wizard.
-     */
     @Override
     @Transactional(readOnly = true)
     public boolean isTenantCodeAvailable(String tenantCode) {
@@ -253,25 +221,17 @@ public class TenantServiceImpl implements TenantService {
 
 
     @Override
-// 1. REMOVE @Transactional from the method itself
-    public void resetBankAdminCredentials(UUID id) {
-        // 2. We use a TransactionTemplate to control boundaries manually
+  public void resetBankAdminCredentials(UUID id) {
         TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
         txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-
-        // PHASE 1: Get Tenant Details (Common Schema)
-        // Runs in a standard connection
         Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant not found with ID: " + id));
 
         String newPassword = generateSecurePassword();
 
-        // PHASE 2: Reset Admin (Tenant Schema)
-        // We use the Schema Name to ensure the Resolver handles it instantly
         TenantContext.setTenantId(tenant.getSchemaName());
         try {
             txTemplate.executeWithoutResult(status -> {
-                // entityManager.clear() is a safety net to wipe the common_schema cache
                 entityManager.clear();
 
                 TenantUser admin = tenantUserRepository.findByEmailIgnoreCase(tenant.getContactEmail())
@@ -286,7 +246,6 @@ public class TenantServiceImpl implements TenantService {
             TenantContext.clear();
         }
 
-        // PHASE 3: Communications
         mailService.sendEmail(
                 tenant.getContactEmail(),
                 "AML Platform - Credentials Reset",

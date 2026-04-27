@@ -46,7 +46,6 @@ public class InPlatformNotification extends SoftDeletableEntity {
 
     @Builder
     public InPlatformNotification(UUID id, UUID recipientId, String notificationType, String title, String body) {
-        // Assuming your SoftDeletableEntity / BaseEntity has an ID setter or constructor
         this.id=id;
         this.recipientId = recipientId;
         this.notificationType = notificationType;
@@ -55,9 +54,7 @@ public class InPlatformNotification extends SoftDeletableEntity {
         this.isRead = false;
     }
 
-    /**
-     * Helper method to mark the notification as read and record the timestamp.
-     */
+
     public void markAsRead() {
         if (!this.isRead) {
             this.isRead = true;

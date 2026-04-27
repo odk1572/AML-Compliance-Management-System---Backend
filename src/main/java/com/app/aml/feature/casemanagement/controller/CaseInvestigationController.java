@@ -1,10 +1,10 @@
 package com.app.aml.feature.casemanagement.controller;
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.casemanagement.dto.caseAuditTrail.CaseAuditTrailResponseDto;
 import com.app.aml.feature.casemanagement.dto.request.CaseNoteRequestDto;
 import com.app.aml.feature.casemanagement.service.CaseInvestigationService;
-import com.app.aml.feature.ingestion.dto.alert.response.AlertResponseDto;
+import com.app.aml.feature.alert.dto.alert.response.AlertResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

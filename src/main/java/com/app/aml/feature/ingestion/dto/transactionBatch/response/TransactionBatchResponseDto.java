@@ -1,6 +1,7 @@
 package com.app.aml.feature.ingestion.dto.transactionBatch.response;
 
-import com.app.aml.domain.enums.BatchStatus;
+import com.app.aml.enums.BatchStatus;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransactionBatchResponseDto {
     private UUID id;
     private String batchReference;
@@ -24,7 +26,7 @@ public class TransactionBatchResponseDto {
     private String cloudinarySecureUrl;
     private Integer totalRecords;
     private BatchStatus batchStatus;
-    private String failureDetails; // Will contain the JSON string of errors
+    private String failureDetails;
     private String springBatchJobId;
     private Instant processedAt;
     private Instant sysCreatedAt;

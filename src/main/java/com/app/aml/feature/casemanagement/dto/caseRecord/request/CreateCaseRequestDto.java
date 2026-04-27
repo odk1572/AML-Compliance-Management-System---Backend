@@ -1,6 +1,6 @@
 package com.app.aml.feature.casemanagement.dto.caseRecord.request;
 
-import com.app.aml.domain.enums.CasePriority;
+import com.app.aml.enums.CasePriority;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +20,4 @@ public class CreateCaseRequestDto {
     @NotNull(message = "Initial priority is required")
     private CasePriority priority;
 
-    // The logic to link Alerts will happen in the Service
-    // by taking a List<UUID> alertIds separately.
 }

@@ -1,13 +1,17 @@
 package com.app.aml.feature.ruleengine.service;
 
-import com.app.aml.domain.enums.AlertSeverity;
-import com.app.aml.feature.ingestion.entity.Alert;
-import com.app.aml.feature.ingestion.entity.AlertEvidence;
-import com.app.aml.feature.ingestion.repository.AlertEvidenceRepository;
-import com.app.aml.feature.ingestion.repository.AlertRepository;
-import com.app.aml.feature.ingestion.repository.AlertTransactionRepository;
+import com.app.aml.enums.AlertSeverity;
+import com.app.aml.feature.alert.entity.Alert;
+import com.app.aml.feature.alert.entity.AlertEvidence;
+import com.app.aml.feature.alert.entity.AlertTransaction;
+import com.app.aml.feature.alert.repository.AlertEvidenceRepository;
+import com.app.aml.feature.alert.repository.AlertRepository;
+import com.app.aml.feature.alert.repository.AlertTransactionRepository;
+import com.app.aml.feature.ingestion.entity.Transaction;
 import com.app.aml.feature.ingestion.repository.TransactionRepository;
+import com.app.aml.feature.ruleengine.dto.RuleBreachResult;
 import com.app.aml.feature.ruleengine.dto.execution.ConditionExecutionContextDto;
+
 import com.app.aml.feature.ruleengine.dto.execution.RuleExecutionContextDto;
 import com.app.aml.feature.ruleengine.dto.tenantRule.response.TenantRuleResponseDto;
 import com.app.aml.feature.ruleengine.entity.*;
@@ -46,12 +50,12 @@ public class ScenarioOrchestrationService {
     private final TenantRuleMapper tenantRuleMapper;
 
     @Transactional
-    public Set<UUID> executeFullScenario(UUID tenantScenarioId) {
+    public List<RuleBreachResult> executeFullScenario(UUID tenantScenarioId) {
         log.info("Starting execution for Tenant Scenario ID: {}", tenantScenarioId);
 
-        Set<UUID> scenarioBreaches = new HashSet<>();
+        // 1. Change to a List that holds your DTO
+        List<RuleBreachResult> allScenarioBreaches = new ArrayList<>();
 
-        // Fetch the parent scenario to correctly map Alert hierarchy later
         TenantScenario tenantScenario = tenantScenarioRepo.findById(tenantScenarioId)
                 .orElseThrow(() -> new IllegalArgumentException("Tenant Scenario not found: " + tenantScenarioId));
 
@@ -71,17 +75,25 @@ public class ScenarioOrchestrationService {
             RuleExecutorStrategy strategy = executorFactory.getStrategy(context.getRuleType());
 
             log.debug("Handing off to Strategy: {}", strategy.getRuleType());
-            Set<UUID> breachingCustomers = strategy.executeRule(context);
 
-            if (!breachingCustomers.isEmpty()) {
-                log.info("Rule [{}] triggered for {} customers.", tenantRule.getRuleName(), breachingCustomers.size());
-                persistResults(breachingCustomers, context, tenantScenario);
-                scenarioBreaches.addAll(breachingCustomers);
+            // Strategy now returns the full list of Customers and Transactions
+            List<RuleBreachResult> breachingResults = strategy.executeRule(context);
+
+            if (!breachingResults.isEmpty()) {
+                log.info("Rule [{}] triggered for {} customers.", tenantRule.getRuleName(), breachingResults.size());
+
+                // Persist alerts and evidences
+                persistResults(breachingResults, context, tenantScenario);
+
+                // 2. Add the full results to our master list
+                allScenarioBreaches.addAll(breachingResults);
             }
         }
 
-        log.info("Scenario execution complete. Total unique customers flagged: {}", scenarioBreaches.size());
-        return scenarioBreaches;
+        log.info("Scenario execution complete. Total breaches flagged: {}", allScenarioBreaches.size());
+
+        // 3. Return the full list to the Controller
+        return allScenarioBreaches;
     }
 
     private List<TenantRuleResponseDto> loadActiveRules(UUID tenantScenarioId) {
@@ -113,7 +125,6 @@ public class ScenarioOrchestrationService {
     private ConditionExecutionContextDto mergeThreshold(GlobalRuleCondition cond, Map<UUID, TenantRuleThreshold> overrides) {
         TenantRuleThreshold override = overrides.get(cond.getId());
 
-        // Use resolveSafe to prevent empty strings ("") from breaking the executors
         String aggFn = resolveSafe(
                 override != null ? override.getOverrideAggregationFunction() : null,
                 cond.getAggregationFunction()
@@ -138,9 +149,6 @@ public class ScenarioOrchestrationService {
                 .build();
     }
 
-    /**
-     * Safely falls back to the global value if the override is null OR completely blank.
-     */
     private String resolveSafe(String overrideVal, String globalVal) {
         if (overrideVal != null && !overrideVal.isBlank()) {
             return overrideVal.trim();
@@ -151,51 +159,42 @@ public class ScenarioOrchestrationService {
         return null;
     }
 
-    private void persistResults(Set<UUID> customerIds, RuleExecutionContextDto rule, TenantScenario tenantScenario) {
-        for (UUID customerId : customerIds) {
+    private void persistResults(List<RuleBreachResult> breachingResults, RuleExecutionContextDto rule, TenantScenario tenantScenario) {
+        for (RuleBreachResult result : breachingResults) {
+            UUID customerId = result.getCustomer().getId();
+
             double geoMultiplier = geoRiskEvaluator.getGeographicRiskMultiplier(customerId);
             int finalRiskScore = (int) Math.min(100, Math.round(rule.getBaseRiskScore() * geoMultiplier));
             AlertSeverity finalSeverity = determineSeverity(finalRiskScore, rule.getSeverity());
 
             Alert alert = new Alert();
-
-            // REMOVED alert.setId(UUID.randomUUID());
-            // Let JPA generate the ID automatically to prevent the "SELECT before INSERT" behavior!
-
             alert.setAlertReference(buildAlertReference());
-
-            // THE FIX: Set the initial status of the Alert!
-            // (Change AlertStatus.NEW to whatever your actual Enum/Constant is named)
-            // alert.setStatus(AlertStatus.NEW);  <-- UNCOMMENT AND UPDATE THIS LINE
-
-            // Fixed Hierarchical Mapping
             alert.setTenantScenarioId(tenantScenario.getId());
-
-            // Fixed typo: Ensure this points to the Global Scenario, not the Tenant Scenario
-            alert.setGlobalScenarioId(tenantScenario.getGlobalScenarioId()); // or .getScenarioId() depending on your entity
-
+            alert.setGlobalScenarioId(tenantScenario.getGlobalScenarioId());
             alert.setGlobalRuleId(rule.getGlobalRuleId());
             alert.setTenantRuleId(rule.getTenantRuleId());
-
             alert.setCustomerProfileId(customerId);
             alert.setSeverity(finalSeverity);
             alert.setRiskScore(BigDecimal.valueOf(finalRiskScore));
             alert.setTypologyTriggered(rule.getTypologyLabel());
-            alert.setTransaction(null);
 
-            alertRepo.save(alert);
+            if (result.getTransactions() != null && !result.getTransactions().isEmpty()) {
+                for (Transaction txn : result.getTransactions()) {
+                    if (txn != null) {
+                        alert.addAlertTransaction(txn);
+                    }
+                }
+            }
+
+            Alert savedAlert = alertRepo.save(alert);
 
             List<AlertEvidence> evidences = rule.getConditions().stream().map(cond -> {
                 AlertEvidence evidence = new AlertEvidence();
-
-                        evidence.setAttributeName(cond.getAttributeName());
+                evidence.setAlert(savedAlert);
+                evidence.setAttributeName(cond.getAttributeName());
                 evidence.setAggregationFunction(cond.getAggregationFunction());
-                evidence.setOperator(cond.getOperator()); // This was "BREACHED" in buildExecutionContext
-                // --- MANDATORY FIELDS END ---
+                evidence.setOperator(cond.getOperator());
 
-                evidence.setAlert(alert);
-
-                // Construct a readable evidence string (e.g., "COUNT over 7d >= 10")
                 String appliedParams = String.format("%s over %s >= %s",
                         cond.getAggregationFunction(),
                         cond.getLookbackPeriod() != null ? cond.getLookbackPeriod() : "N/A",
@@ -207,6 +206,14 @@ public class ScenarioOrchestrationService {
             }).toList();
 
             evidenceRepo.saveAll(evidences);
+
+            if (savedAlert.getAlertTransactions() != null && !savedAlert.getAlertTransactions().isEmpty()) {
+                log.info("Alert {} created: Linked {} transactions for Customer {}",
+                        savedAlert.getAlertReference(), savedAlert.getAlertTransactions().size(), customerId);
+            } else {
+                log.warn("Alert {} created WITHOUT transactions. This might cause issues in STR filing.",
+                        savedAlert.getAlertReference());
+            }
         }
     }
 

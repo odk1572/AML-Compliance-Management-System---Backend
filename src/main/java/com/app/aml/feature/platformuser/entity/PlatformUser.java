@@ -28,7 +28,7 @@ import java.util.UUID;
 public class PlatformUser extends SoftDeletableEntity implements Persistable<UUID> { // Added Persistable
 
     @Id
-    @Builder.Default // Ensure builder uses the generator
+    @Builder.Default
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
@@ -79,8 +79,6 @@ public class PlatformUser extends SoftDeletableEntity implements Persistable<UUI
     @Column(name = "last_login_ip", length = 45)
     private String lastLoginIp;
 
-    // --- NEW: Dynamic Persistable Logic ---
-
     @Transient
     @Builder.Default
     private boolean isNewRecord = true;
@@ -101,8 +99,6 @@ public class PlatformUser extends SoftDeletableEntity implements Persistable<UUI
     public UUID getId() {
         return this.id;
     }
-
-    // --- End of Persistable Logic ---
 
     public void incrementFailedAttempts() {
         this.failedLoginAttempts++;

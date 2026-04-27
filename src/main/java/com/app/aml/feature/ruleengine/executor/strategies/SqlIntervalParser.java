@@ -4,23 +4,14 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Utility to parse and validate time intervals for SQL execution and rule logic.
- * Supports shorthand (7d) and full-word (7 days) formats.
- */
 public final class SqlIntervalParser {
 
-    // Broad pattern: capturing digits, optional space, and any word characters
     private static final Pattern LOOKBACK_PATTERN = Pattern.compile("^(\\d+)\\s*([a-zA-Z]+)$");
 
     private SqlIntervalParser() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
-    /**
-     * Converts various time formats into a standard PostgreSQL-compatible interval string.
-     * Example: "7d" -> "7 days", "1 hour" -> "1 hours"
-     */
     public static String parse(String dbLookback) {
         if (dbLookback == null || dbLookback.isBlank()) {
             throw new IllegalArgumentException("Lookback period cannot be null or blank");
@@ -39,10 +30,6 @@ public final class SqlIntervalParser {
         return value + " " + normalizedUnit;
     }
 
-    /**
-     * Validates that the primary scenario window is large enough to encompass sub-intervals.
-     * Useful for rules like Dormant Reactivation.
-     */
     public static void validateCoverage(String primary, String ruleName, String... subIntervals) {
         double primaryDays = convertToDays(primary);
         double totalSubDays = 0;
@@ -61,10 +48,6 @@ public final class SqlIntervalParser {
             ));
         }
     }
-
-    /**
-     * Logic to normalize shorthand and full-word units into standard Postgres plural keywords.
-     */
     private static String normalizeUnit(String unit) {
         return switch (unit.toLowerCase()) {
             case "h", "hr", "hour", "hours" -> "hours";

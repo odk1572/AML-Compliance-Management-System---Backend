@@ -1,5 +1,6 @@
 package com.app.aml.feature.strfiling.dto.strFilingTransaction;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +12,7 @@ import java.util.UUID;
 @Data
 @Builder
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @AllArgsConstructor
 public class StrFilingTransactionResponseDto {
     private UUID id;

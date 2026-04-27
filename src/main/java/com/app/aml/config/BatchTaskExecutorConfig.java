@@ -13,9 +13,9 @@ public class BatchTaskExecutorConfig {
     public TaskExecutor batchTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
-        executor.setCorePoolSize(10); // Minimum threads always kept alive
-        executor.setMaxPoolSize(20);  // Max threads spun up under heavy load
-        executor.setQueueCapacity(200); // How many chunks wait in line before maxing out threads
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(20);
+        executor.setQueueCapacity(200);
         executor.setTaskDecorator(new TenantContextTaskDecorator());
         executor.setThreadNamePrefix("batch-worker-");
 

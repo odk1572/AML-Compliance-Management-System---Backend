@@ -20,5 +20,5 @@ public class CreateCaseAssignmentRequestDto {
     @NotNull(message = "The user being assigned to is required")
     private UUID assignedTo;
 
-    private String assignmentReason; // Optional: Analyst can explain why they are reassigning it
+    private String assignmentReason;
 }

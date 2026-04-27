@@ -26,10 +26,7 @@ public class DataSourceConfig {
     @Value("${spring.datasource.driver-class-name:org.postgresql.Driver}")
     private String driverClassName;
 
-    /**
-     * 1. Manually builds the Hikari pool using @Value strings.
-     * This avoids the need for DataSourceProperties entirely.
-     */
+
     @Bean
     public DataSource defaultHikariDataSource() {
         return DataSourceBuilder.create()
@@ -40,9 +37,7 @@ public class DataSourceConfig {
                 .build();
     }
 
-    /**
-     * 2. Wraps the manual pool in our Multi-Tenant routing logic.
-     */
+
     @Bean
     @Primary
     public DataSource tenantAwareDataSource(

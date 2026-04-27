@@ -25,6 +25,5 @@ public class AsyncConfig {
         return executor;
     }
 
-    // 👇 REMOVED the batchTaskExecutor bean from here because
-    // it already exists in BatchTaskExecutorConfig.java!
+
 }

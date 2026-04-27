@@ -1,6 +1,6 @@
 package com.app.aml.feature.casemanagement.entity;
 
-import com.app.aml.feature.ingestion.entity.Alert;
+import com.app.aml.feature.alert.entity.Alert;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

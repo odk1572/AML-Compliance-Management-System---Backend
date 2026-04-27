@@ -1,6 +1,6 @@
 package com.app.aml.feature.strfiling.entity;
 
-import com.app.aml.domain.enums.TypologyCategory;
+import com.app.aml.enums.TypologyCategory;
 import com.app.aml.feature.casemanagement.entity.CaseRecord;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;

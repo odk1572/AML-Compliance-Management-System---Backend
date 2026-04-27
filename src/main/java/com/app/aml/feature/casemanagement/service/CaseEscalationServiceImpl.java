@@ -1,16 +1,15 @@
 package com.app.aml.feature.casemanagement.service;
 
 
-import com.app.aml.domain.enums.CaseStatus;
-import com.app.aml.domain.enums.EscalationStatus;
-import com.app.aml.feature.casemanagement.dto.request.EscalationRequestDto;
+import com.app.aml.enums.CaseStatus;
+import com.app.aml.enums.EscalationStatus;
+import com.app.aml.feature.casemanagement.dto.caseEscalation.request.EscalationRequestDto;
 import com.app.aml.feature.casemanagement.entity.CaseAuditTrail;
 import com.app.aml.feature.casemanagement.entity.CaseEscalation;
 import com.app.aml.feature.casemanagement.entity.CaseRecord;
 import com.app.aml.feature.casemanagement.repository.CaseAuditTrailRepository;
 import com.app.aml.feature.casemanagement.repository.CaseEscalationRepository;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
-import com.app.aml.feature.casemanagement.service.CaseEscalationService;
 import com.app.aml.feature.notification.event.CaseEscalatedEvent;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -61,7 +60,6 @@ public class CaseEscalationServiceImpl implements CaseEscalationService {
     }
 
     private String resolveUserEmail(UUID userId) {
-        // Replace with actual user service/repository lookup in production
         return "admin_" + userId.toString().substring(0, 8) + "@bank.com";
     }
 }

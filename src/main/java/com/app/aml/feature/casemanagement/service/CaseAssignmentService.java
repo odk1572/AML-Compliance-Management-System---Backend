@@ -8,4 +8,5 @@ import java.util.UUID;
 public interface CaseAssignmentService {
     CaseResponseDto createCase(List<UUID> alertIds, UUID assigneeId, UUID assignedById, String priority);
     void reassignCase(UUID caseId, UUID newAssigneeId, UUID reassignedById, String reason);
+    CaseResponseDto getCaseDetails(UUID caseId);
 }

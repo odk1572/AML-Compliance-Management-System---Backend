@@ -28,7 +28,6 @@ public class TransactionValidationSkipListener implements SkipListener<Transacti
 
     @Override
     public void onSkipInProcess(TransactionCsvDto item, Throwable t) {
-        // Log the actual error message
         log.error("Process Skip at row {}: {}", item.getLineNumber(), t.getMessage());
 
         if (t instanceof ValidationException ex) {

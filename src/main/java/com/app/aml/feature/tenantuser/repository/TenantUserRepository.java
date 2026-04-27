@@ -15,12 +15,6 @@ import java.util.UUID;
 @Repository
 public interface TenantUserRepository extends JpaRepository<TenantUser, UUID> {
     Optional<TenantUser> findByEmail(String email);
-    // Add this to your TenantUserRepository
-   // Standard find ignores the @SQLRestriction if you use one,
-    // or you might need a custom @Query if you have filters applied.
-
-    // If you are using Hibernate @SQLRestriction("sys_is_deleted = false"),
-// you need this to find the deleted ones:
     @Query(value = "SELECT * FROM tenant_users WHERE id = :id AND sys_is_deleted = true", nativeQuery = true)
     Optional<TenantUser> findDeletedById(@Param("id") UUID id);
     Optional<TenantUser> findByEmailIgnoreCase(String email);

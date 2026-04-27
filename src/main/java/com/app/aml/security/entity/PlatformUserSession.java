@@ -27,7 +27,7 @@ public class PlatformUserSession extends AuditableEntity {
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
     @Column(name = "user_id", nullable = false)
-    private UUID userId; // References PLATFORM_USERS(id)
+    private UUID userId;
 
     @Column(name = "jwt_jti", nullable = false, unique = true)
     private String jwtJti;

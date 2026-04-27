@@ -1,6 +1,6 @@
 package com.app.aml.feature.ruleengine.dto.globalRules.request;
 
-import com.app.aml.domain.enums.AlertSeverity;
+import com.app.aml.enums.AlertSeverity;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

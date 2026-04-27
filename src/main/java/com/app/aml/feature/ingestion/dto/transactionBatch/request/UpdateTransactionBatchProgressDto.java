@@ -1,6 +1,6 @@
 package com.app.aml.feature.ingestion.dto.transactionBatch.request;
 
-import com.app.aml.domain.enums.BatchStatus;
+import com.app.aml.enums.BatchStatus;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -21,7 +21,7 @@ public class UpdateTransactionBatchProgressDto {
 
     private Integer totalRecords;
 
-    private String failureDetails; // Pass a JSONified string here if rows fail validation
+    private String failureDetails;
 
     @Size(max = 100)
     private String springBatchJobId;

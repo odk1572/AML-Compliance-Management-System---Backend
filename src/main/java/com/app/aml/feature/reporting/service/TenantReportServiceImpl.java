@@ -1,12 +1,11 @@
 package com.app.aml.feature.reporting.service;
 
-import com.app.aml.domain.enums.CaseStatus;
+import com.app.aml.enums.CaseStatus;
 import com.app.aml.feature.casemanagement.entity.CaseRecord;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
-import com.app.aml.feature.ingestion.repository.AlertRepository;
+import com.app.aml.feature.alert.repository.AlertRepository;
 import com.app.aml.feature.ingestion.repository.TransactionBatchRepository;
 import com.app.aml.feature.reporting.dtos.TenantReportDtos.*;
-import com.app.aml.feature.reporting.service.TenantReportService;
 import com.app.aml.feature.strfiling.repository.StrFilingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,19 +30,6 @@ public class TenantReportServiceImpl implements TenantReportService {
     private final TransactionBatchRepository batchRepo;
     private final CaseRecordRepository caseRepo;
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<FlaggedTransactionDto> getFlaggedTransactionReport(Pageable pageable) {
-        // Fetches alerts and maps them to transaction-focused view
-        return alertRepo.findAll(pageable).map(alert -> FlaggedTransactionDto.builder()
-                .transactionId(alert.getTransaction().getId())
-                .accountNo(alert.getTransaction().getBeneficiaryAccountNo())
-                .amount(alert.getTransaction().getAmount())
-                .currency(alert.getTransaction().getCurrencyCode())
-                .riskLevel(alert.getRiskScore().compareTo(BigDecimal.valueOf(80)) > 0 ? "HIGH" : "MEDIUM")
-                .timestamp(alert.getSysCreatedAt())
-                .build());
-    }
 
     @Override
     @Transactional(readOnly = true)

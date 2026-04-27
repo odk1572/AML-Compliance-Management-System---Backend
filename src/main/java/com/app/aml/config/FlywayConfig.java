@@ -10,12 +10,9 @@ import javax.sql.DataSource;
 
 @Configuration
 @Slf4j
-// REMOVED @RequiredArgsConstructor to prevent eager injection of DataSource
+
 public class FlywayConfig {
 
-    // 1. PHASE 1: Platform Migration
-    // We inject DataSource here with @Lazy so Spring doesn't try to build the
-    // whole TenantAwareDataSource stack until Flyway actually needs to connect.
     @Bean(initMethod = "migrate")
     public Flyway commonSchemaFlyway(@Lazy DataSource dataSource) {
         log.info("Initializing Flyway for common_schema...");
@@ -27,8 +24,6 @@ public class FlywayConfig {
                 .load();
     }
 
-    // 2. PHASE 2: Dynamic Tenant Migration
-    // This is called by your TenantSchemaProvisioner.
     public void runTenantSchemaMigration(String schemaName, DataSource dataSource) {
         log.info("Running Flyway migration for tenant schema: {}", schemaName);
 

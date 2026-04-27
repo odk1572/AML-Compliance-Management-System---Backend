@@ -12,7 +12,7 @@ public class BatchCompletedEvent extends ApplicationEvent {
     private final UUID batchId;
     private final String batchReference;
     private final String uploaderEmail;
-    private final String status; // e.g., "PROCESSED", "FAILED", "PARTIAL_SUCCESS"
+    private final String status;
     private final int totalRecords;
     private final int failedRecords;
 

@@ -144,25 +144,18 @@ public class TenantUserServiceImpl implements TenantUserService {
 
         TenantUserResponseDto prevState = mapper.toResponseDto(user);
 
-        // 1. Handle Manual Lock/Unlock logic
         if (dto.getIsLocked() != null) {
             if (user.isLocked() && !dto.getIsLocked()) {
-                // Transition: Locked -> Unlocked
                 user.resetFailedAttempts();
             } else if (!user.isLocked() && dto.getIsLocked()) {
-                // Transition: Unlocked -> Locked
                 user.lock();
             }
         }
-
-        // 2. Map other fields (fullName, role)
-        // Note: Ensure your mapper ignores 'isLocked' to avoid overwriting the logic above
         mapper.updateEntityFromDto(dto, user);
 
         TenantUser updatedUser = userRepo.save(user);
         TenantUserResponseDto response = mapper.toResponseDto(updatedUser);
 
-        // 3. Audit the change
         auditLog.logTenant(
                 null,
                 "USER_MGMT",
@@ -187,22 +180,17 @@ public class TenantUserServiceImpl implements TenantUserService {
     @Override
     @Transactional
     public void reactivateUser(UUID id) {
-        // 1. Find the deleted user
-        // Using a native query or custom method because standard find often filters deleted rows
         TenantUser user = userRepo.findDeletedById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Deleted user not found with ID: " + id));
 
-        // 2. Restore flags
         user.setSysIsDeleted(false);
         user.setSysDeletedAt(null);
 
-        // 3. Clean security state (so they can actually log in)
         user.resetFailedAttempts();
         user.setLocked(false);
 
         userRepo.save(user);
 
-        // 4. Audit Log
         auditLog.logTenant(
                 null,
                 "USER_MGMT",
@@ -220,15 +208,13 @@ public class TenantUserServiceImpl implements TenantUserService {
         TenantUser user = userRepo.findByIdAndSysIsDeletedFalse(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        // 1. Verify old password (if it's not the very first login, or even if it is)
         if (!encoder.matches(oldPassword, user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid current password");
         }
 
-        // 2. Update security details
         user.setPasswordHash(encoder.encode(newPassword));
-        user.setFirstLogin(false); // 👈 Crucial: allow them into the app now
-        user.resetFailedAttempts(); // Safety reset
+        user.setFirstLogin(false);
+        user.resetFailedAttempts();
 
         userRepo.save(user);
 
@@ -250,10 +236,10 @@ public class TenantUserServiceImpl implements TenantUserService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         if (!user.isLocked()) {
-            return; // Already unlocked
+            return;
         }
 
-        user.resetFailedAttempts(); // Clears isLocked, lockedAt, and failedLoginAttempts
+        user.resetFailedAttempts();
         userRepo.save(user);
 
         auditLog.logTenant(

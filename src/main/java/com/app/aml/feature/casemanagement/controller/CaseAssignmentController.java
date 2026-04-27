@@ -1,7 +1,7 @@
 package com.app.aml.feature.casemanagement.controller;
 
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.casemanagement.dto.CreateCaseRequest;
 import com.app.aml.feature.casemanagement.dto.ReassignCaseRequest;
 import com.app.aml.feature.casemanagement.dto.caseRecord.response.CaseResponseDto;
@@ -42,6 +42,24 @@ public class CaseAssignmentController {
                 ApiResponse.of(
                         HttpStatus.CREATED,
                         "Case created and assigned successfully",
+                        httpRequest.getRequestURI(),
+                        data
+                )
+        );
+    }
+
+    @GetMapping("/{caseId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    public ResponseEntity<ApiResponse<CaseResponseDto>> getCaseDetails(
+            @PathVariable UUID caseId,
+            HttpServletRequest httpRequest) {
+
+        CaseResponseDto data = caseAssignmentService.getCaseDetails(caseId);
+
+        return ResponseEntity.ok(
+                ApiResponse.of(
+                        HttpStatus.OK,
+                        "Case details retrieved successfully",
                         httpRequest.getRequestURI(),
                         data
                 )

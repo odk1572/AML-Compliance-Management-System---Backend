@@ -202,17 +202,11 @@ public class GlobalScenarioServiceImpl implements GlobalScenarioService {
     @Override
     @Transactional
     public GlobalScenarioRuleResponseDto updateRuleInScenario(UUID scenarioId, UUID ruleId, UpdateGlobalScenarioRuleRequestDto dto) {
-        // 1. Find the existing entity
         GlobalScenarioRule scenarioRule = scenarioRuleRepo.findByScenarioIdAndRuleId(scenarioId, ruleId)
                 .orElseThrow(() -> new EntityNotFoundException("Mapping not found for Scenario ID: " + scenarioId + " and Rule ID: " + ruleId));
 
-        // 2. Capture previous state for Audit Log
         GlobalScenarioRuleResponseDto prevState = scenarioRuleMapper.toResponseDto(scenarioRule);
 
-        // 3. Debug Log: Verify if Postman data reached the DTO
-
-        // 4. Manual Update (Replaces the Mapper call)
-        // We check for null to mimic the 'IGNORE' strategy
         if (dto.getIsActive() != null) {
             scenarioRule.setActive(dto.getIsActive());
         }
@@ -221,13 +215,10 @@ public class GlobalScenarioServiceImpl implements GlobalScenarioService {
             scenarioRule.setPriorityOrder(dto.getPriorityOrder());
         }
 
-        // 5. Persist the changes
         GlobalScenarioRule updatedScenarioRule = scenarioRuleRepo.save(scenarioRule);
 
-        // 6. Map to Response DTO
         GlobalScenarioRuleResponseDto responseDto = scenarioRuleMapper.toResponseDto(updatedScenarioRule);
 
-        // 7. Log to Platform Audit
         auditLog.logPlatform(
                 null,
                 "RULE_ENGINE",

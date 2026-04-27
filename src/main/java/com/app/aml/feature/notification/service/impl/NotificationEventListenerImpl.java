@@ -129,4 +129,25 @@ public class NotificationEventListenerImpl implements NotificationEventListener 
 
         mailService.sendEmail(event.getAdminEmail(), subject, body);
     }
+//    @Async
+//    @EventListener
+//    public void handleUserLogin(UserLoginEvent event) {
+//        log.info("Caught UserLoginEvent for User: {}", event.getUserEmail());
+//
+//        String subject = "Security Alert: New Login Detected";
+//        String body = String.format(
+//                "Hello,\n\nYour AML platform account (%s) was recently accessed from a new session.\n" +
+//                        "IP Address: %s\nTime: %s\n\n" +
+//                        "If this was not you, please contact your administrator immediately.\n\n" +
+//                        "Thank you,\nAML Platform Security",
+//                event.getUserEmail(), event.getIpAddress(), java.time.Instant.now().toString()
+//        );
+//        mailService.sendEmail(event.getUserEmail(), subject, body);
+//        notificationService.createInPlatform(
+//                event.getUserId(),
+//                "SECURITY",
+//                "New Login Detected",
+//                "Your account was accessed from IP: " + event.getIpAddress()
+//        );
+//    }
 }

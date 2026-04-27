@@ -1,7 +1,7 @@
 package com.app.aml.feature.ruleengine.controller;
 
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.ruleengine.dto.tenantRule.response.TenantRuleResponseDto;
 import com.app.aml.feature.ruleengine.dto.tenantScenario.response.TenantScenarioResponseDto;
 import com.app.aml.feature.ruleengine.dto.tenantScenario.response.TenantScenarioWithRulesDto;

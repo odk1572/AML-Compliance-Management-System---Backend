@@ -1,6 +1,6 @@
 package com.app.aml.feature.casemanagement.dto.caseEscalation.request;
 
-import com.app.aml.domain.enums.EscalationStatus;
+import com.app.aml.enums.EscalationStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,8 +1,8 @@
 package com.app.aml.feature.casemanagement.controller;
 
 
-import com.app.aml.domain.api.ApiResponse;
-import com.app.aml.feature.casemanagement.dto.request.EscalationRequestDto;
+import com.app.aml.apiResponse.ApiResponse;
+import com.app.aml.feature.casemanagement.dto.caseEscalation.request.EscalationRequestDto;
 import com.app.aml.feature.casemanagement.service.CaseEscalationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;

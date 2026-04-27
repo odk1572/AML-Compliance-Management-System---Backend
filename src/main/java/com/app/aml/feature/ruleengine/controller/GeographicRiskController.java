@@ -1,6 +1,6 @@
 package com.app.aml.feature.ruleengine.controller;
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.ruleengine.dto.geographicRiskRating.request.CreateGeographicRiskRequestDto;
 import com.app.aml.feature.ruleengine.dto.geographicRiskRating.response.GeographicRiskRatingResponseDto;
 import com.app.aml.feature.ruleengine.service.GeographicRiskService;

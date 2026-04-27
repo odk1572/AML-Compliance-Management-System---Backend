@@ -1,6 +1,6 @@
 package com.app.aml.feature.casemanagement.entity;
 
-import com.app.aml.domain.enums.EscalationStatus;
+import com.app.aml.enums.EscalationStatus;
 import com.app.aml.shared.audit.AuditableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
@@ -52,5 +52,4 @@ public class CaseEscalation extends AuditableEntity {
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 
-//    sys_created_at and sys_updated_at are inherited from AuditableEntity
 }

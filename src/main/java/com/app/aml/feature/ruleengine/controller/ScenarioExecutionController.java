@@ -1,6 +1,7 @@
 package com.app.aml.feature.ruleengine.controller;
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
+import com.app.aml.feature.ruleengine.dto.RuleBreachResult;
 import com.app.aml.feature.ruleengine.service.ScenarioOrchestrationService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -25,10 +26,6 @@ public class ScenarioExecutionController {
 
     private final ScenarioOrchestrationService orchestrationService;
 
-    /**
-     * Executes all active rules for a Tenant Scenario.
-     * Accessible by SUPER_ADMIN and BANK_ADMIN.
-     */
     @PostMapping("/{tenantScenarioId}/execute")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN')")
     public ResponseEntity<ApiResponse<ScenarioExecutionSummary>> executeScenario(
@@ -41,26 +38,24 @@ public class ScenarioExecutionController {
 
         long startTime = System.currentTimeMillis();
 
-        // 1. Core Logic Call
-        Set<UUID> breachingCustomers = orchestrationService.executeFullScenario(tenantScenarioId);
+        // Updated to receive the full DTO list
+        List<RuleBreachResult> ruleBreaches = orchestrationService.executeFullScenario(tenantScenarioId);
 
         long duration = System.currentTimeMillis() - startTime;
 
-        // 2. Prepare Data DTO
         ScenarioExecutionSummary summary = ScenarioExecutionSummary.builder()
                 .tenantScenarioId(tenantScenarioId)
                 .executionTimestamp(LocalDateTime.now())
-                .totalBreachesFound(breachingCustomers.size())
-                .breachingCustomerIds(breachingCustomers)
+                .totalBreachesFound(ruleBreaches.size())
+                .breaches(ruleBreaches) // Passing the full list of Customers and Transactions
                 .processingTimeMs(duration)
                 .status("SUCCESS")
                 .build();
 
         log.info("=========================================================================");
-        log.info("EXECUTION COMPLETE: {} customers flagged in {} ms", breachingCustomers.size(), duration);
+        log.info("EXECUTION COMPLETE: {} breaches flagged in {} ms", ruleBreaches.size(), duration);
         log.info("=========================================================================");
 
-        // 3. Build Response using ApiResponse.of(...)
         return ResponseEntity.ok(ApiResponse.of(
                 HttpStatus.OK,
                 "Scenario execution completed successfully.",
@@ -69,14 +64,13 @@ public class ScenarioExecutionController {
         ));
     }
 
-    // --- Summary DTO ---
     @Data
     @Builder
     public static class ScenarioExecutionSummary {
         private UUID tenantScenarioId;
         private LocalDateTime executionTimestamp;
         private int totalBreachesFound;
-        private Set<UUID> breachingCustomerIds;
+        private List<RuleBreachResult> breaches; // Updated field type
         private long processingTimeMs;
         private String status;
     }

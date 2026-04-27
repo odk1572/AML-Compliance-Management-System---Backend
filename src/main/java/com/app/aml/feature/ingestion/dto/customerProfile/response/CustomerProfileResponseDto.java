@@ -1,8 +1,9 @@
 package com.app.aml.feature.ingestion.dto.customerProfile.response;
-import com.app.aml.domain.enums.CustomerType;
-import com.app.aml.domain.enums.KycStatus; // Assuming this exists
+import com.app.aml.enums.CustomerType;
+import com.app.aml.enums.KycStatus; // Assuming this exists
 import com.app.aml.feature.casemanagement.dto.caseRecord.response.CaseResponseDto;
-import com.app.aml.feature.ingestion.dto.alert.response.AlertResponseDto;
+import com.app.aml.feature.alert.dto.alert.response.AlertResponseDto;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CustomerProfileResponseDto {
     private UUID id;
     private String accountNumber;
@@ -31,10 +33,8 @@ public class CustomerProfileResponseDto {
     private LocalDate lastActivityDate;
     private KycStatus kycStatus;
 
-    // Media
     private String kycDocumentUrl;
 
-    // 360 View Aggregations
     private List<AlertResponseDto> recentAlerts;
     private List<CaseResponseDto> recentCases;
 }

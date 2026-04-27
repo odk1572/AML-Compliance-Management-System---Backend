@@ -1,6 +1,7 @@
 package com.app.aml.feature.tenant.dto.response;
 
-import com.app.aml.domain.enums.TenantStatus;
+import com.app.aml.enums.TenantStatus;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TenantResponseDto {
     private UUID id;
     private String tenantCode;

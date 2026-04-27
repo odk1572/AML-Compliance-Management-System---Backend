@@ -17,17 +17,9 @@ public class GeographicRiskEvaluator {
 
     private final JdbcTemplate jdbcTemplate;
 
-    /**
-     * Evaluates the customer's recent transaction history against FATF/Basel risk tiers.
-     * Returns a multiplier (e.g., 2.0 for CRITICAL risk, 1.5 for HIGH risk, 1.0 for LOW risk).
-     *
-     * @param customerId The UUID of the customer being evaluated.
-     * @return double representing the risk multiplier.
-     */
     public double getGeographicRiskMultiplier(UUID customerId) {
         String schema = TenantContext.getSchemaName();
 
-        // Find the highest risk tier involved in the customer's activity over the last 30 days.
         String sql = String.format("""
             WITH involved_countries AS (
                 -- 1. Customer's Residency
@@ -69,16 +61,15 @@ public class GeographicRiskEvaluator {
         """, schema, schema, schema, schema, schema);
 
         try {
-            // Note: We now pass customerId 3 times because of the 3 WHERE clauses
             return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
                 String riskTier = rs.getString("risk_tier").toUpperCase();
                 int baselScore = rs.getInt("basel_aml_index_score");
 
                 double multiplier = switch (riskTier) {
-                    case "CRITICAL" -> 2.0;               // Double the base score
+                    case "CRITICAL" -> 2.0;
                     case "HIGH"     -> (baselScore > 70) ? 1.75 : 1.5;
                     case "MEDIUM"   -> 1.2;
-                    default         -> 1.0;               // No penalty for LOW risk
+                    default         -> 1.0;
                 };
 
                 log.debug("Geo-Risk for Customer {}: Tier={}, BaselScore={}, Multiplier={}",
@@ -88,11 +79,9 @@ public class GeographicRiskEvaluator {
             }, customerId, customerId, customerId);
 
         } catch (EmptyResultDataAccessException e) {
-            // Default to 1.0 if no high-risk countries are found or transaction history is empty
             log.trace("No geographic risk modifiers found for Customer {}. Defaulting to 1.0x", customerId);
             return 1.0;
         } catch (DataAccessException e) {
-            // Log DB errors but do not fail the entire rule execution
             log.error("Database error while evaluating geographic risk for Customer {}. Defaulting to 1.0x", customerId, e);
             return 1.0;
         }

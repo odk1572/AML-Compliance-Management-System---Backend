@@ -1,6 +1,6 @@
 package com.app.aml.feature.tenant.dto.request;
 
-import com.app.aml.domain.enums.TenantStatus;
+import com.app.aml.enums.TenantStatus;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

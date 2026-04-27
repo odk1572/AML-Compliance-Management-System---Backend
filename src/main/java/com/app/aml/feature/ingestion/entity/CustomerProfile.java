@@ -1,7 +1,7 @@
 package com.app.aml.feature.ingestion.entity;
 
-import com.app.aml.domain.enums.CustomerType;
-import com.app.aml.domain.enums.KycStatus;
+import com.app.aml.enums.CustomerType;
+import com.app.aml.enums.KycStatus;
 import com.app.aml.shared.audit.SoftDeletableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;

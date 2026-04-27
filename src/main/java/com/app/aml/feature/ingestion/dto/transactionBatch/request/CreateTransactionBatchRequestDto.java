@@ -34,5 +34,4 @@ public class CreateTransactionBatchRequestDto {
 
     private String cloudinarySecureUrl;
 
-    // uploadedBy is omitted because your Service will extract it from the Security Context (JWT)
 }

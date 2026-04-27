@@ -1,6 +1,6 @@
 package com.app.aml.feature.ingestion.batch.customer;
 
-import com.app.aml.domain.enums.BatchStatus;
+import com.app.aml.enums.BatchStatus;
 import com.app.aml.feature.ingestion.entity.TransactionBatch;
 import com.app.aml.feature.ingestion.repository.TransactionBatchRepository;
 import com.app.aml.feature.notification.service.interfaces.MailService;

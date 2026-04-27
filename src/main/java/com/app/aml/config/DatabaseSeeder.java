@@ -31,7 +31,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             log.info("Seeding Super Admin user...");
 
             PlatformUser admin = new PlatformUser();
-            // Using the fixed ID from your SQL if you want to maintain consistency
+
             admin.setId(UUID.fromString("00000000-0000-0000-0000-000000000002"));
             admin.setEmail(adminEmail);
             admin.setFullName("AML System Administrator");

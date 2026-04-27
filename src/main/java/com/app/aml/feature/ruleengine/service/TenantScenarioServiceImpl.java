@@ -1,6 +1,6 @@
 package com.app.aml.feature.ruleengine.service;
 
-import com.app.aml.domain.enums.RuleStatus;
+import com.app.aml.enums.RuleStatus;
 import com.app.aml.feature.ruleengine.dto.tenantRule.response.TenantRuleResponseDto;
 import com.app.aml.feature.ruleengine.dto.tenantScenario.response.TenantScenarioResponseDto;
 import com.app.aml.feature.ruleengine.dto.tenantScenario.response.TenantScenarioWithRulesDto;
@@ -94,9 +94,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
         TenantScenario scenario = tenantScenarioRepo.findById(tenantScenarioId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant Scenario not found"));
 
-        // Fix: Get status as String
         RuleStatus oldStatus = scenario.getStatus();
-        // Fix: Set status as String
         scenario.setStatus(RuleStatus.PAUSED);
         TenantScenario savedScenario = tenantScenarioRepo.save(scenario);
 
@@ -123,7 +121,6 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
         TenantScenario scenario = tenantScenarioRepo.findById(tenantScenarioId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant Scenario not found"));
 
-        // Fix: String comparison instead of ==
         if (RuleStatus.ACTIVE.equals(scenario.getStatus())) {
             throw new IllegalStateException("Scenario is already active.");
         }
@@ -195,7 +192,6 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
     public List<TenantScenarioWithRulesDto> listActiveScenariosWithRules() {
         log.debug("Fetching all active tenant scenarios with their rules");
 
-        // Fix: Use String literal for repository query
         List<TenantScenario> activeScenarios = tenantScenarioRepo.findByStatus(RuleStatus.ACTIVE);
 
         return activeScenarios.stream().map(scenario -> {

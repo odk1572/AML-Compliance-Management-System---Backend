@@ -16,7 +16,6 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
     Optional<Tenant> findByTenantCode(String tenantCode);
     Optional<Tenant> findByContactEmail(String email);
     Optional<Tenant> findBySchemaName(String discoveredSchema);
-    // This tells Spring how to handle the method we called in the Report Service
     @Query("SELECT t FROM Tenant t WHERE t.status = TenantStatus.ACTIVE")
     List<Tenant> findAllActive();
 }

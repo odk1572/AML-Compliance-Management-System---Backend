@@ -1,7 +1,7 @@
 package com.app.aml.feature.ingestion.dto.customerProfile.request;
 
-import com.app.aml.domain.enums.CustomerType;
-import com.app.aml.domain.enums.KycStatus;
+import com.app.aml.enums.CustomerType;
+import com.app.aml.enums.KycStatus;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

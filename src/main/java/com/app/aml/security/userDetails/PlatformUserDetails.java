@@ -11,10 +11,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
 
-/**
- * Spring Security adapter for Platform Users (Super Admins).
- * Wraps the database entity to provide authentication details.
- */
 @RequiredArgsConstructor
 public class PlatformUserDetails implements UserDetails {
 
@@ -22,7 +18,6 @@ public class PlatformUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Spring Security expects roles to be prefixed with "ROLE_"
         return Collections.singletonList(
                 new SimpleGrantedAuthority("ROLE_" + platformUser.getRole().name())
         );
@@ -30,24 +25,22 @@ public class PlatformUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return platformUser.getPasswordHash(); // Assumes your entity uses this field name
+        return platformUser.getPasswordHash();
     }
 
     @Override
     public String getUsername() {
-        return platformUser.getEmail(); // We use email as the username for login
+        return platformUser.getEmail();
     }
 
-    // You can expose the raw user object if you need it in your login controllers
     public PlatformUser getPlatformUser() {
         return platformUser;
     }
 
-    // --- Account Status Checks ---
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Not used for MVP, default to true
+        return true;
     }
 
     @Override
@@ -57,11 +50,11 @@ public class PlatformUserDetails implements UserDetails {
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Not used for MVP, default to true
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return !platformUser.isSysIsDeleted(); // Block access if soft-deleted
+        return !platformUser.isSysIsDeleted();
     }
 }

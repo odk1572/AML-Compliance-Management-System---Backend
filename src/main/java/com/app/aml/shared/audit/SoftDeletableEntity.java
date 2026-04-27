@@ -14,7 +14,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-@EntityListeners(AuditingEntityListener.class) // Enables automatic timestamping
+@EntityListeners(AuditingEntityListener.class)
 public abstract class SoftDeletableEntity extends AuditableEntity {
 
     @Builder.Default

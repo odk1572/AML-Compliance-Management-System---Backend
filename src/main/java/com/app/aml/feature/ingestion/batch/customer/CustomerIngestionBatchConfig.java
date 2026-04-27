@@ -44,9 +44,6 @@ public class CustomerIngestionBatchConfig {
     @Qualifier("batchTaskExecutor")
     private final TaskExecutor batchTaskExecutor;
 
-    /**
-     * Critical: This ensures each background thread knows which schema to use.
-     */
     @Bean
     public StepExecutionListener customerTenantStepListener() {
         return new StepExecutionListener() {
@@ -69,10 +66,6 @@ public class CustomerIngestionBatchConfig {
         };
     }
 
-    /**
-     * We pass completionListener as a parameter here to avoid
-     * circular dependency issues during startup.
-     */
     @Bean
     public Job customerProfileIngestionJob(CustomerIngestionJobCompletionListener completionListener) {
         return new JobBuilder("customerProfileIngestionJob", jobRepository)
@@ -135,11 +128,10 @@ public class CustomerIngestionBatchConfig {
     public FlatFileItemReader<CustomerProfileCsvDto> customerProfileReader(
             @Value("#{jobParameters['filePath']}") String filePath) {
 
-        // --- UPDATED HEADER (Must match found: [accountNumber...riskScore...lastActivityDate,kycStatus]) ---
         final String expectedHeader =
                 "accountNumber,customerName,customerType,idType,idNumber,nationality," +
-                        "countryOfResidence,monthlyIncome,netWorth,riskRating,riskScore," + // riskScore added here
-                        "isPep,isDormant,accountOpenedOn,lastActivityDate,kycStatus";      // lastActivityDate added here
+                        "countryOfResidence,monthlyIncome,netWorth,riskRating,riskScore," +
+                        "isPep,isDormant,accountOpenedOn,lastActivityDate,kycStatus";
 
         return new FlatFileItemReaderBuilder<CustomerProfileCsvDto>()
                 .name("customerProfileReader")
@@ -161,7 +153,7 @@ public class CustomerIngestionBatchConfig {
     public RepositoryItemWriter<CustomerProfile> customerProfileWriter() {
         return new RepositoryItemWriterBuilder<CustomerProfile>()
                 .repository(repository)
-                .methodName("save") // Standard method name for single items in RepositoryItemWriter
+                .methodName("save")
                 .build();
     }
 }

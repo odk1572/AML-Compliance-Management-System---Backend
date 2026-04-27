@@ -10,9 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 
-/**
- * Spring Security adapter for Bank Employees (Bank Admins & Compliance Officers).
- */
+
 @RequiredArgsConstructor
 public class TenantUserDetails implements UserDetails {
 
@@ -38,8 +36,6 @@ public class TenantUserDetails implements UserDetails {
     public TenantUser getTenantUser() {
         return tenantUser;
     }
-
-    // --- Account Status Checks ---
 
     @Override
     public boolean isAccountNonExpired() {

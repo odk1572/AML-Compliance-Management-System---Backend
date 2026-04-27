@@ -19,9 +19,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @MappedSuperclass
-@NoArgsConstructor // Required by JPA
-@AllArgsConstructor // Required by SuperBuilder
-@SuperBuilder // Required for hierarchy building
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 public abstract class AuditableEntity {
 
     @CreationTimestamp

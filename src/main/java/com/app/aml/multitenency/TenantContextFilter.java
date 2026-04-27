@@ -15,10 +15,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Map;
 
-/**
- * Filter that executes once per HTTP request to extract the Tenant ID
- * from the authenticated user and bind it to the thread-local TenantContext.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -36,13 +32,10 @@ public class TenantContextFilter extends OncePerRequestFilter {
 
         try {
             if (tenantId != null) {
-                // 1. Resolve the schema name from the tenant ID
-                // I'm assuming resolveSchema returns the String name of the schema.
                 String schemaName = tenantSchemaResolver.resolveSchema(tenantId);
 
-                // 2. BIND BOTH to the TenantContext
                 TenantContext.setTenantId(tenantId);
-                TenantContext.setSchemaName(schemaName); // 👈 THIS WAS MISSING
+                TenantContext.setSchemaName(schemaName);
 
                 log.trace("TenantContext bound: ID={}, Schema={}", tenantId, schemaName);
             }
@@ -54,27 +47,18 @@ public class TenantContextFilter extends OncePerRequestFilter {
             TenantContext.clear();
         }
     }
-    /**
-     * Helper method to extract the tenantId.
-     * Since the JwtAuthenticationFilter runs BEFORE this filter, the JWT claims
-     * should already be parsed and placed into the SecurityContext or request attributes.
-     */
     private String extractTenantId(HttpServletRequest request) {
-        // Primary approach: Extract from the Principal configured by your JwtAuthFilter
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null && authentication.getDetails() instanceof Map claims) {
-            // If your JwtAuthFilter puts the raw claims into the 'details' object
             return (String) claims.get("tenantId");
         }
 
-        // Fallback approach: Extract from a custom request attribute
         Object tenantAttribute = request.getAttribute("tenantId");
         if (tenantAttribute instanceof String tId) {
             return tId;
         }
 
-        // Developer/System approach: Check for a direct HTTP header (useful for Super Admins)
         return request.getHeader("X-Tenant-ID");
     }
 }

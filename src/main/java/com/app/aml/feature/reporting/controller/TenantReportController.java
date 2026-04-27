@@ -1,6 +1,6 @@
 package com.app.aml.feature.reporting.controller;
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.reporting.dtos.TenantReportDtos.*;
 import com.app.aml.feature.reporting.service.TenantReportService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,20 +25,6 @@ public class TenantReportController {
 
     private final TenantReportService reportService;
 
-
-    @GetMapping("/flagged-transactions")
-    public ResponseEntity<ApiResponse<Page<FlaggedTransactionDto>>> getFlaggedTransactions(
-            @PageableDefault(size = 20) Pageable pageable,
-            HttpServletRequest request) {
-
-        Page<FlaggedTransactionDto> data = reportService.getFlaggedTransactionReport(pageable);
-        return ResponseEntity.ok(ApiResponse.of(
-                HttpStatus.OK,
-                "Flagged transactions report retrieved successfully",
-                request.getRequestURI(),
-                data
-        ));
-    }
 
     @GetMapping("/str-log")
     public ResponseEntity<ApiResponse<Page<StrLogDto>>> getStrLog(

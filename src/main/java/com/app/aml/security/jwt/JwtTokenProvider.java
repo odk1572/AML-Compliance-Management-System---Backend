@@ -16,10 +16,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Utility class for generating, parsing, and validating JSON Web Tokens (JWT).
- * Uses UUIDv7 for JTIs to ensure time-ordered session tracking and DB performance.
- */
 @Slf4j
 @Component
 public class JwtTokenProvider {
@@ -30,14 +26,7 @@ public class JwtTokenProvider {
     @Value("${app.security.jwt.expiration-ms}")
     private long jwtExpirationMs;
 
-    /**
-     * Generates a new JWT containing the user's identity, tenant routing data, and session ID.
-     *
-     * @param userId   The UUID string of the user (becomes the 'sub' claim)
-     * @param tenantId The UUID string of the bank/tenant (null for SUPER_ADMINs)
-     * @param role     The user's role (e.g., COMPLIANCE_OFFICER, SUPER_ADMIN)
-     * @return A signed JWT string
-     */
+
     public String generateToken(String userId, String tenantId, String role) {
         Map<String, Object> extraClaims = new HashMap<>();
 
@@ -46,23 +35,18 @@ public class JwtTokenProvider {
         }
         extraClaims.put("role", role);
 
-        // CHANGE: Using UUIDv7 (Time-Ordered Epoch) instead of randomUUID (v4).
-        // This is highly beneficial for your session revocation tables' indexing.
         String jti = UuidCreator.getTimeOrderedEpoch().toString();
 
         return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(userId)
-                .setId(jti) // JWT ID (jti)
+                .setId(jti)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    /**
-     * Extracts all claims from a valid token.
-     */
     public Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSignInKey())
@@ -71,9 +55,6 @@ public class JwtTokenProvider {
                 .getBody();
     }
 
-    /**
-     * Validates the cryptographic signature and expiration of the token.
-     */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -87,7 +68,6 @@ public class JwtTokenProvider {
         }
     }
 
-    // Convenience Getters
     public String extractTenantId(String token) {
         return extractAllClaims(token).get("tenantId", String.class);
     }

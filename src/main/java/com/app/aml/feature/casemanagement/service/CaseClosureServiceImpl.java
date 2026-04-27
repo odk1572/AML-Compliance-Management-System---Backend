@@ -1,18 +1,17 @@
 package com.app.aml.feature.casemanagement.service;
 
 
-import com.app.aml.domain.enums.AlertStatus;
-import com.app.aml.domain.enums.CaseStatus;
-import com.app.aml.domain.enums.ClosureDisposition;
+import com.app.aml.enums.AlertStatus;
+import com.app.aml.enums.CaseStatus;
+import com.app.aml.enums.ClosureDisposition;
 import com.app.aml.feature.casemanagement.entity.CaseAlertLink;
 import com.app.aml.feature.casemanagement.entity.CaseAuditTrail;
 import com.app.aml.feature.casemanagement.entity.CaseRecord;
 import com.app.aml.feature.casemanagement.repository.CaseAlertLinkRepository;
 import com.app.aml.feature.casemanagement.repository.CaseAuditTrailRepository;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
-import com.app.aml.feature.casemanagement.service.CaseClosureService;
-import com.app.aml.feature.ingestion.entity.Alert;
-import com.app.aml.feature.ingestion.repository.AlertRepository;
+import com.app.aml.feature.alert.entity.Alert;
+import com.app.aml.feature.alert.repository.AlertRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

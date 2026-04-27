@@ -38,7 +38,6 @@ public final class BatchValidationUtils {
     }
 
     public static String safe(String value) {
-        // Calls the strict version but passes null for maxLength
         return safe(value, null);
     }
 
@@ -90,7 +89,6 @@ public final class BatchValidationUtils {
         try {
             return Enum.valueOf(enumType, value.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            // Log a warning instead of stopping the whole process
             return defaultValue;
         }
     }

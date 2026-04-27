@@ -1,5 +1,5 @@
 package com.app.aml.feature.reporting.controller;
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.reporting.dtos.PlatformReportDtos.*;
 import com.app.aml.feature.reporting.service.PlatformReportService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,11 +29,9 @@ public class PlatformReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             HttpServletRequest request) {
 
-        // 1. Set dynamic defaults if parameters are missing
         LocalDate endDate = (to != null) ? to : LocalDate.now();
         LocalDate startDate = (from != null) ? from : endDate.minusDays(30);
 
-        // 2. Pass the resolved dates to the service
         List<SarSummaryDto> data = reportService.getSarSummary(startDate, endDate);
 
         return ResponseEntity.ok(ApiResponse.of(

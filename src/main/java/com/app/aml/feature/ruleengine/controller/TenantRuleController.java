@@ -1,6 +1,6 @@
 package com.app.aml.feature.ruleengine.controller;
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.ruleengine.dto.tenantRule.request.UpdateTenantRuleRequestDto;
 import com.app.aml.feature.ruleengine.dto.tenantRule.response.TenantRuleResponseDto;
 import com.app.aml.feature.ruleengine.dto.tenantRuleThreshold.request.CreateTenantRuleThresholdRequestDto;

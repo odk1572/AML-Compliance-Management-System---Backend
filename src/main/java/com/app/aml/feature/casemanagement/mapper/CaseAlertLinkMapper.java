@@ -5,7 +5,7 @@ import com.app.aml.feature.casemanagement.dto.caseAlertLink.request.CreateCaseAl
 import com.app.aml.feature.casemanagement.dto.caseAlertLink.request.UpdateCaseAlertLinkRequestDto;
 import com.app.aml.feature.casemanagement.entity.CaseAlertLink;
 import com.app.aml.feature.casemanagement.entity.CaseRecord;
-import com.app.aml.feature.ingestion.entity.Alert;
+import com.app.aml.feature.alert.entity.Alert;
 import org.mapstruct.*;
 
 import java.util.List;

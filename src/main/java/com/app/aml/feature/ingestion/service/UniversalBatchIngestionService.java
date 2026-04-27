@@ -1,9 +1,9 @@
 package com.app.aml.feature.ingestion.service;
 
-import com.app.aml.domain.enums.BatchFileType;
-import com.app.aml.domain.enums.BatchStatus;
-import com.app.aml.domain.exceptions.BusinessRuleException;
-import com.app.aml.domain.exceptions.DuplicateBatchException;
+import com.app.aml.enums.BatchFileType;
+import com.app.aml.enums.BatchStatus;
+import com.app.aml.exceptions.BusinessRuleException;
+import com.app.aml.exceptions.DuplicateBatchException;
 import com.app.aml.feature.ingestion.dto.transactionBatch.response.TransactionBatchResponseDto;
 import com.app.aml.feature.ingestion.entity.TransactionBatch;
 import com.app.aml.feature.ingestion.mapper.TransactionBatchMapper;
@@ -24,14 +24,13 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor // Safe to use this again!
+@RequiredArgsConstructor
 public class UniversalBatchIngestionService {
 
     private final TransactionBatchRepository batchRepository;
     private final TransactionBatchMapper batchMapper;
     private final AsyncBatchLauncher asyncBatchLauncher; // Inject our new Async Launcher
 
-    // REMOVED @Transactional to prevent the Spring Batch crash!
     public TransactionBatchResponseDto uploadAndRouteBatch(MultipartFile file, UUID uploadedBy, BatchFileType fileType) {
 
         if (file.isEmpty() || file.getOriginalFilename() == null) {
@@ -57,23 +56,16 @@ public class UniversalBatchIngestionService {
             batch.setFileSizeBytes(file.getSize());
             batch.setBatchStatus(BatchStatus.PENDING);
 
-            // Database save happens safely here (JPA is transactional by default)
             TransactionBatch savedBatch = batchRepository.save(batch);
 
-            // Fetch the current Tenant ID from the context
-
-            // Fire the background job using the new Async component
-            // 1. Capture the schema name while still on the request thread
             String currentTenantId = TenantContext.getTenantId();
             String currentSchemaName = TenantContext.getSchemaName(); // <-- Capture this
-
-// 2. Pass BOTH the ID and the Schema to the launcher
-            asyncBatchLauncher.triggerTargetedBatchJobAsync(
+        asyncBatchLauncher.triggerTargetedBatchJobAsync(
                     savedBatch.getId(),
                     tempFilePath.toAbsolutePath().toString(),
                     fileType,
                     currentTenantId,
-                    currentSchemaName // <-- ADD THIS 5th ARGUMENT
+                    currentSchemaName
             );
 
             return batchMapper.toResponseDto(savedBatch);
@@ -108,8 +100,6 @@ public class UniversalBatchIngestionService {
     }
 
     public Page<TransactionBatchResponseDto> getAllBatches(BatchFileType fileType, Pageable pageable) {
-        // Accepting 'fileType' to match your controller signature,
-        // but fetching all records since the entity lacks a fileType field.
         Page<TransactionBatch> batchPage = batchRepository.findAll(pageable);
 
         return batchPage.map(batchMapper::toResponseDto);

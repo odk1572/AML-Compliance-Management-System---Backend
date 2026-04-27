@@ -1,4 +1,4 @@
-package com.app.aml.feature.casemanagement.dto.request;
+package com.app.aml.feature.casemanagement.dto.caseEscalation.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

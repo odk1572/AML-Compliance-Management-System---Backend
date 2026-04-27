@@ -1,7 +1,7 @@
 package com.app.aml.feature.casemanagement.controller;
 
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.casemanagement.dto.FalsePositiveClosureRequest;
 import com.app.aml.feature.casemanagement.dto.StrClosureRequest;
 import com.app.aml.feature.casemanagement.service.CaseClosureService;

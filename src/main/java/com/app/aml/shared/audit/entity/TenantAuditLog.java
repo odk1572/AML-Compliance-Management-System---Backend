@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tenant_audit_log") // Schema omitted deliberately for dynamic tenant routing
+@Table(name = "tenant_audit_log")
 @Getter
 @Setter
 @NoArgsConstructor

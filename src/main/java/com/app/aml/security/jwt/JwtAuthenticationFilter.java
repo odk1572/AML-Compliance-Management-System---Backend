@@ -26,11 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Intercepts incoming HTTP requests to validate JWT Bearer tokens.
- * Extracts user identity and tenant routing data, verifies session validity,
- * and populates the Spring SecurityContext.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -48,10 +43,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         try {
-            // 1. Extract the JWT from the Authorization header
             String jwt = getJwtFromRequest(request);
 
-            // 2. Cryptographically validate the token (checks signature & expiration)
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
 
                 Claims claims = tokenProvider.extractAllClaims(jwt);
@@ -60,8 +53,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String role = claims.get("role", String.class);
                 String tenantId = claims.get("tenantId", String.class);
                 UUID userUuid = UUID.fromString(userId);
-
-                // 3. CHECK LOCK STATUS FOR BOTH PLATFORM AND TENANT USERS
                 if (tenantId == null) {
                     PlatformUser user = platformUserRepository.findById(userUuid).orElse(null);
                     if (user != null && user.isLocked()) {
@@ -70,7 +61,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         return;
                     }
                 } else {
-                    // Temporarily set TenantContext to query the correct schema, then clear it
                     TenantContext.setTenantId(tenantId);
                     try {
                         TenantUser tenantUser = tenantUserRepository.findById(userUuid).orElse(null);
@@ -84,14 +74,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
                 }
 
-                // 4. Database Check: Ensure the session hasn't been revoked by an Admin
                 if (jtiBlacklistService.isTokenRevoked(jti, tenantId)) {
                     log.warn("Attempted access with revoked JWT (jti: {}). Blocking request.", jti);
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session has been revoked or expired.");
-                    return; // Halt the filter chain immediately
+                    return;
                 }
 
-                // 5. Build the Authentication object
                 SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -100,12 +88,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         Collections.singletonList(authority)
                 );
 
-                // 6. Attach the tenantId to the Authentication details
                 Map<String, String> authDetails = new HashMap<>();
                 authDetails.put("tenantId", tenantId);
                 authentication.setDetails(authDetails);
 
-                // 7. Set the Context
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 log.debug("Security context set for User: {}, Role: {}, Tenant: {}", userId, role, tenantId);
             }
@@ -113,13 +99,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.error("Could not set user authentication in security context", ex);
         }
 
-        // 8. Continue to the next filter (usually TenantContextFilter)
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Helper to extract the raw token string from the HTTP header.
-     */
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {

@@ -1,5 +1,6 @@
 package com.app.aml.feature.casemanagement.mapper;
 
+import com.app.aml.feature.casemanagement.dto.caseEscalation.request.EscalationRequestDto;
 import com.app.aml.feature.casemanagement.dto.caseEscalation.response.CaseEscalationResponseDto;
 import com.app.aml.feature.casemanagement.dto.caseEscalation.request.UpdateCaseEscalationStatusDto;
 import com.app.aml.feature.casemanagement.entity.CaseEscalation;
@@ -22,7 +23,7 @@ public interface CaseEscalationMapper {
     @Mapping(target = "escalationStatus", ignore = true) // Entity defaults to PENDING
     @Mapping(target = "acknowledgedAt", ignore = true)
     @Mapping(target = "resolvedAt", ignore = true)
-    CaseEscalation toEntity(com.app.aml.feature.casemanagement.dto.request.EscalationRequestDto dto);
+    CaseEscalation toEntity(EscalationRequestDto dto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)

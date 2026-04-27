@@ -10,5 +10,5 @@ import java.util.UUID;
 
 @Repository
 public interface StrFilingTransactionRepository extends JpaRepository<StrFilingTransaction, UUID> {
-    List<Transaction> findByStrFilingId(UUID filingId);
+    List<StrFilingTransaction> findByStrFilingId(UUID filingId);
 }

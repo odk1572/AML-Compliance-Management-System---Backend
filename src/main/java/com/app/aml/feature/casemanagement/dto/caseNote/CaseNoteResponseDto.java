@@ -1,6 +1,7 @@
 package com.app.aml.feature.casemanagement.dto.caseNote;
 
-import com.app.aml.domain.enums.NoteType;
+import com.app.aml.enums.NoteType;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CaseNoteResponseDto {
     private UUID id;
     private UUID caseId; // Flattened from CaseRecord

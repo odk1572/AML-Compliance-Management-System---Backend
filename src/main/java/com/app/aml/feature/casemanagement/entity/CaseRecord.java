@@ -1,8 +1,9 @@
 package com.app.aml.feature.casemanagement.entity;
 
-import com.app.aml.domain.enums.CasePriority;
-import com.app.aml.domain.enums.CaseStatus;
-import com.app.aml.domain.enums.ClosureDisposition;
+import com.app.aml.enums.CasePriority;
+import com.app.aml.enums.CaseStatus;
+import com.app.aml.enums.ClosureDisposition;
+import com.app.aml.feature.ingestion.entity.Transaction;
 import com.app.aml.shared.audit.SoftDeletableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
@@ -14,6 +15,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -40,6 +43,20 @@ public class CaseRecord extends SoftDeletableEntity {
 
     @Transient
     private UUID customerProfileId;
+
+    @OneToMany(
+            mappedBy = "caseRecord",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<CaseTransaction> caseTransactions = new ArrayList<>();
+
+    @OneToMany(
+            mappedBy = "caseRecord",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<CaseAlertLink> caseAlertLinks = new ArrayList<>(); // This fixes 'getCaseAlertLinks'
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -80,4 +97,11 @@ public class CaseRecord extends SoftDeletableEntity {
 
     @Column(name = "sys_deleted_by")
     private UUID sysDeletedBy;
+
+    public void addTransaction(Transaction transaction) {
+        CaseTransaction caseTxn = new CaseTransaction();
+        caseTxn.setCaseRecord(this);
+        caseTxn.setTransaction(transaction);
+        this.caseTransactions.add(caseTxn);
+    }
 }

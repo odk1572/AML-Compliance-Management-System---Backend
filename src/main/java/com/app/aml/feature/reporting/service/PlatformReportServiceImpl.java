@@ -33,7 +33,6 @@ public class PlatformReportServiceImpl implements PlatformReportService {
 
         for (Tenant tenant : tenants) {
             executeInTenantSchema(tenant.getSchemaName(), (jdbcTemplate) -> {
-                // Reverted to str_filings
                 String sql = "SELECT COUNT(*) as cnt FROM str_filings WHERE sys_created_at BETWEEN ? AND ?";
                 Long count = jdbcTemplate.queryForObject(sql, Long.class, from.atStartOfDay(), to.atTime(23, 59, 59));
 

@@ -1,6 +1,6 @@
 package com.app.aml.feature.casemanagement.entity;
 
-import com.app.aml.domain.enums.NoteType;
+import com.app.aml.enums.NoteType;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

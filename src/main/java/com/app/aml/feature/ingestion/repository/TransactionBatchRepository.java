@@ -11,6 +11,5 @@ import java.util.UUID;
 public interface TransactionBatchRepository extends JpaRepository<TransactionBatch, UUID> {
     boolean existsByFileHashSha256(String fileHash);
 
-    // This fixes the 'Cannot resolve' error in listBatches
     Page<TransactionBatch> findByUploadedByOrderBySysCreatedAtDesc(UUID uploadedBy, Pageable pageable);
 }

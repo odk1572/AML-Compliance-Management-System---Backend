@@ -32,7 +32,6 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
     @Query("UPDATE UserSession s SET s.isRevoked = true, s.revokedAt = ?2 WHERE s.jwtJti = ?1")
     void revokeSessionByJti(String jwtJti, Instant revokedAt);
 
-    // 1. Used by TenantSchemaDeactivator (Revokes everyone in the current schema)
     @Modifying
     @Query("UPDATE UserSession s SET s.isRevoked = true WHERE s.isRevoked = false")
     int revokeAllActiveSessions();

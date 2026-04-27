@@ -1,7 +1,7 @@
 package com.app.aml.feature.strfiling.controller;
 
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.strfiling.dto.strFiling.StrFilingRequestDto;
 import com.app.aml.feature.strfiling.dto.strFiling.StrFilingResponseDto;
 import com.app.aml.feature.strfiling.service.StrFilingService;
@@ -24,9 +24,6 @@ public class StrFilingController {
 
     private final StrFilingService strFilingService;
 
-    /**
-     * Files a Suspicious Transaction Report (STR/SAR) and automatically closes the case.
-     */
     @PostMapping("/cases/{caseId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<StrFilingResponseDto>> fileSar(
@@ -35,7 +32,6 @@ public class StrFilingController {
             @RequestParam UUID filedBy,
             HttpServletRequest request) {
 
-        // The IP is fetched automatically from the HTTP request to feed into the Audit Trail
         StrFilingResponseDto responseDto = strFilingService.fileSar(
                 caseId,
                 dto,
@@ -53,9 +49,6 @@ public class StrFilingController {
         );
     }
 
-    /**
-     * Retrieves the details of a specific STR Filing by its ID.
-     */
     @GetMapping("/{filingId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<StrFilingResponseDto>> getFilingDetail(
@@ -79,13 +72,11 @@ public class StrFilingController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<byte[]> downloadStrPdf(@PathVariable UUID filingId) {
 
-        // Fetch the raw PDF bytes from your service
         byte[] pdfBytes = strFilingService.getPdfReport(filingId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
 
-        // Use "inline" to open in browser, or "attachment" to force download
         headers.setContentDispositionFormData("attachment", "STR-Report-" + filingId.toString().substring(0,8) + ".pdf");
 
         return ResponseEntity.ok()

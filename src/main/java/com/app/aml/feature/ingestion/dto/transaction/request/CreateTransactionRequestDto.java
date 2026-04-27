@@ -1,7 +1,7 @@
 package com.app.aml.feature.ingestion.dto.transaction.request;
 
-import com.app.aml.domain.enums.Channel;
-import com.app.aml.domain.enums.TransactionType;
+import com.app.aml.enums.Channel;
+import com.app.aml.enums.TransactionType;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,7 +24,7 @@ public class CreateTransactionRequestDto {
     @NotNull(message = "Batch ID is required")
     private UUID batchId;
 
-    private UUID customerId; // Optional: The system might not map it to a known profile immediately
+    private UUID customerId;
 
     @NotBlank(message = "Transaction reference is required")
     @Size(max = 100, message = "Transaction reference cannot exceed 100 characters")
@@ -73,5 +73,4 @@ public class CreateTransactionRequestDto {
 
     private String referenceNote;
 
-    // Note: 'status' is omitted because the entity defaults to CLEAN upon creation.
 }

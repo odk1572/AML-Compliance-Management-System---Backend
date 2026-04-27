@@ -5,34 +5,18 @@ package com.app.aml.security.rbac;
  */
 public enum Permission {
 
-    // ==========================================
-    // SYSTEM ADMIN (Platform Level)
-    // ==========================================
-    GLOBAL_RULE_MANAGE,      // Rule Engine Management
-    TENANT_ONBOARD,          // Bank Onboarding
-    REPORT_CROSS_TENANT,     // Cross-Tenant Reports
+    GLOBAL_RULE_MANAGE,
+    TENANT_ONBOARD,
+    REPORT_CROSS_TENANT,
     REPORT_SYSTEM_WIDE,
-    // System-Wide Reports
-
-    // ==========================================
-    // BANK ADMIN (Tenant Level)
-    // ==========================================
-    BANK_USER_MANAGE,        // User Management (COs)
-    BATCH_UPLOAD,            // Transaction Batch Upload
-    CASE_ASSIGN,             // Case Assignment
-    REPORT_INSTITUTIONAL,    // Institutional Reports
-
-    // ==========================================
-    // COMPLIANCE OFFICER (Investigation Level)
-    // ==========================================
-    CASE_INVESTIGATE,        // Case Investigation
-    CASE_NOTE_WRITE,         // Case Notes (Add Notes)
-    STR_FILE,                // SAR/STR Filing
-
-    // ==========================================
-    // SHARED / READ-ONLY ACCESS
-    // ==========================================
-    ALERT_READ,              // Alert Dashboard (View Only)
-    TRANSACTION_READ,        // Historical Transaction Review
-    CASE_NOTE_READ           // Case Notes / Audit Trail (View Only)
+    BANK_USER_MANAGE,
+    BATCH_UPLOAD,
+    CASE_ASSIGN,
+    REPORT_INSTITUTIONAL,
+    CASE_INVESTIGATE,
+    CASE_NOTE_WRITE,
+    STR_FILE,
+    ALERT_READ,
+    TRANSACTION_READ,
+    CASE_NOTE_READ
 }

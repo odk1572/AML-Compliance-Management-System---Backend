@@ -3,13 +3,11 @@ import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
 import com.app.aml.feature.ingestion.dto.customerProfile.response.CustomerProfileResponseDto;
 import com.app.aml.feature.ingestion.dto.customerProfile.response.TransactionSummaryDto;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
-import com.app.aml.feature.ingestion.mapper.AlertMapper; // Assuming you have this
+import com.app.aml.feature.alert.mapper.AlertMapper; // Assuming you have this
 import com.app.aml.feature.casemanagement.mapper.CaseRecordMapper; // Assuming you have this
-import com.app.aml.feature.ingestion.repository.AlertRepository;
+import com.app.aml.feature.alert.repository.AlertRepository;
 import com.app.aml.feature.ingestion.repository.CustomerProfileRepository;
 import com.app.aml.feature.ingestion.repository.TransactionRepository;
-import com.app.aml.feature.ingestion.service.CustomerInvestigationService;
-import com.app.aml.shared.cloudinary.CloudinaryService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -82,7 +79,6 @@ public class CustomerInvestigationServiceImpl implements CustomerInvestigationSe
         CustomerProfile profile = customerRepo.findByAccountNumber(accountNo)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found for account: " + accountNo));
 
-        // Using getCustomerName() based on the updated entity
         return txnRepo.findLinkedAccountsByName(profile.getCustomerName());
     }
 }

@@ -1,6 +1,6 @@
 package com.app.aml.feature.ingestion.controller;
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.ingestion.dto.transactionBatch.response.TransactionBatchResponseDto;
 import com.app.aml.feature.ingestion.service.CustomerProfileBatchService;
 import com.app.aml.security.userDetails.PlatformUserDetails;

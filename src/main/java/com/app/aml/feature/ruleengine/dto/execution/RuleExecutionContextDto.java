@@ -1,6 +1,6 @@
 package com.app.aml.feature.ruleengine.dto.execution;
 
-import com.app.aml.domain.enums.AlertSeverity;
+import com.app.aml.enums.AlertSeverity;
 import lombok.Builder;
 import lombok.Data;
 

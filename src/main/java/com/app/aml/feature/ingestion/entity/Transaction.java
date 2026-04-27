@@ -1,8 +1,8 @@
 package com.app.aml.feature.ingestion.entity;
 
-import com.app.aml.domain.enums.Channel;
-import com.app.aml.domain.enums.TransactionStatus;
-import com.app.aml.domain.enums.TransactionType;
+import com.app.aml.enums.Channel;
+import com.app.aml.enums.TransactionStatus;
+import com.app.aml.enums.TransactionType;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Digits;

@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransactionCsvDto {
-    // This is used by the SkipListener to track which row failed
     private int lineNumber;
 
     private String transactionRef;
@@ -27,6 +26,5 @@ public class TransactionCsvDto {
     private String transactionTimestamp;
     private String referenceNote;
 
-    // --- ADDED TO MATCH CSV AND ENTITY ---
     private String status;
 }

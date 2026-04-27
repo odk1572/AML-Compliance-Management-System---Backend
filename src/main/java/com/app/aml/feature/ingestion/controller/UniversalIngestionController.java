@@ -1,7 +1,7 @@
 package com.app.aml.feature.ingestion.controller;
 
-import com.app.aml.domain.api.ApiResponse;
-import com.app.aml.domain.enums.BatchFileType;
+import com.app.aml.apiResponse.ApiResponse;
+import com.app.aml.enums.BatchFileType;
 import com.app.aml.feature.ingestion.dto.transactionBatch.response.TransactionBatchResponseDto;
 import com.app.aml.feature.ingestion.service.UniversalBatchIngestionService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,9 +50,6 @@ public class UniversalIngestionController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
-    /**
-     * Retrieves the status of a specific batch by its ID.
-     */
     @GetMapping("/batches/{batchId}")
     public ResponseEntity<ApiResponse<TransactionBatchResponseDto>> getBatchStatus(
             @PathVariable UUID batchId,
@@ -70,10 +67,6 @@ public class UniversalIngestionController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Retrieves a paginated list of all batches (useful for a Data Ingestion Dashboard).
-     * You can optionally filter by fileType here if needed.
-     */
     @GetMapping("/batches")
     public ResponseEntity<ApiResponse<Page<TransactionBatchResponseDto>>> getAllBatches(
             @RequestParam(required = false) BatchFileType fileType,
@@ -92,9 +85,7 @@ public class UniversalIngestionController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Helper method to safely extract the UUID from the Authentication object.
-     */
+
     private UUID extractBankAdminId(Authentication authentication) {
         return UUID.fromString(authentication.getName());
     }

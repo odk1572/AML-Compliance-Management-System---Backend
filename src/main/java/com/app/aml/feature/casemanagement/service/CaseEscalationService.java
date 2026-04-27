@@ -1,7 +1,8 @@
 package com.app.aml.feature.casemanagement.service;
 
 
-import com.app.aml.feature.casemanagement.dto.request.EscalationRequestDto;
+
+import com.app.aml.feature.casemanagement.dto.caseEscalation.request.EscalationRequestDto;
 
 import java.util.UUID;
 

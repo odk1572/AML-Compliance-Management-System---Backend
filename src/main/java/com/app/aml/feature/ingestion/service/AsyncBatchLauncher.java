@@ -1,7 +1,7 @@
 package com.app.aml.feature.ingestion.service;
 
-import com.app.aml.domain.enums.BatchFileType;
-import com.app.aml.domain.enums.BatchStatus;
+import com.app.aml.enums.BatchFileType;
+import com.app.aml.enums.BatchStatus;
 import com.app.aml.feature.ingestion.repository.TransactionBatchRepository;
 import com.app.aml.multitenency.TenantContext;
 import lombok.extern.slf4j.Slf4j;
@@ -38,14 +38,11 @@ public class AsyncBatchLauncher {
     }
 
     @Async("asyncExecutor")
-    // 1. FIXED: Added 'schemaName' as an input parameter
     public void triggerTargetedBatchJobAsync(UUID batchId, String filePath, BatchFileType fileType, String tenantId, String schemaName) {
 
-        // 2. REMOVED: TenantContext.getSchemaName() call from inside the thread
         log.info("Starting background {} batch job for batchId: {} in schema: {}", fileType, batchId, schemaName);
 
         try {
-            // 3. ADDED: A null check just to be safe before building parameters
             if (schemaName == null) {
                 log.error("Schema name is null for batchId: {}. Batch cannot proceed.", batchId);
                 return;

@@ -1,7 +1,7 @@
 package com.app.aml.feature.auth.controller;
 
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.auth.dto.*;
 import com.app.aml.feature.auth.service.interfaces.AuthService;
 import jakarta.servlet.http.HttpServletRequest;

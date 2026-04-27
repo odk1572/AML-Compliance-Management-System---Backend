@@ -1,7 +1,7 @@
 package com.app.aml.feature.ruleengine.controller;
 
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.ruleengine.dto.globalScenario.request.CreateGlobalScenarioRequestDto;
 import com.app.aml.feature.ruleengine.dto.globalScenario.request.UpdateGlobalScenarioRequestDto;
 import com.app.aml.feature.ruleengine.dto.globalScenario.response.GlobalScenarioResponseDto;

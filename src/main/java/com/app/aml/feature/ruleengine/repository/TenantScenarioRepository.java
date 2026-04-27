@@ -1,6 +1,6 @@
 package com.app.aml.feature.ruleengine.repository;
 
-import com.app.aml.domain.enums.RuleStatus;
+import com.app.aml.enums.RuleStatus;
 import com.app.aml.feature.ruleengine.entity.TenantScenario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

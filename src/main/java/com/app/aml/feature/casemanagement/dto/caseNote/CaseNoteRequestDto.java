@@ -1,6 +1,6 @@
 package com.app.aml.feature.casemanagement.dto.request;
 
-import com.app.aml.domain.enums.NoteType;
+import com.app.aml.enums.NoteType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

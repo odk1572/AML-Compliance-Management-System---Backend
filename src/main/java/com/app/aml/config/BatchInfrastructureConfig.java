@@ -30,13 +30,11 @@ public class BatchInfrastructureConfig extends DefaultBatchConfiguration {
         return transactionManager; // Forces Batch to use your custom transaction manager
     }
 
-    // 👇 1. THIS FIXES THE "RELATION DOES NOT EXIST" ERROR 👇
     @Override
     protected String getTablePrefix() {
         return "common_schema.BATCH_";
     }
 
-    // 👇 2. THIS MAKES YOUR CONTROLLER RETURN "202 ACCEPTED" IMMEDIATELY 👇
     @Bean
     @Override
     public JobLauncher jobLauncher() {

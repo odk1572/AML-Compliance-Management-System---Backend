@@ -70,7 +70,6 @@ public class GeographicRiskServiceImpl implements GeographicRiskService {
         entity.setSysDeletedAt(Instant.now());
         repo.save(entity);
 
-        // FIX: Pass a Map instead of a raw String to ensure valid JSON serialization
         auditLog.logPlatform(
                 null,
                 "RULE_ENGINE",

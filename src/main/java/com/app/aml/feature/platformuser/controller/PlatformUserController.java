@@ -1,6 +1,6 @@
 package com.app.aml.feature.platformuser.controller;
 
-import com.app.aml.domain.api.ApiResponse;
+import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.platformuser.dto.CreatePlatformUserRequestDto;
 import com.app.aml.feature.platformuser.dto.PlatformUserResponseDto;
 import com.app.aml.feature.platformuser.dto.UpdatePlatformUserRequestDto;

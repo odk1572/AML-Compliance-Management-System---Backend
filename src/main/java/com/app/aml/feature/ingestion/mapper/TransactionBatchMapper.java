@@ -20,7 +20,7 @@ public interface TransactionBatchMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "uploadedBy", ignore = true)
     @Mapping(target = "totalRecords", ignore = true)
-    @Mapping(target = "batchStatus", ignore = true) // Entity defaults to PENDING
+    @Mapping(target = "batchStatus", ignore = true)
     @Mapping(target = "failureDetails", ignore = true)
     @Mapping(target = "springBatchJobId", ignore = true)
     @Mapping(target = "processedAt", ignore = true)
