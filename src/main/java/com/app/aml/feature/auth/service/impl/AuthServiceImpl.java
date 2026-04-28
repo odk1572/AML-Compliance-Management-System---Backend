@@ -62,12 +62,14 @@ public class AuthServiceImpl implements AuthService {
     private long refreshExpirationMs;
 
     public LoginResponseDto login(LoginRequestDto dto) {
-        if (dto.getTenantId() != null) {
-            TenantContext.setTenantId(dto.getTenantId().toString());
+        Tenant resolvedTenant = null;
+        if (dto.getTenantCode() != null && !dto.getTenantCode().isBlank()) {
+            resolvedTenant = tenantRepository.findByTenantCode(dto.getTenantCode())
+                    .orElseThrow(() -> new RuntimeException("Invalid Tenant Code: " + dto.getTenantCode()));
+            TenantContext.setTenantId(resolvedTenant.getSchemaName());
         } else {
             TenantContext.clear();
         }
-
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
         );
@@ -75,12 +77,12 @@ public class AuthServiceImpl implements AuthService {
         String userId;
         String role;
         boolean isFirstLogin;
-        UUID finalTenantId = dto.getTenantId();
-        String sessionSchema = null; // To track where the session table lives
+
+        UUID finalTenantId = (resolvedTenant != null) ? resolvedTenant.getId() : null;
+        String sessionSchema = (resolvedTenant != null) ? resolvedTenant.getSchemaName() : "common_schema";
 
         Object principal = authentication.getPrincipal();
 
-        // 3. Process Platform User
         if (principal instanceof PlatformUserDetails platformUserDetails) {
             PlatformUser user = platformUserDetails.getPlatformUser();
             if (user.isLocked()) throw new RuntimeException("Account is locked");
@@ -89,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
             role = user.getRole().name();
             isFirstLogin = user.isFirstLogin();
 
-            user.recordSuccessfulLogin("unknown-ip");
+            user.recordSuccessfulLogin("unknown-ip"); // You can pass HttpServletRequest to get real IP later
             platformUserRepository.save(user);
 
             finalTenantId = null;
@@ -106,13 +108,6 @@ public class AuthServiceImpl implements AuthService {
             user.setLastLoginAt(java.time.Instant.now());
             tenantUserRepository.save(user);
 
-            sessionSchema = TenantContext.getTenantId();
-
-            if (finalTenantId == null) {
-                Tenant tenant = tenantRepository.findBySchemaName(sessionSchema)
-                        .orElseThrow(() -> new RuntimeException("Tenant not found for schema: " ));
-                finalTenantId = tenant.getId();
-            }
         } else {
             throw new IllegalStateException("Unknown Principal type");
         }
@@ -121,7 +116,8 @@ public class AuthServiceImpl implements AuthService {
         String jti = tokenProvider.extractJti(accessToken);
         java.time.Instant expiry = tokenProvider.extractAllClaims(accessToken).getExpiration().toInstant();
 
-        if (finalTenantId != null && sessionSchema != null) {
+        // 6. Ensure context is set correctly for Session Persistence
+        if (finalTenantId != null && sessionSchema != null && !sessionSchema.equals("common_schema")) {
             TenantContext.setTenantId(sessionSchema);
         } else {
             TenantContext.clear();
@@ -133,12 +129,13 @@ public class AuthServiceImpl implements AuthService {
             String rawRefreshToken = UUID.randomUUID().toString();
             saveRefreshToken(UUID.fromString(userId), finalTenantId, rawRefreshToken);
 
+
             return LoginResponseDto.builder()
                     .accessToken(accessToken)
                     .refreshToken(rawRefreshToken)
                     .username(dto.getEmail())
                     .role(role)
-                    .tenantId(finalTenantId)
+                    .tenantId(finalTenantId) // Returns the UUID so frontend has it for the session
                     .isFirstLogin(isFirstLogin)
                     .build();
         } finally {

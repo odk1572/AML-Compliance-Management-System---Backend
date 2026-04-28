@@ -25,10 +25,10 @@ public class CreateGlobalRuleConditionRequestDto {
 
     @NotBlank(message = "Aggregation function tag is required")
     @Size(max = 10, message = "Aggregation function tag cannot exceed 10 characters")
-    private String aggregationFunction; // e.g., NONE, SUM, COUNT, AVG
+    private String aggregationFunction;
 
     @Size(max = 10, message = "Lookback period cannot exceed 10 characters")
-    private String lookbackPeriod; // e.g., "24h", "30d"
+    private String lookbackPeriod;
 
     @NotBlank(message = "Threshold value is required")
     @Size(max = 255, message = "Threshold value cannot exceed 255 characters")

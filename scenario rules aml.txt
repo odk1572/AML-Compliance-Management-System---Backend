@@ -1,5 +1,4 @@
 Structuring
-
 rule:
 {
   "ruleName": "Suspicious Structuring (Under Threshold Smurfing)",

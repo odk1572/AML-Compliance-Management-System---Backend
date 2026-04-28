@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -20,5 +19,5 @@ public class LoginRequestDto {
     @NotBlank(message = "Password is required")
     private String password;
 
-    private UUID tenantId;
+    private String tenantCode;
 }
