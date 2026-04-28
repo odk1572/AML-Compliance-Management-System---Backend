@@ -1,7 +1,7 @@
 package com.app.aml.feature.tenant.entity;
 
 import com.app.aml.enums.TenantStatus;
-import com.app.aml.shared.audit.SoftDeletableEntity;
+import com.app.aml.audit.SoftDeletableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;

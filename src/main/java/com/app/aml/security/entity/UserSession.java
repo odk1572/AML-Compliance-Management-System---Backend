@@ -1,7 +1,7 @@
 package com.app.aml.security.entity;
 
 
-import com.app.aml.shared.audit.AuditableEntity;
+import com.app.aml.audit.AuditableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -13,7 +13,7 @@ import com.app.aml.feature.ruleengine.repository.GlobalScenarioRuleRepository;
 import com.app.aml.feature.ruleengine.repository.TenantRuleRepository;
 import com.app.aml.feature.ruleengine.repository.TenantScenarioRepository;
 import com.app.aml.annotation.AuditAction;
-import com.app.aml.shared.audit.service.AuditLogService;
+import com.app.aml.audit.service.AuditLogService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

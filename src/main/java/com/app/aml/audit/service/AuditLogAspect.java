@@ -1,4 +1,4 @@
-package com.app.aml.shared.audit.service;
+package com.app.aml.audit.service;
 
 
 import com.app.aml.annotation.AuditAction;

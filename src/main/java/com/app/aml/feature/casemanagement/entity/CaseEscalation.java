@@ -1,7 +1,7 @@
 package com.app.aml.feature.casemanagement.entity;
 
 import com.app.aml.enums.EscalationStatus;
-import com.app.aml.shared.audit.AuditableEntity;
+import com.app.aml.audit.AuditableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

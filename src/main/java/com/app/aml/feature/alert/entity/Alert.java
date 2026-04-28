@@ -4,7 +4,7 @@ import com.app.aml.enums.AlertSeverity;
 import com.app.aml.enums.AlertStatus;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import com.app.aml.feature.ingestion.entity.Transaction;
-import com.app.aml.shared.audit.AuditableEntity;
+import com.app.aml.audit.AuditableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Digits;

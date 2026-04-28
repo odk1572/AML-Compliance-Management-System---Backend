@@ -1,4 +1,4 @@
-package com.app.aml.shared.audit.entity;
+package com.app.aml.audit.entity;
 
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;

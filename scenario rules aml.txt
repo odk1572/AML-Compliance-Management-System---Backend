@@ -1,12 +1,13 @@
 Structuring
-rule:
+global_rules :
 {
   "ruleName": "Suspicious Structuring (Under Threshold Smurfing)",
   "ruleType": "STRUCTURING",
   "severity": "HIGH",
   "baseRiskScore": 85
 }
-conditions:
+conditions for above rule:
+global_rule_conditions
 1){
   "ruleId": "your-rule-uuid-here",
   "attributeName": "Individual Transaction Ceiling",

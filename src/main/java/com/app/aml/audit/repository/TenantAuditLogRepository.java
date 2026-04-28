@@ -1,7 +1,7 @@
-package com.app.aml.shared.audit.repository;
+package com.app.aml.audit.repository;
 
 
-import com.app.aml.shared.audit.entity.TenantAuditLog;
+import com.app.aml.audit.entity.TenantAuditLog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

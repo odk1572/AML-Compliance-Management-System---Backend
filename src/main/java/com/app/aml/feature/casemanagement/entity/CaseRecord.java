@@ -5,7 +5,7 @@ import com.app.aml.enums.CaseStatus;
 import com.app.aml.enums.ClosureDisposition;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import com.app.aml.feature.ingestion.entity.Transaction;
-import com.app.aml.shared.audit.SoftDeletableEntity;
+import com.app.aml.audit.SoftDeletableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

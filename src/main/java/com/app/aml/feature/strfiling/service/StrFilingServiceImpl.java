@@ -20,7 +20,7 @@ import com.app.aml.feature.strfiling.repository.StrFilingRepository;
 import com.app.aml.feature.strfiling.repository.StrFilingTransactionRepository;
 import com.app.aml.multitenency.TenantContext;
 import com.app.aml.annotation.AuditAction;
-import com.app.aml.shared.cloudinary.CloudinaryService;
+import com.app.aml.cloudinary.CloudinaryService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

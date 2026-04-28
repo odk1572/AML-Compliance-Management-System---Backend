@@ -9,7 +9,7 @@ import com.app.aml.feature.tenantuser.repository.TenantUserRepository;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
 import com.app.aml.security.rbac.Role;
 import com.app.aml.annotation.AuditAction;
-import com.app.aml.shared.audit.service.AuditLogService;
+import com.app.aml.audit.service.AuditLogService;
 import com.app.aml.feature.notification.service.interfaces.MailService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;

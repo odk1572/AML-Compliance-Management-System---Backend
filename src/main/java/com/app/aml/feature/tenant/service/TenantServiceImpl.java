@@ -21,7 +21,7 @@ import com.app.aml.multitenency.TenantContext;
 import com.app.aml.multitenency.TenantSchemaDeactivator;
 import com.app.aml.multitenency.TenantSchemaProvisioner;
 import com.app.aml.security.rbac.Role;
-import com.app.aml.shared.audit.service.AuditLogService;
+import com.app.aml.audit.service.AuditLogService;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;

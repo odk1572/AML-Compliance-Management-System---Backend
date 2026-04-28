@@ -1,4 +1,4 @@
-package com.app.aml.shared.audit;
+package com.app.aml.audit;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;

@@ -1,4 +1,4 @@
-package com.app.aml.shared.cloudinary;
+package com.app.aml.cloudinary;
 
 
 import com.cloudinary.Cloudinary;

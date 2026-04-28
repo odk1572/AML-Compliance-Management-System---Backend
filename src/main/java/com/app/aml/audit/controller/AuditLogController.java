@@ -1,7 +1,7 @@
-package com.app.aml.shared.audit.controller;
+package com.app.aml.audit.controller;
 
 import com.app.aml.apiResponse.ApiResponse;
-import com.app.aml.shared.audit.service.AuditLogService;
+import com.app.aml.audit.service.AuditLogService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

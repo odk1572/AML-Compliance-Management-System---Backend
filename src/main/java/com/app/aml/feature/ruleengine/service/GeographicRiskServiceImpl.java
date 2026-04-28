@@ -6,7 +6,7 @@ import com.app.aml.feature.ruleengine.entity.GeographicRiskRating;
 import com.app.aml.feature.ruleengine.mapper.GeographicRiskRatingMapper;
 import com.app.aml.feature.ruleengine.repository.GeographicRiskRatingRepository;
 import com.app.aml.annotation.AuditAction;
-import com.app.aml.shared.audit.service.AuditLogService;
+import com.app.aml.audit.service.AuditLogService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

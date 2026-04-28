@@ -1,4 +1,4 @@
-package com.app.aml.shared.validation;
+package com.app.aml.validation;
 
 import com.app.aml.multitenency.TenantContext;
 import lombok.extern.slf4j.Slf4j;

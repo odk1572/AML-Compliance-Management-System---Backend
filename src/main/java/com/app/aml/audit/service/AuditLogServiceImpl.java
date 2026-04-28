@@ -1,10 +1,10 @@
-package com.app.aml.shared.audit.service;
+package com.app.aml.audit.service;
 
 import com.app.aml.multitenency.TenantContext;
-import com.app.aml.shared.audit.entity.PlatformAuditLog;
-import com.app.aml.shared.audit.entity.TenantAuditLog;
-import com.app.aml.shared.audit.repository.PlatformAuditLogRepository;
-import com.app.aml.shared.audit.repository.TenantAuditLogRepository;
+import com.app.aml.audit.entity.PlatformAuditLog;
+import com.app.aml.audit.entity.TenantAuditLog;
+import com.app.aml.audit.repository.PlatformAuditLogRepository;
+import com.app.aml.audit.repository.TenantAuditLogRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

@@ -14,7 +14,7 @@ import com.app.aml.feature.ruleengine.mapper.GlobalRuleMapper;
 import com.app.aml.feature.ruleengine.repository.GlobalRuleConditionRepository;
 import com.app.aml.feature.ruleengine.repository.GlobalRuleRepository;
 import com.app.aml.annotation.AuditAction;
-import com.app.aml.shared.audit.service.AuditLogService;
+import com.app.aml.audit.service.AuditLogService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
