@@ -24,8 +24,22 @@ public class CaseResponseDto {
     private Integer aggregatedRiskScore;
     private UUID assignedTo;
     private Instant openedAt;
+    private String ruleType;
+    private String typologyTriggered;
 
+    private CaseCustomerDto customer;
     private List<LinkedTransactionDto> transactions;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CaseCustomerDto {
+        private UUID id;
+        private String accountNumber;
+        private String customerName;
+        private String riskRating;
+    }
 
     @Data
     @Builder
@@ -36,7 +50,8 @@ public class CaseResponseDto {
         private String transactionReference;
         private BigDecimal amount;
         private String currency;
-        private Instant timestamp;
+        private Instant transactionTimestamp;
+        private String transactionType;
         private String originatorAccount;
         private String beneficiaryAccount;
     }

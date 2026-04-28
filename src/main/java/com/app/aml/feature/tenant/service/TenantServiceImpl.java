@@ -2,6 +2,7 @@ package com.app.aml.feature.tenant.service;
 
 import com.app.aml.enums.TenantStatus;
 import com.app.aml.multitenency.TenantSchemaResolver;
+import com.app.aml.annotation.AuditAction;
 import jakarta.persistence.EntityManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -57,6 +58,7 @@ public class TenantServiceImpl implements TenantService {
     private final EntityManager entityManager; // <--- Add this!
 
     @Override
+    @AuditAction(category = "TENANT_MGMT", action = "CREATE_NEW_TENANT", entityType = "TENANT")
     public TenantResponseDto createTenant(CreateTenantRequestDto requestDto) {
         TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
 
@@ -114,6 +116,7 @@ public class TenantServiceImpl implements TenantService {
         return responseDto;
     }
 
+
     private void sendOnboardingEmail(Tenant tenant, String password) {
         String credSubject = "Your Temporary AML Platform Credentials";
         String credBody = String.format("Hello,\n\nYour temporary password for Bank Code %s is: %s\n\n" +
@@ -124,6 +127,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional
+    @AuditAction(category = "TENANT_MGMT", action = "UPDATE_TENANT_METADATA", entityType = "TENANT")
     public TenantResponseDto updateTenant(UUID id, UpdateTenantRequestDto requestDto) {
         Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant not found with ID: " + id));
@@ -143,6 +147,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional
+    @AuditAction(category = "SECURITY", action = "DEACTIVATE_TENANT", entityType = "TENANT")
     public void deactivateTenant(UUID id) {
         Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant not found with ID: " + id));
@@ -168,6 +173,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "LIST_ALL_TENANTS", entityType = "TENANT")
     public Page<TenantResponseDto> listTenants(Pageable pageable) {
         return tenantRepository.findAll(pageable)
                 .map(tenantMapper::toResponseDto);
@@ -175,6 +181,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_TENANT_DETAILS", entityType = "TENANT")
     public TenantResponseDto getTenant(UUID id) {
         Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant not found with ID: " + id));
@@ -184,6 +191,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "RESOLVE_TENANT_BY_CODE", entityType = "TENANT")
     public TenantResponseDto getTenantByCode(String tenantCode) {
         Tenant tenant = tenantRepository.findByTenantCode(tenantCode)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant not found with code: " + tenantCode));
@@ -192,6 +200,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional
+    @AuditAction(category = "SECURITY", action = "REACTIVATE_TENANT", entityType = "TENANT")
     public TenantResponseDto reactivateTenant(UUID id) {
         Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant not found with ID: " + id));
@@ -221,6 +230,7 @@ public class TenantServiceImpl implements TenantService {
 
 
     @Override
+    @AuditAction(category = "SECURITY", action = "RESET_TENANT_ADMIN_PASSWORD", entityType = "USER")
   public void resetBankAdminCredentials(UUID id) {
         TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
         txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);

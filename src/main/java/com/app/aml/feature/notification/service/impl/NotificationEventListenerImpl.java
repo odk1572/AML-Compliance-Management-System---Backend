@@ -4,6 +4,7 @@ package com.app.aml.feature.notification.service.impl;
 import com.app.aml.feature.notification.event.*;
 import com.app.aml.feature.notification.service.interfaces.MailService;
 import com.app.aml.feature.notification.service.interfaces.NotificationEventListener;
+import com.app.aml.annotation.AuditAction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -19,6 +20,7 @@ public class NotificationEventListenerImpl implements NotificationEventListener 
 
     @Async
     @EventListener
+    @AuditAction(category = "NOTIFICATION", action = "EMAIL_CASE_ASSIGNMENT", entityType = "CASE")
     public void handleCaseAssigned(CaseAssignedEvent event) {
         log.info("Caught CaseAssignedEvent for Case: {}", event.getCaseReference());
 
@@ -35,6 +37,7 @@ public class NotificationEventListenerImpl implements NotificationEventListener 
 
     @Async
     @EventListener
+    @AuditAction(category = "NOTIFICATION", action = "EMAIL_BATCH_UPLOAD_SUCCESS", entityType = "BATCH")
     public void handleBatchUploaded(BatchUploadedEvent event) {
         log.info("Caught BatchUploadedEvent for Batch ID: {}", event.getBatchId());
 
@@ -50,6 +53,7 @@ public class NotificationEventListenerImpl implements NotificationEventListener 
 
     @Async
     @EventListener
+    @AuditAction(category = "NOTIFICATION", action = "EMAIL_BATCH_COMPLETION", entityType = "BATCH")
     public void handleBatchCompleted(BatchCompletedEvent event) {
         log.info("Caught BatchCompletedEvent for Batch: {}", event.getBatchReference());
 
@@ -67,6 +71,7 @@ public class NotificationEventListenerImpl implements NotificationEventListener 
 
     @Async
     @EventListener
+    @AuditAction(category = "SECURITY_ALERT", action = "EMAIL_ACCOUNT_LOCKOUT", entityType = "USER")
     public void handleAccountLocked(AccountLockedEvent event) {
         log.info("Caught AccountLockedEvent for User: {}", event.getUserEmail());
 
@@ -83,6 +88,7 @@ public class NotificationEventListenerImpl implements NotificationEventListener 
 
     @Async
     @EventListener
+    @AuditAction(category = "NOTIFICATION", action = "EMAIL_TENANT_WELCOME", entityType = "TENANT")
     public void handleTenantCreated(TenantCreatedEvent event) {
         log.info("Caught TenantCreatedEvent for Tenant: {}", event.getTenantName());
 
@@ -100,6 +106,7 @@ public class NotificationEventListenerImpl implements NotificationEventListener 
 
     @Async
     @EventListener
+    @AuditAction(category = "NOTIFICATION", action = "EMAIL_STR_CONFIRMATION", entityType = "STR")
     public void handleStrFiled(StrFiledEvent event) {
         log.info("Caught StrFiledEvent for STR: {}", event.getStrReference());
 
@@ -115,6 +122,7 @@ public class NotificationEventListenerImpl implements NotificationEventListener 
     }
     @Async
     @EventListener
+    @AuditAction(category = "NOTIFICATION", action = "EMAIL_CASE_ESCALATION", entityType = "CASE")
     public void handleCaseEscalated(CaseEscalatedEvent event) {
         log.info("Caught CaseEscalatedEvent for Case: {}", event.getCaseReference());
 

@@ -9,9 +9,10 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class RuleBreachResult {
     private CustomerProfile customer;
     private List<Transaction> transactions;
+    private String ruleType; 
+    private String ruleLabel;
 }

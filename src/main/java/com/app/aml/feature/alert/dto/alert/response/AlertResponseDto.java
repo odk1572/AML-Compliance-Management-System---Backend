@@ -19,7 +19,7 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AlertResponseDto {
     private UUID id;
-    private UUID customerProfileId;
+    private AlertCustomerDto customer;
     private UUID tenantScenarioId;
     private UUID globalScenarioId;
     private UUID globalRuleId;
@@ -27,6 +27,7 @@ public class AlertResponseDto {
     private String alertReference;
     private AlertSeverity severity;
     private AlertStatus status;
+    private String ruleType;
     private String typologyTriggered;
     private BigDecimal riskScore;
     private Instant sysCreatedAt;

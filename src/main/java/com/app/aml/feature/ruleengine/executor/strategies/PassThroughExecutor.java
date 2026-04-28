@@ -12,13 +12,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -32,7 +32,6 @@ public class PassThroughExecutor implements RuleExecutorStrategy {
 
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
-
 
     @Autowired
     public PassThroughExecutor(JdbcTemplate jdbcTemplate) {
@@ -52,9 +51,7 @@ public class PassThroughExecutor implements RuleExecutorStrategy {
             @Override
             public Instant deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                 String text = p.getText().trim().replace(" ", "T");
-
                 TemporalAccessor accessor = pgFormatter.parseBest(text, Instant::from, LocalDateTime::from);
-
                 if (accessor instanceof Instant instant) {
                     return instant;
                 }
@@ -69,7 +66,6 @@ public class PassThroughExecutor implements RuleExecutorStrategy {
         this.objectMapper = mapper;
     }
 
-
     @Override
     public String getRuleType() {
         return "PASS_THROUGH";
@@ -78,71 +74,100 @@ public class PassThroughExecutor implements RuleExecutorStrategy {
     @Override
     public List<RuleBreachResult> executeRule(RuleExecutionContextDto rule) {
         BigDecimal margin = null;
-        String lookback = null;
+        String chunkSize = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
             String agg = cond.getAggregationFunction() != null ? cond.getAggregationFunction().toUpperCase() : "NONE";
-
             if (cond.getLookbackPeriod() != null) {
-                lookback = cond.getLookbackPeriod();
+                chunkSize = cond.getLookbackPeriod();
             }
-
             if ("NONE".equals(agg)) {
                 margin = new BigDecimal(cond.getThresholdValue());
             }
         }
 
-        if (margin == null || lookback == null) {
+        if (margin == null || chunkSize == null) {
             throw new IllegalStateException("Required parameters missing for Pass Through Rule: " + rule.getTypologyLabel());
         }
 
-        String interval = SqlIntervalParser.parse(lookback);
+        if (rule.getGlobalLookbackStart() == null || rule.getGlobalLookbackEnd() == null || rule.getDataFetchStart() == null) {
+            throw new IllegalStateException("Global Start, End, and Data Fetch Start times are required for execution.");
+        }
+
         String schema = TenantContext.getSchemaName();
 
         String sql = String.format("""
-            WITH flow_context AS (
-                SELECT beneficiary_account_no as account_no, amount as incoming, 0 as outgoing
-                FROM %s.transactions 
-                WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-                UNION ALL
-                SELECT originator_account_no as account_no, 0 as incoming, amount as outgoing
-                FROM %s.transactions 
-                WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
+            WITH data_universe AS (
+                SELECT t.*, cp.id as customer_profile_id, cp.account_number
+                FROM %s.transactions t
+                JOIN %s.customer_profiles cp ON (t.originator_account_no = cp.account_number OR t.beneficiary_account_no = cp.account_number)
+                WHERE t.transaction_timestamp BETWEEN ? AND ?
             ),
-            violating_accounts AS (
-                SELECT account_no
-                FROM flow_context
-                GROUP BY account_no
-                HAVING SUM(incoming) > 0 
-                   AND SUM(outgoing) > 0 
-                   AND ABS(SUM(incoming) - SUM(outgoing)) <= (SUM(incoming) * ?)
+            rolling_flows AS (
+                SELECT 
+                    *,
+                    SUM(CASE WHEN beneficiary_account_no = account_number THEN amount ELSE 0 END) OVER (
+                        PARTITION BY customer_profile_id 
+                        ORDER BY transaction_timestamp 
+                        RANGE BETWEEN CAST(? AS INTERVAL) PRECEDING AND CURRENT ROW
+                    ) as rolling_incoming,
+                    SUM(CASE WHEN originator_account_no = account_number THEN amount ELSE 0 END) OVER (
+                        PARTITION BY customer_profile_id 
+                        ORDER BY transaction_timestamp 
+                        RANGE BETWEEN CAST(? AS INTERVAL) PRECEDING AND CURRENT ROW
+                    ) as rolling_outgoing
+                FROM data_universe
+            ),
+            breaching_customers AS (
+                SELECT DISTINCT customer_profile_id
+                FROM rolling_flows
+                WHERE rolling_incoming > 0 
+                  AND rolling_outgoing > 0 
+                  AND ABS(rolling_incoming - rolling_outgoing) <= (rolling_incoming * ?)
+                  AND transaction_timestamp BETWEEN ? AND ?
             )
             SELECT 
+                ? as rule_type,
+                ? as rule_label,
                 row_to_json(cp.*) as customer_json, 
-                json_agg(row_to_json(t.*)) as transactions_json
-            FROM violating_accounts va
-            JOIN %s.customer_profiles cp ON va.account_no = cp.account_number
-            JOIN %s.transactions t ON (t.originator_account_no = cp.account_number OR t.beneficiary_account_no = cp.account_number)
-            WHERE t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
+                json_agg(row_to_json(du.*)) as transactions_json
+            FROM data_universe du
+            JOIN breaching_customers bc ON du.customer_profile_id = bc.customer_profile_id
+            JOIN %s.customer_profiles cp ON bc.customer_profile_id = cp.id
+            WHERE du.transaction_timestamp BETWEEN ? AND ?
             GROUP BY cp.id
-        """, schema, schema, schema, schema);
+        """, schema, schema, schema);
 
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            try {
-                CustomerProfile customer = objectMapper.readValue(
-                        rs.getString("customer_json"),
-                        CustomerProfile.class
-                );
+                    try {
+                        CustomerProfile customer = objectMapper.readValue(
+                                rs.getString("customer_json"),
+                                CustomerProfile.class
+                        );
+                        List<Transaction> transactions = objectMapper.readValue(
+                                rs.getString("transactions_json"),
+                                new TypeReference<List<Transaction>>() {}
+                        );
 
-                List<Transaction> transactions = objectMapper.readValue(
-                        rs.getString("transactions_json"),
-                        new TypeReference<List<Transaction>>() {}
-                );
 
-                return new RuleBreachResult(customer, transactions);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to parse JSON from database", e);
-            }
-        }, interval, interval, margin, interval);
+                        String type = rs.getString("rule_type");
+                        String label = rs.getString("rule_label");
+
+                        return new RuleBreachResult(customer, transactions, type, label);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to parse JSON from database", e);
+                    }
+                },
+                Timestamp.from(rule.getDataFetchStart()),
+                Timestamp.from(rule.getGlobalLookbackEnd()),
+                chunkSize,
+                chunkSize,
+                margin,
+                Timestamp.from(rule.getGlobalLookbackStart()),
+                Timestamp.from(rule.getGlobalLookbackEnd()),
+                getRuleType(),
+                rule.getTypologyLabel(),
+                Timestamp.from(rule.getGlobalLookbackStart()),
+                Timestamp.from(rule.getGlobalLookbackEnd()));
     }
 }

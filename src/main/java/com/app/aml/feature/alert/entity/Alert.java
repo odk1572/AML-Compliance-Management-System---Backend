@@ -2,6 +2,7 @@ package com.app.aml.feature.alert.entity;
 
 import com.app.aml.enums.AlertSeverity;
 import com.app.aml.enums.AlertStatus;
+import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import com.app.aml.feature.ingestion.entity.Transaction;
 import com.app.aml.shared.audit.AuditableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
@@ -31,10 +32,9 @@ public class Alert extends AuditableEntity {
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
     @NotNull
-    @Column(name = "customer_profile_id", nullable = false)
-    private UUID customerProfileId;
-
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_profile_id", nullable = false)
+    private CustomerProfile customer;
     @OneToMany(
             mappedBy = "alert",
             cascade = CascadeType.ALL,
@@ -71,6 +71,11 @@ public class Alert extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
     private AlertStatus status = AlertStatus.NEW;
+
+    @NotBlank
+    @Size(max = 100)
+    @Column(name = "rule_type", nullable = false, length = 100)
+    private String ruleType;
 
     @NotBlank
     @Size(max = 255)

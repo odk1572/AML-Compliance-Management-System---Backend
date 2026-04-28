@@ -2,6 +2,7 @@ package com.app.aml.feature.casemanagement.repository;
 
 import com.app.aml.enums.CaseStatus;
 import com.app.aml.feature.casemanagement.entity.CaseRecord;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -20,14 +21,11 @@ public interface CaseRecordRepository extends JpaRepository<CaseRecord, UUID> {
     @Query("UPDATE CaseRecord c SET c.assignedTo = null WHERE c.assignedTo = :userId AND c.status NOT IN ('CLOSED', 'ARCHIVED')")
     void unassignOpenCasesForUser(@Param("userId") UUID userId);
 
-    List<CaseRecord> findByCustomerProfileIdOrderBySysCreatedAtDesc(UUID customerProfileId, Pageable pageable);
+    Page<CaseRecord> findByCustomerIdOrderBySysCreatedAtDesc(UUID customerId, Pageable pageable);
 
-    @Query("SELECT DISTINCT c FROM CaseRecord c " +
-            "JOIN CaseAlertLink cal ON c.id = cal.caseRecord.id " +
-            "JOIN cal.alert a " +
-            "WHERE a.customerProfileId = :profileId " +
-            "ORDER BY c.openedAt DESC")
-    List<CaseRecord> findRecentCasesByCustomerProfileId(@Param("profileId") UUID customerProfileId, Pageable pageable);
 
     List<CaseRecord> findByStatusIn(Collection<CaseStatus> statuses);
+
+    @Query("SELECT DISTINCT c FROM CaseRecord c JOIN CaseAlertLink cal ON c.id = cal.caseRecord.id JOIN cal.alert a WHERE a.customer.id = :profileId ORDER BY c.openedAt DESC")
+    Page<CaseRecord> findRecentCasesByCustomerProfileId(@Param("profileId") UUID profileId, Pageable pageable);
 }

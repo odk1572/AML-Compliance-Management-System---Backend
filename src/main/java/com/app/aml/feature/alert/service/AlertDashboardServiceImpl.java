@@ -12,6 +12,7 @@ import com.app.aml.feature.alert.mapper.AlertMapper;
 import com.app.aml.feature.alert.repository.AlertEvidenceRepository;
 import com.app.aml.feature.alert.repository.AlertRepository;
 import com.app.aml.feature.alert.repository.AlertTransactionRepository;
+import com.app.aml.annotation.AuditAction;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +37,10 @@ public class AlertDashboardServiceImpl implements AlertDashboardService {
 
     private final AlertMapper alertMapper;
     private final AlertEvidenceMapper evidenceMapper;
+
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "LIST_ALERTS", entityType = "ALERT")
     public Page<AlertResponseDto> getAlerts(AlertSeverity severity, AlertStatus status,
                                             LocalDate from, LocalDate to, Pageable pageable) {
 
@@ -49,11 +52,14 @@ public class AlertDashboardServiceImpl implements AlertDashboardService {
                 ? to.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant()
                 : Instant.parse("2099-12-31T23:59:59.999Z");
 
+        // The updated AlertMapper now automatically includes the "Rich" Customer object here
         return alertRepo.findWithFilters(severity, status, start, end, pageable)
-                .map(alert -> alertMapper.toResponseDto(alert));
+                .map(alertMapper::toResponseDto);
     }
+
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_ALERT_DETAILS", entityType = "ALERT")
     public AlertDetailResponseDto getAlertDetail(UUID alertId) {
         Alert alert = alertRepo.findById(alertId)
                 .orElseThrow(() -> new EntityNotFoundException("Alert not found with ID: " + alertId));
@@ -68,6 +74,9 @@ public class AlertDashboardServiceImpl implements AlertDashboardService {
                         at.getTransaction().getTransactionRef(),
                         at.getTransaction().getAmount(),
                         at.getTransaction().getCurrencyCode(),
+                        at.getTransaction().getTransactionTimestamp(),
+                        at.getTransaction().getTransactionType() != null ?
+                                at.getTransaction().getTransactionType().name() : null,
                         at.getInvolvementRole()
                 ))
                 .toList();
@@ -81,6 +90,7 @@ public class AlertDashboardServiceImpl implements AlertDashboardService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_DASHBOARD_STATS", entityType = "ALERT")
     public Map<String, Long> getSeverityCounts() {
         List<Object[]> results = alertRepo.countByStatusAndGroupBySeverity(AlertStatus.NEW);
         return results.stream()
@@ -89,7 +99,9 @@ public class AlertDashboardServiceImpl implements AlertDashboardService {
                         row -> (Long) row[1]
                 ));
     }
+
     @Transactional
+    @AuditAction(category = "ALERT_MGMT", action = "CLOSE_ALERT", entityType = "ALERT")
     public void closeAlert(UUID alertId, AlertStatus resolution, String comment) {
         Alert alert = alertRepo.findById(alertId)
                 .orElseThrow(() -> new EntityNotFoundException("Alert alertId " + alertId + " not found"));
@@ -99,7 +111,6 @@ public class AlertDashboardServiceImpl implements AlertDashboardService {
         }
 
         alert.setStatus(resolution);
-
         alertRepo.save(alert);
     }
 }

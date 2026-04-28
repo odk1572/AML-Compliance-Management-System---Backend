@@ -22,7 +22,7 @@ public class CaseEscalationController {
     private final CaseEscalationService caseEscalationService;
 
     @PostMapping("/{caseId}/escalate")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<Void>> escalateCase(
             @PathVariable UUID caseId,
             @Valid @RequestBody EscalationRequestDto requestDto,

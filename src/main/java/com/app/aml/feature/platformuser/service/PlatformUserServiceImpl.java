@@ -6,7 +6,7 @@ import com.app.aml.feature.platformuser.dto.UpdatePlatformUserRequestDto;
 import com.app.aml.feature.platformuser.entity.PlatformUser;
 import com.app.aml.feature.platformuser.mapper.PlatformUserMapper;
 import com.app.aml.feature.platformuser.repository.PlatformUserRepository;
-import com.app.aml.feature.platformuser.service.PlatformUserService;
+import com.app.aml.annotation.AuditAction;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +39,7 @@ public class PlatformUserServiceImpl implements PlatformUserService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_SELF_PROFILE", entityType = "PLATFORM_USER")
     public PlatformUserResponseDto getMe(UUID userId) {
         PlatformUser user = platformUserRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Platform user not found with ID: " + userId));
@@ -48,6 +49,7 @@ public class PlatformUserServiceImpl implements PlatformUserService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_PLATFORM_USER_DETAILS", entityType = "PLATFORM_USER")
     public PlatformUserResponseDto getPlatformUserById(UUID id) {
         PlatformUser user = platformUserRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Platform user not found with ID: " + id));
@@ -57,6 +59,7 @@ public class PlatformUserServiceImpl implements PlatformUserService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "LIST_PLATFORM_USERS", entityType = "PLATFORM_USER")
     public Page<PlatformUserResponseDto> getAllPlatformUsers(Pageable pageable) {
         return platformUserRepository.findAll(pageable)
                 .map(platformUserMapper::toResponseDto);
@@ -64,6 +67,7 @@ public class PlatformUserServiceImpl implements PlatformUserService {
 
     @Override
     @Transactional
+    @AuditAction(category = "USER_MGMT", action = "UPDATE_PLATFORM_USER_PROFILE", entityType = "PLATFORM_USER")
     public PlatformUserResponseDto updateProfile(UUID id, UpdatePlatformUserRequestDto dto) {
         if (!id.equals(getCurrentUserId())) {
             throw new AccessDeniedException("You can only update your own profile");
@@ -86,6 +90,7 @@ public class PlatformUserServiceImpl implements PlatformUserService {
 
     @Override
     @Transactional
+    @AuditAction(category = "ADMIN", action = "CREATE_PLATFORM_USER", entityType = "PLATFORM_USER")
     public PlatformUserResponseDto createPlatformUser(CreatePlatformUserRequestDto dto) {
         if (platformUserRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email is already in use");
@@ -101,6 +106,7 @@ public class PlatformUserServiceImpl implements PlatformUserService {
 
     @Override
     @Transactional
+    @AuditAction(category = "ADMIN", action = "DELETE_PLATFORM_USER", entityType = "PLATFORM_USER")
     public void deletePlatformUser(UUID id) {
         UUID currentUserId = getCurrentUserId();
 
@@ -115,6 +121,7 @@ public class PlatformUserServiceImpl implements PlatformUserService {
 
     @Override
     @Transactional
+    @AuditAction(category = "SECURITY", action = "LOCK_PLATFORM_USER", entityType = "PLATFORM_USER")
     public PlatformUserResponseDto lockUser(UUID id) {
         if (id.equals(getCurrentUserId())) {
             throw new IllegalArgumentException("You cannot lock your own account");
@@ -133,6 +140,7 @@ public class PlatformUserServiceImpl implements PlatformUserService {
 
     @Override
     @Transactional
+    @AuditAction(category = "SECURITY", action = "UNLOCK_PLATFORM_USER", entityType = "PLATFORM_USER")
     public PlatformUserResponseDto unlockUser(UUID id) {
         if (id.equals(getCurrentUserId())) {
             throw new IllegalArgumentException("You cannot unlock your own account");

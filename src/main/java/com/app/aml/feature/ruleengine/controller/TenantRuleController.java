@@ -28,9 +28,6 @@ public class TenantRuleController {
 
     private final TenantRuleService tenantRuleService;
 
-    // ========================================================================
-    // Tenant Rule Endpoints
-    // ========================================================================
 
     @PreAuthorize("hasRole( 'BANK_ADMIN')")
     @GetMapping("/{ruleId}")

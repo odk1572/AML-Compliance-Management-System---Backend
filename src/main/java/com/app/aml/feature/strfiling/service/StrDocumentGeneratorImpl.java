@@ -3,6 +3,7 @@ package com.app.aml.feature.strfiling.service;
 import com.app.aml.feature.casemanagement.entity.CaseNote;
 import com.app.aml.feature.ingestion.entity.Transaction;
 import com.app.aml.feature.strfiling.entity.StrFiling;
+import com.app.aml.annotation.AuditAction;
 import com.lowagie.text.DocumentException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ public class StrDocumentGeneratorImpl implements StrDocumentGenerator {
     private final TemplateEngine thymeleaf;
 
     @Override
+    @AuditAction(category = "COMPLIANCE", action = "GENERATE_STR_PDF", entityType = "STR")
     public byte[] generatePdf(StrFiling filing, List<Transaction> txns, List<CaseNote> notes, List<String> evidence) {
         Context context = new Context();
         context.setVariable("filing", filing);
@@ -59,12 +61,13 @@ public class StrDocumentGeneratorImpl implements StrDocumentGenerator {
             renderer.createPDF(outputStream);
             return outputStream.toByteArray();
         } catch (DocumentException | IOException e) {
-            log.error("Failed to render STR PDF. This is often due to invalid characters like '&' in the data.", e);
+            log.error("Failed to render STR PDF.", e);
             throw new RuntimeException("Error rendering STR PDF", e);
         }
     }
 
     @Override
+    @AuditAction(category = "COMPLIANCE", action = "GENERATE_STR_XML", entityType = "STR")
     public byte[] generateXml(StrFiling filing, List<Transaction> txns) {
         try {
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -76,9 +79,20 @@ public class StrDocumentGeneratorImpl implements StrDocumentGenerator {
 
             addTextNode(doc, rootElement, "FilingReference", filing.getFilingReference());
             addTextNode(doc, rootElement, "RegulatoryBody", filing.getRegulatoryBody());
-            addTextNode(doc, rootElement, "TypologyCategory", filing.getTypologyCategory().name());
-            addTextNode(doc, rootElement, "SubjectName", filing.getSubjectName());
-            addTextNode(doc, rootElement, "SubjectAccountNo", filing.getSubjectAccountNo());
+
+            addTextNode(doc, rootElement, "RuleType", filing.getRuleType());
+            addTextNode(doc, rootElement, "TypologyTriggered", filing.getTypologyTriggered());
+
+            if (filing.getCustomer() != null) {
+                addTextNode(doc, rootElement, "SubjectName", filing.getCustomer().getCustomerName());
+                addTextNode(doc, rootElement, "SubjectAccountNo", filing.getCustomer().getAccountNumber());
+                addTextNode(doc, rootElement, "SubjectRiskRating", filing.getCustomer().getRiskRating());
+            } else {
+                addTextNode(doc, rootElement, "SubjectName", "N/A");
+                addTextNode(doc, rootElement, "SubjectAccountNo", "N/A");
+                addTextNode(doc, rootElement, "SubjectRiskRating", "N/A");
+            }
+
             addTextNode(doc, rootElement, "SuspicionNarrative", filing.getSuspicionNarrative());
 
             Element transactionsNode = doc.createElement("LinkedTransactions");
@@ -92,10 +106,10 @@ public class StrDocumentGeneratorImpl implements StrDocumentGenerator {
                 addTextNode(doc, txnNode, "Amount", txn.getAmount() != null ? txn.getAmount().toString() : "0");
                 addTextNode(doc, txnNode, "Currency", txn.getCurrencyCode());
                 addTextNode(doc, txnNode, "Timestamp", txn.getTransactionTimestamp().toString());
+                addTextNode(doc, txnNode, "TransactionType", txn.getTransactionType() != null ? txn.getTransactionType().name() : "N/A");
                 addTextNode(doc, txnNode, "OriginatorAccount", txn.getOriginatorAccountNo());
                 addTextNode(doc, txnNode, "BeneficiaryAccount", txn.getBeneficiaryAccountNo());
 
-                // FIX: You were missing this line in your loop!
                 transactionsNode.appendChild(txnNode);
             }
 
@@ -115,17 +129,15 @@ public class StrDocumentGeneratorImpl implements StrDocumentGenerator {
         }
     }
 
-
     private String sanitizeXmlContent(String html) {
         if (html == null) return "";
         return html
-                .replace("&nbsp;", "&#160;") // Flying Saucer hates &nbsp;
-                .replaceAll("&(?![a-zA-Z0-9#]+;)", "&amp;"); // Escapes any '&' NOT followed by an existing entity
+                .replace("&nbsp;", "&#160;")
+                .replaceAll("&(?![a-zA-Z0-9#]+;)", "&amp;");
     }
 
     private void addTextNode(Document doc, Element parent, String tagName, String content) {
         Element node = doc.createElement(tagName);
-        // doc.createTextNode automatically handles escaping for XML nodes
         node.appendChild(doc.createTextNode(content != null ? content : ""));
         parent.appendChild(node);
     }

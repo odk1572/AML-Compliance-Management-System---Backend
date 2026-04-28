@@ -9,6 +9,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,18 @@ public class AuditLogServiceImpl implements AuditLogService {
     private final PlatformAuditLogRepository platformRepo;
     private final TenantAuditLogRepository tenantRepo;
     private final ObjectMapper objectMapper;
+
+    public Page<?> getAuditLogs(Pageable pageable) {
+        String tenantId = TenantContext.getTenantId();
+
+        if (tenantId != null && !tenantId.equals("common_schema")) {
+            log.debug("Fetching tenant-specific audit logs for: {}", tenantId);
+            return tenantRepo.findAll(pageable);
+        } else {
+            log.debug("Fetching global platform audit logs.");
+            return platformRepo.findAll(pageable);
+        }
+    }
 
     @Override
     public void log(UUID actorId, String category, String action, String entityType, UUID entityId, Object prev, Object next) {

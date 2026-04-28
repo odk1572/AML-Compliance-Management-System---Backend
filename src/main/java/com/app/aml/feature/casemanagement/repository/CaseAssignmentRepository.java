@@ -7,4 +7,5 @@ import java.util.UUID;
 
 @Repository
 public interface CaseAssignmentRepository extends JpaRepository<CaseAssignment, UUID> {
+
 }

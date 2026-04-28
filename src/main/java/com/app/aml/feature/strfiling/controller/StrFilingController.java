@@ -25,7 +25,7 @@ public class StrFilingController {
     private final StrFilingService strFilingService;
 
     @PostMapping("/cases/{caseId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<StrFilingResponseDto>> fileSar(
             @PathVariable UUID caseId,
             @Valid @RequestBody StrFilingRequestDto dto,
@@ -50,7 +50,7 @@ public class StrFilingController {
     }
 
     @GetMapping("/{filingId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<StrFilingResponseDto>> getFilingDetail(
             @PathVariable UUID filingId,
             HttpServletRequest request) {

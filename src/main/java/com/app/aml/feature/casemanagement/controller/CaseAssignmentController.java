@@ -25,7 +25,7 @@ public class CaseAssignmentController {
     private final CaseAssignmentService caseAssignmentService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasRole('BANK_ADMIN')")
     public ResponseEntity<ApiResponse<CaseResponseDto>> createCase(
             @Valid @RequestBody CreateCaseRequest request,
             HttpServletRequest httpRequest) {
@@ -49,7 +49,7 @@ public class CaseAssignmentController {
     }
 
     @GetMapping("/{caseId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<CaseResponseDto>> getCaseDetails(
             @PathVariable UUID caseId,
             HttpServletRequest httpRequest) {
@@ -67,7 +67,7 @@ public class CaseAssignmentController {
     }
 
     @PatchMapping("/{caseId}/reassign")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<Void>> reassignCase(
             @PathVariable UUID caseId,
             @Valid @RequestBody ReassignCaseRequest request,

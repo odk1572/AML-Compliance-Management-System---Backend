@@ -23,7 +23,7 @@ public class CaseClosureController {
     private final CaseClosureService caseClosureService;
 
     @PostMapping("/{caseId}/close/false-positive")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<Void>> closeAsFalsePositive(
             @PathVariable UUID caseId,
             @Valid @RequestBody FalsePositiveClosureRequest requestDto,
@@ -48,7 +48,7 @@ public class CaseClosureController {
     }
 
     @PostMapping("/{caseId}/close/str")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<Void>> closeAfterStr(
             @PathVariable UUID caseId,
             @Valid @RequestBody StrClosureRequest requestDto,

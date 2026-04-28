@@ -3,6 +3,7 @@ package com.app.aml.feature.casemanagement.entity;
 import com.app.aml.enums.CasePriority;
 import com.app.aml.enums.CaseStatus;
 import com.app.aml.enums.ClosureDisposition;
+import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import com.app.aml.feature.ingestion.entity.Transaction;
 import com.app.aml.shared.audit.SoftDeletableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
@@ -41,8 +42,10 @@ public class CaseRecord extends SoftDeletableEntity {
     @Column(name = "assigned_by")
     private UUID assignedBy;
 
-    @Transient
-    private UUID customerProfileId;
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_profile_id", nullable = false)
+    private CustomerProfile customer;
 
     @OneToMany(
             mappedBy = "caseRecord",
@@ -57,6 +60,12 @@ public class CaseRecord extends SoftDeletableEntity {
             orphanRemoval = true
     )
     private List<CaseAlertLink> caseAlertLinks = new ArrayList<>(); // This fixes 'getCaseAlertLinks'
+
+    @Column(name = "rule_type")
+    private String ruleType;
+
+    @Column(name = "typology_triggered")
+    private String typologyTriggered;
 
     @NotNull
     @Enumerated(EnumType.STRING)

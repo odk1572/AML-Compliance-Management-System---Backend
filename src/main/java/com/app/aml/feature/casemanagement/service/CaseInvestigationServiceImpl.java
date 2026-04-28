@@ -13,6 +13,7 @@ import com.app.aml.feature.casemanagement.repository.CaseNoteRepository;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
 import com.app.aml.feature.alert.dto.alert.response.AlertResponseDto;
 import com.app.aml.feature.alert.mapper.AlertMapper;
+import com.app.aml.annotation.AuditAction;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ public class CaseInvestigationServiceImpl implements CaseInvestigationService {
 
     @Override
     @Transactional
+    @AuditAction(category = "CASE_MGMT", action = "OPEN_CASE_FOLDER", entityType = "CASE")
     public void openCase(UUID caseId, UUID actorId, String ip) {
         CaseRecord caseRecord = caseRepo.findById(caseId)
                 .orElseThrow(() -> new EntityNotFoundException("Case not found"));
@@ -59,6 +61,7 @@ public class CaseInvestigationServiceImpl implements CaseInvestigationService {
 
     @Override
     @Transactional
+    @AuditAction(category = "CASE_MGMT", action = "ADD_INVESTIGATION_NOTE", entityType = "CASE")
     public void addNote(UUID caseId, CaseNoteRequestDto dto, UUID authoredBy, String ip) {
         CaseRecord caseRecord = caseRepo.findById(caseId)
                 .orElseThrow(() -> new EntityNotFoundException("Case not found"));
@@ -85,6 +88,7 @@ public class CaseInvestigationServiceImpl implements CaseInvestigationService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_CASE_HISTORY", entityType = "CASE")
     public List<CaseAuditTrailResponseDto> getCaseAuditTrail(UUID caseId) {
         return trailRepo.findByCaseRecordIdOrderBySysCreatedAtDesc(caseId).stream()
                 .map(trail -> CaseAuditTrailResponseDto.builder()
@@ -100,6 +104,7 @@ public class CaseInvestigationServiceImpl implements CaseInvestigationService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "EXPORT_AUDIT_TRAIL_PDF", entityType = "CASE")
     public byte[] exportAuditTrailAsPdf(UUID caseId) {
 
         CaseRecord caseRecord = caseRepo.findById(caseId)
@@ -131,6 +136,7 @@ public class CaseInvestigationServiceImpl implements CaseInvestigationService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_LINKED_ALERTS", entityType = "CASE")
     public List<AlertResponseDto> getAlertsForCase(UUID caseId) {
         if (!caseRepo.existsById(caseId)) {
             throw new EntityNotFoundException("Case not found");

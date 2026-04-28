@@ -5,6 +5,7 @@ import com.app.aml.feature.ruleengine.dto.geographicRiskRating.response.Geograph
 import com.app.aml.feature.ruleengine.entity.GeographicRiskRating;
 import com.app.aml.feature.ruleengine.mapper.GeographicRiskRatingMapper;
 import com.app.aml.feature.ruleengine.repository.GeographicRiskRatingRepository;
+import com.app.aml.annotation.AuditAction;
 import com.app.aml.shared.audit.service.AuditLogService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class GeographicRiskServiceImpl implements GeographicRiskService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "UPSERT_GEO_RISK", entityType = "GEO_RISK")
     public GeographicRiskRatingResponseDto upsertRating(CreateGeographicRiskRequestDto dto) {
         return repo.findByCountryCodeAndSysIsDeletedFalse(dto.getCountryCode())
                 .map(existingEntity -> updateExistingRating(existingEntity, dto))
@@ -37,6 +39,7 @@ public class GeographicRiskServiceImpl implements GeographicRiskService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "BULK_UPSERT_GEO_RISK", entityType = "GEO_RISK")
     public List<GeographicRiskRatingResponseDto> bulkUpsert(List<CreateGeographicRiskRequestDto> dtos) {
         return dtos.stream()
                 .map(this::upsertRating)
@@ -45,6 +48,7 @@ public class GeographicRiskServiceImpl implements GeographicRiskService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "LIST_GEO_RISK_RATINGS", entityType = "GEO_RISK")
     public Page<GeographicRiskRatingResponseDto> listRatings(Pageable pageable) {
         return repo.findAllBySysIsDeletedFalse(pageable)
                 .map(mapper::toResponseDto);
@@ -52,6 +56,7 @@ public class GeographicRiskServiceImpl implements GeographicRiskService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_GEO_RISK_DETAIL", entityType = "GEO_RISK")
     public GeographicRiskRatingResponseDto getRating(String countryCode) {
         return repo.findByCountryCodeAndSysIsDeletedFalse(countryCode.toUpperCase())
                 .map(mapper::toResponseDto)
@@ -60,6 +65,7 @@ public class GeographicRiskServiceImpl implements GeographicRiskService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "DELETE_GEO_RISK", entityType = "GEO_RISK")
     public void deleteRating(String countryCode) {
         GeographicRiskRating entity = repo.findByCountryCodeAndSysIsDeletedFalse(countryCode.toUpperCase())
                 .orElseThrow(() -> new EntityNotFoundException("Geographic risk rating not found for: " + countryCode));

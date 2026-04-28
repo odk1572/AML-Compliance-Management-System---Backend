@@ -2,8 +2,6 @@ package com.app.aml.feature.casemanagement.service;
 
 import com.app.aml.enums.CasePriority;
 import com.app.aml.enums.CaseStatus;
-// Assuming you have an AlertStatus enum based on your earlier alert assignment code
-
 import com.app.aml.enums.AlertStatus;
 import com.app.aml.feature.alert.entity.AlertTransaction;
 import com.app.aml.feature.alert.repository.AlertTransactionRepository;
@@ -12,6 +10,7 @@ import com.app.aml.feature.casemanagement.entity.CaseAlertLink;
 import com.app.aml.feature.casemanagement.entity.CaseAssignment;
 import com.app.aml.feature.casemanagement.entity.CaseAuditTrail;
 import com.app.aml.feature.casemanagement.entity.CaseRecord;
+import com.app.aml.feature.casemanagement.mapper.CaseRecordMapper;
 import com.app.aml.feature.casemanagement.repository.CaseAlertLinkRepository;
 import com.app.aml.feature.casemanagement.repository.CaseAssignmentRepository;
 import com.app.aml.feature.casemanagement.repository.CaseAuditTrailRepository;
@@ -20,6 +19,7 @@ import com.app.aml.feature.alert.entity.Alert;
 import com.app.aml.feature.alert.repository.AlertRepository;
 import com.app.aml.feature.ingestion.entity.Transaction;
 import com.app.aml.feature.notification.event.CaseAssignedEvent;
+import com.app.aml.annotation.AuditAction;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,16 +42,29 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
     private final CaseAssignmentRepository assignmentRepo;
     private final CaseAuditTrailRepository trailRepo;
     private final AlertRepository alertRepo;
-    private final AlertTransactionRepository alertTxnRepo; // Injected
+    private final AlertTransactionRepository alertTxnRepo;
     private final ApplicationEventPublisher eventPublisher;
+    private final CaseRecordMapper caseRecordMapper;
+
 
     @Override
     @Transactional
+    @AuditAction(category = "CASE_MGMT", action = "CREATE_CASE", entityType = "CASE")
     public CaseResponseDto createCase(List<UUID> alertIds, UUID assigneeId, UUID assignedById, String priority) {
         List<Alert> alerts = alertRepo.findAllById(alertIds);
         if (alerts.isEmpty()) {
             throw new IllegalArgumentException("No valid alerts provided");
         }
+        long distinctCustomerCount = alerts.stream()
+                .map(alert -> alert.getCustomer().getId())
+                .distinct()
+                .count();
+
+        if (distinctCustomerCount > 1) {
+            throw new IllegalArgumentException("Invalid operation: You cannot bundle alerts from different customers into a single case.");
+        }
+
+        Alert primaryAlertMetadata = alerts.get(0);
 
         int totalRisk = alerts.stream()
                 .map(alert -> alert.getRiskScore() != null ? alert.getRiskScore().intValue() : 0)
@@ -67,6 +80,10 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
         caseRecord.setAggregatedRiskScore(totalRisk);
         caseRecord.setOpenedAt(Instant.now());
         caseRecord.setLastActivityAt(Instant.now());
+
+        caseRecord.setRuleType(primaryAlertMetadata.getRuleType());
+        caseRecord.setTypologyTriggered(primaryAlertMetadata.getTypologyTriggered());
+        caseRecord.setCustomer(primaryAlertMetadata.getCustomer());
 
         List<Transaction> transactionsToMigrate = alerts.stream()
                 .flatMap(alert -> alert.getAlertTransactions().stream())
@@ -94,14 +111,16 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
 
         alertRepo.saveAll(alerts);
         saveInitialAssignment(savedCase, assigneeId, assignedById);
-
-        // Pass the correct transaction count to the audit trail
         saveAuditTrails(savedCase, assignedById, assigneeId, alerts.size(), transactionsToMigrate.size());
 
         String assigneeEmail = resolveUserEmail(assigneeId);
         eventPublisher.publishEvent(new CaseAssignedEvent(this, savedCase.getCaseReference(), assigneeEmail));
 
         return buildResponse(savedCase);
+    }
+
+    private CaseResponseDto buildResponse(CaseRecord savedCase) {
+        return caseRecordMapper.toResponseDto(savedCase);
     }
 
     private void saveInitialAssignment(CaseRecord caseRecord, UUID assigneeId, UUID assignedById) {
@@ -129,37 +148,11 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
         trailRepo.save(assignedTrail);
     }
 
-    private CaseResponseDto buildResponse(CaseRecord savedCase) {
 
-        List<CaseResponseDto.LinkedTransactionDto> transactionDtos = savedCase.getCaseTransactions().stream()
-                .map(ct -> {
-                    var txn = ct.getTransaction();
-                    return CaseResponseDto.LinkedTransactionDto.builder()
-                            .id(txn.getId())
-                            .transactionReference(txn.getTransactionRef())
-                            .amount(txn.getAmount())
-                            .currency(txn.getCurrencyCode())
-                            .timestamp(txn.getTransactionTimestamp())
-                            .originatorAccount(txn.getOriginatorAccountNo())
-                            .beneficiaryAccount(txn.getBeneficiaryAccountNo())
-                            .build();
-                })
-                .toList();
-
-        return CaseResponseDto.builder()
-                .id(savedCase.getId())
-                .caseReference(savedCase.getCaseReference())
-                .status(savedCase.getStatus().name())
-                .priority(savedCase.getPriority().name())
-                .aggregatedRiskScore(savedCase.getAggregatedRiskScore())
-                .assignedTo(savedCase.getAssignedTo())
-                .openedAt(savedCase.getOpenedAt())
-                .transactions(transactionDtos)
-                .build();
-    }
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_CASE_DETAILS", entityType = "CASE")
     public CaseResponseDto getCaseDetails(UUID caseId) {
         log.info("Fetching details for Case ID: {}", caseId);
 
@@ -171,6 +164,7 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
 
     @Override
     @Transactional
+    @AuditAction(category = "CASE_MGMT", action = "REASSIGN_CASE", entityType = "CASE")
     public void reassignCase(UUID caseId, UUID newAssigneeId, UUID reassignedById, String reason) {
         CaseRecord caseRecord = caseRepo.findById(caseId)
                 .orElseThrow(() -> new EntityNotFoundException("Case not found"));

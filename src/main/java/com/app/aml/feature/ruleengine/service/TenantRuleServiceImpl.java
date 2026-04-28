@@ -11,6 +11,7 @@ import com.app.aml.feature.ruleengine.mapper.TenantRuleMapper;
 import com.app.aml.feature.ruleengine.mapper.TenantRuleThresholdMapper;
 import com.app.aml.feature.ruleengine.repository.TenantRuleRepository;
 import com.app.aml.feature.ruleengine.repository.TenantRuleThresholdRepository;
+import com.app.aml.annotation.AuditAction;
 import com.app.aml.shared.audit.service.AuditLogService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class TenantRuleServiceImpl implements TenantRuleService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_TENANT_RULE", entityType = "TENANT_RULE")
     public TenantRuleResponseDto getRuleById(UUID ruleId) {
         TenantRule rule = tenantRuleRepo.findById(ruleId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant Rule not found with ID: " + ruleId));
@@ -41,6 +43,7 @@ public class TenantRuleServiceImpl implements TenantRuleService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "UPDATE_TENANT_RULE", entityType = "TENANT_RULE")
     public TenantRuleResponseDto updateRule(UUID ruleId, UpdateTenantRuleRequestDto dto) {
         TenantRule rule = tenantRuleRepo.findById(ruleId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant Rule not found with ID: " + ruleId));
@@ -65,6 +68,7 @@ public class TenantRuleServiceImpl implements TenantRuleService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "TOGGLE_RULE_STATUS", entityType = "TENANT_RULE")
     public TenantRuleResponseDto toggleRule(UUID ruleId, boolean isActive) {
         TenantRule rule = tenantRuleRepo.findById(ruleId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant Rule not found with ID: " + ruleId));
@@ -89,6 +93,7 @@ public class TenantRuleServiceImpl implements TenantRuleService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "CREATE_THRESHOLD_OVERRIDE", entityType = "RULE_THRESHOLD")
     public TenantRuleThresholdResponseDto createThresholdOverride(CreateTenantRuleThresholdRequestDto dto) {
         if (!tenantRuleRepo.existsById(dto.getTenantRuleId())) {
             throw new EntityNotFoundException("Tenant Rule not found with ID: " + dto.getTenantRuleId());
@@ -113,6 +118,7 @@ public class TenantRuleServiceImpl implements TenantRuleService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "UPDATE_THRESHOLD_OVERRIDE", entityType = "RULE_THRESHOLD")
     public TenantRuleThresholdResponseDto updateThresholdOverride(UUID thresholdId, UpdateTenantRuleThresholdRequestDto dto) {
         TenantRuleThreshold threshold = tenantRuleThresholdRepo.findById(thresholdId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant Rule Threshold not found with ID: " + thresholdId));
@@ -137,6 +143,7 @@ public class TenantRuleServiceImpl implements TenantRuleService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_RULE_THRESHOLDS", entityType = "RULE_THRESHOLD")
     public List<TenantRuleThresholdResponseDto> getThresholdsForRule(UUID ruleId) {
         if (!tenantRuleRepo.existsById(ruleId)) {
             throw new EntityNotFoundException("Tenant Rule not found with ID: " + ruleId);
@@ -147,6 +154,7 @@ public class TenantRuleServiceImpl implements TenantRuleService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "DELETE_THRESHOLD_OVERRIDE", entityType = "RULE_THRESHOLD")
     public void deleteThresholdOverride(UUID thresholdId) {
         TenantRuleThreshold threshold = tenantRuleThresholdRepo.findById(thresholdId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant Rule Threshold not found with ID: " + thresholdId));
@@ -167,6 +175,7 @@ public class TenantRuleServiceImpl implements TenantRuleService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "BULK_UPDATE_THRESHOLDS", entityType = "RULE_THRESHOLD")
     public List<TenantRuleThresholdResponseDto> updateThresholds(UUID ruleId, List<CreateTenantRuleThresholdRequestDto> overrides) {
         TenantRule rule = tenantRuleRepo.findById(ruleId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant Rule not found with ID: " + ruleId));

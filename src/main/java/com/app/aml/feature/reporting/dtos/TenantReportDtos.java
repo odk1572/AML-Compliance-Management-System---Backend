@@ -25,7 +25,7 @@ public class TenantReportDtos {
     @Data @Builder @AllArgsConstructor
     public static class StrLogDto {
         private String filingReference;
-        private TypologyCategory typology;
+        private String typology;
         private String subjectName;
         private UUID filedBy;
         private Instant filedAt;

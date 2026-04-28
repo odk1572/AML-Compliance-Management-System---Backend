@@ -12,6 +12,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +26,7 @@ public class UniversalIngestionController {
 
     private final UniversalBatchIngestionService ingestionService;
 
+    @PreAuthorize("hasRole('BANK_ADMIN')")
     @PostMapping(value = "/{fileType}/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<TransactionBatchResponseDto>> uploadBatchFile(
             @PathVariable BatchFileType fileType,
@@ -50,6 +52,8 @@ public class UniversalIngestionController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
+
+    @PreAuthorize("hasRole('BANK_ADMIN')")
     @GetMapping("/batches/{batchId}")
     public ResponseEntity<ApiResponse<TransactionBatchResponseDto>> getBatchStatus(
             @PathVariable UUID batchId,
@@ -67,6 +71,8 @@ public class UniversalIngestionController {
         return ResponseEntity.ok(response);
     }
 
+
+    @PreAuthorize("hasRole('BANK_ADMIN')")
     @GetMapping("/batches")
     public ResponseEntity<ApiResponse<Page<TransactionBatchResponseDto>>> getAllBatches(
             @RequestParam(required = false) BatchFileType fileType,

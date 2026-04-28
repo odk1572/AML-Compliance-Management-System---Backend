@@ -11,6 +11,7 @@ import com.app.aml.feature.casemanagement.repository.CaseAuditTrailRepository;
 import com.app.aml.feature.casemanagement.repository.CaseEscalationRepository;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
 import com.app.aml.feature.notification.event.CaseEscalatedEvent;
+import com.app.aml.annotation.AuditAction;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -31,6 +32,7 @@ public class CaseEscalationServiceImpl implements CaseEscalationService {
 
     @Override
     @Transactional
+    @AuditAction(category = "CASE_MGMT", action = "ESCALATE_CASE", entityType = "CASE")
     public void escalate(UUID caseId, EscalationRequestDto dto, UUID escalatedById, String ip) {
         CaseRecord caseRecord = caseRepo.findById(caseId)
                 .orElseThrow(() -> new EntityNotFoundException("Case not found"));

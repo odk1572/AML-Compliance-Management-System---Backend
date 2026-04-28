@@ -26,7 +26,7 @@ public class CaseInvestigationController {
     private final CaseInvestigationService investigationService;
 
     @PatchMapping("/{caseId}/open")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<Void>> openCase(
             @PathVariable UUID caseId,
             @RequestParam UUID actorId,
@@ -49,7 +49,7 @@ public class CaseInvestigationController {
     }
 
     @GetMapping("/{caseId}/audit-trail")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<List<CaseAuditTrailResponseDto>>> getAuditTrail(
             @PathVariable UUID caseId,
             HttpServletRequest request) {
@@ -59,7 +59,7 @@ public class CaseInvestigationController {
     }
 
     @GetMapping(value = "/{caseId}/audit-trail/export", produces = MediaType.APPLICATION_PDF_VALUE)
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<byte[]> exportAuditTrail(@PathVariable UUID caseId) {
         byte[] pdfContent = investigationService.exportAuditTrailAsPdf(caseId);
 
@@ -70,7 +70,7 @@ public class CaseInvestigationController {
     }
 
     @GetMapping("/{caseId}/alerts")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<List<AlertResponseDto>>> getAlertsForCase(
             @PathVariable UUID caseId,
             HttpServletRequest request) {

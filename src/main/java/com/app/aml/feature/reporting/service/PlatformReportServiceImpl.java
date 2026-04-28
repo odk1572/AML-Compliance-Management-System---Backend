@@ -3,6 +3,7 @@ package com.app.aml.feature.reporting.service;
 import com.app.aml.feature.reporting.dtos.PlatformReportDtos.*;
 import com.app.aml.feature.tenant.entity.Tenant;
 import com.app.aml.feature.tenant.repository.TenantRepository;
+import com.app.aml.annotation.AuditAction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -27,6 +28,7 @@ public class PlatformReportServiceImpl implements PlatformReportService {
     private final DataSource dataSource;
 
     @Override
+    @AuditAction(category = "REPORTING", action = "GENERATE_GLOBAL_SAR_SUMMARY", entityType = "REPORT")
     public List<SarSummaryDto> getSarSummary(LocalDate from, LocalDate to) {
         List<SarSummaryDto> globalResults = new ArrayList<>();
         List<Tenant> tenants = tenantRepo.findAllActive();

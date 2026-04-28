@@ -9,6 +9,7 @@ import com.app.aml.feature.ingestion.entity.TransactionBatch;
 import com.app.aml.feature.ingestion.mapper.TransactionBatchMapper;
 import com.app.aml.feature.ingestion.repository.TransactionBatchRepository;
 import com.app.aml.multitenency.TenantContext; // Required to fetch the tenant ID
+import com.app.aml.annotation.AuditAction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,6 +32,8 @@ public class UniversalBatchIngestionService {
     private final TransactionBatchMapper batchMapper;
     private final AsyncBatchLauncher asyncBatchLauncher; // Inject our new Async Launcher
 
+
+    @AuditAction(category = "DATA_INGESTION", action = "UPLOAD_BATCH", entityType = "BATCH")
     public TransactionBatchResponseDto uploadAndRouteBatch(MultipartFile file, UUID uploadedBy, BatchFileType fileType) {
 
         if (file.isEmpty() || file.getOriginalFilename() == null) {
@@ -92,6 +95,8 @@ public class UniversalBatchIngestionService {
         }
         return hexString.toString();
     }
+
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_BATCH_STATUS", entityType = "BATCH")
     public TransactionBatchResponseDto getBatchStatus(UUID batchId) {
         TransactionBatch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new BusinessRuleException("Batch not found with ID: " + batchId));
@@ -99,6 +104,8 @@ public class UniversalBatchIngestionService {
         return batchMapper.toResponseDto(batch);
     }
 
+
+    @AuditAction(category = "DATA_ACCESS", action = "LIST_BATCHES", entityType = "BATCH")
     public Page<TransactionBatchResponseDto> getAllBatches(BatchFileType fileType, Pageable pageable) {
         Page<TransactionBatch> batchPage = batchRepository.findAll(pageable);
 

@@ -1,6 +1,7 @@
 package com.app.aml.feature.notification.service.impl;
 
 import com.app.aml.feature.notification.service.interfaces.MailService;
+import com.app.aml.annotation.AuditAction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,7 @@ public class MailServiceImpl implements MailService {
 
     @Async
     @Override
+    @AuditAction(category = "COMMUNICATION", action = "SEND_MANUAL_EMAIL", entityType = "NOTIFICATION")
     public void sendEmail(String to, String subject, String text) {
         try {
             log.debug("Attempting to send email to [{}] with subject [{}]", to, subject);

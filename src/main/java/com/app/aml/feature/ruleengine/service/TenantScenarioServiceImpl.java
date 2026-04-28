@@ -12,6 +12,7 @@ import com.app.aml.feature.ruleengine.mapper.TenantScenarioMapper;
 import com.app.aml.feature.ruleengine.repository.GlobalScenarioRuleRepository;
 import com.app.aml.feature.ruleengine.repository.TenantRuleRepository;
 import com.app.aml.feature.ruleengine.repository.TenantScenarioRepository;
+import com.app.aml.annotation.AuditAction;
 import com.app.aml.shared.audit.service.AuditLogService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
 
     @Transactional
     @Override
+    @AuditAction(category = "RULE_ENGINE", action = "ACTIVATE_TENANT_SCENARIO", entityType = "SCENARIO")
     public TenantScenarioResponseDto activateScenario(UUID globalScenarioId) {
         log.info("Activating Global Scenario ID: {} for tenant", globalScenarioId);
 
@@ -88,6 +90,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
 
     @Transactional
     @Override
+    @AuditAction(category = "RULE_ENGINE", action = "PAUSE_TENANT_SCENARIO", entityType = "SCENARIO")
     public TenantScenarioResponseDto pauseScenario(UUID tenantScenarioId) {
         log.info("Pausing Tenant Scenario ID: {}", tenantScenarioId);
 
@@ -115,6 +118,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
 
     @Transactional
     @Override
+    @AuditAction(category = "RULE_ENGINE", action = "RESUME_TENANT_SCENARIO", entityType = "SCENARIO")
     public TenantScenarioResponseDto resumeScenario(UUID tenantScenarioId) {
         log.info("Resuming Tenant Scenario ID: {}", tenantScenarioId);
 
@@ -146,6 +150,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
 
     @Transactional
     @Override
+    @AuditAction(category = "RULE_ENGINE", action = "TOGGLE_SCENARIO_RULE", entityType = "TENANT_RULE")
     public TenantRuleResponseDto toggleScenarioRule(UUID tenantRuleId, boolean isActive) {
         log.info("Toggling Tenant Rule ID: {} to active: {}", tenantRuleId, isActive);
 
@@ -173,6 +178,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
 
     @Transactional(readOnly = true)
     @Override
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_TENANT_SCENARIO_DETAIL", entityType = "SCENARIO")
     public TenantScenarioWithRulesDto getScenarioByIdWithRules(UUID tenantScenarioId) {
         log.debug("Fetching scenario and rules for ID: {}", tenantScenarioId);
 
@@ -189,6 +195,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
 
     @Transactional(readOnly = true)
     @Override
+    @AuditAction(category = "DATA_ACCESS", action = "LIST_TENANT_SCENARIOS")
     public List<TenantScenarioWithRulesDto> listActiveScenariosWithRules() {
         log.debug("Fetching all active tenant scenarios with their rules");
 

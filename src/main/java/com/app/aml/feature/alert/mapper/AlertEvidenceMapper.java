@@ -22,7 +22,6 @@ public interface AlertEvidenceMapper {
     @Mapping(target = "alert", source = "alertId")
     AlertEvidence toEntity(CreateAlertEvidenceRequestDto dto);
 
-
     default Alert mapAlertIdToAlert(UUID alertId) {
         if (alertId == null) {
             return null;

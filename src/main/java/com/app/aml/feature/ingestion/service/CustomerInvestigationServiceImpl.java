@@ -8,6 +8,7 @@ import com.app.aml.feature.casemanagement.mapper.CaseRecordMapper; // Assuming y
 import com.app.aml.feature.alert.repository.AlertRepository;
 import com.app.aml.feature.ingestion.repository.CustomerProfileRepository;
 import com.app.aml.feature.ingestion.repository.TransactionRepository;
+import com.app.aml.annotation.AuditAction;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,15 +32,16 @@ public class CustomerInvestigationServiceImpl implements CustomerInvestigationSe
     private final CaseRecordMapper caseRecordMapper;
 
     @Override
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_CUSTOMER_360", entityType = "CUSTOMER")
     public CustomerProfileResponseDto get360View(String accountNo) {
         CustomerProfile profile = customerRepo.findByAccountNumber(accountNo)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found for account: " + accountNo));
 
 
-        var recentAlerts = alertRepo.findTop5ByCustomerProfileIdOrderBySysCreatedAtDesc(profile.getId())
+        var recentAlerts = alertRepo.findTop5ByCustomerIdOrderBySysCreatedAtDesc(profile.getId())
                 .stream().map(alertMapper::toResponseDto).toList();
 
-        var recentCases = caseRepo.findByCustomerProfileIdOrderBySysCreatedAtDesc(profile.getId(),Pageable.unpaged())
+        var recentCases = caseRepo.findByCustomerIdOrderBySysCreatedAtDesc(profile.getId(),Pageable.unpaged())
                 .stream().map(caseRecordMapper::toResponseDto).toList();
 
         return CustomerProfileResponseDto.builder()
@@ -62,6 +64,7 @@ public class CustomerInvestigationServiceImpl implements CustomerInvestigationSe
     }
 
     @Override
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_CUSTOMER_TRANSACTION_HISTORY", entityType = "CUSTOMER")
     public Page<TransactionSummaryDto> getTransactionHistory(String accountNo, Pageable pageable) {
         return txnRepo.findByOriginatorAccountNoOrBeneficiaryAccountNo(accountNo, accountNo, pageable)
                 .map(txn -> TransactionSummaryDto.builder()
@@ -75,6 +78,7 @@ public class CustomerInvestigationServiceImpl implements CustomerInvestigationSe
     }
 
     @Override
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_LINKED_ACCOUNTS", entityType = "CUSTOMER")
     public List<String> getLinkedAccounts(String accountNo) {
         CustomerProfile profile = customerRepo.findByAccountNumber(accountNo)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found for account: " + accountNo));

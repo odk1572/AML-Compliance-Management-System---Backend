@@ -24,7 +24,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/alerts/dashboard")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BANK_ADMIN')")
+@PreAuthorize("hasRole('BANK_ADMIN')")
 public class AlertDashboardController {
 
     private final AlertDashboardService alertDashboardService;

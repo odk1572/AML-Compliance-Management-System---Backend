@@ -22,7 +22,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/platform-users")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('SUPER_ADMIN')")
 public class PlatformUserController {
 
     private final PlatformUserService platformUserService;
@@ -43,6 +42,7 @@ public class PlatformUserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('BANK_ADMIN')")
     public ResponseEntity<ApiResponse<PlatformUserResponseDto>> getPlatformUserById(
             @PathVariable UUID id,
             HttpServletRequest request) {
@@ -58,6 +58,7 @@ public class PlatformUserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Page<PlatformUserResponseDto>>> getAllPlatformUsers(
             @PageableDefault(size = 20) Pageable pageable,
             HttpServletRequest request) {
@@ -73,6 +74,7 @@ public class PlatformUserController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PlatformUserResponseDto>> createPlatformUser(
             @Valid @RequestBody CreatePlatformUserRequestDto dto,
             HttpServletRequest request) {
@@ -88,6 +90,7 @@ public class PlatformUserController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PlatformUserResponseDto>> updateProfile(
             @PathVariable UUID id,
             @Valid @RequestBody UpdatePlatformUserRequestDto dto,
@@ -104,6 +107,7 @@ public class PlatformUserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deletePlatformUser(
             @PathVariable UUID id,
             HttpServletRequest request) {
@@ -119,6 +123,7 @@ public class PlatformUserController {
     }
 
     @PatchMapping("/{id}/lock")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PlatformUserResponseDto>> lockUser(
             @PathVariable UUID id,
             HttpServletRequest request) {
@@ -134,6 +139,7 @@ public class PlatformUserController {
     }
 
     @PatchMapping("/{id}/unlock")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PlatformUserResponseDto>> unlockUser(
             @PathVariable UUID id,
             HttpServletRequest request) {

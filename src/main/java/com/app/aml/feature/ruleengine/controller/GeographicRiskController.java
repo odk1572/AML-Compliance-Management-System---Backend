@@ -55,7 +55,7 @@ public class GeographicRiskController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','BANK_ADMIN','COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<Page<GeographicRiskRatingResponseDto>>> listRatings(
             @PageableDefault(size = 20) Pageable pageable,
             HttpServletRequest request) {
@@ -70,7 +70,7 @@ public class GeographicRiskController {
     }
 
     @GetMapping("/{countryCode}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COMPLIANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<GeographicRiskRatingResponseDto>> getRating(
             @PathVariable String countryCode,
             HttpServletRequest request) {

@@ -6,58 +6,154 @@
     <style>
         @page {
             size: A4;
-            margin: 15mm;
+            margin: 20mm 15mm;
             @bottom-right {
                 content: "Page " counter(page) " of " counter(pages);
-                font-size: 9px;
+                font-size: 10px;
+                color: #7f8c8d;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             }
         }
-        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; line-height: 1.5; font-size: 12px; }
-        .header { text-align: center; border-bottom: 2px solid #004a99; padding-bottom: 10px; margin-bottom: 20px; }
-        .confidential { color: #d9534f; font-weight: bold; text-align: center; font-size: 14px; margin-bottom: 5px; }
 
-        .section { margin-top: 20px; page-break-inside: avoid; }
-        .section-title {
-            background: #004a99;
-            color: white;
-            padding: 6px 12px;
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #2c3e50;
+            line-height: 1.6;
+            font-size: 12px;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #1a5276;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        .confidential {
+            color: #c0392b;
             font-weight: bold;
+            text-align: center;
+            font-size: 15px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        h1 {
+            margin: 5px 0;
+            color: #1a5276;
+            font-size: 22px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 8px; table-layout: fixed; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; word-wrap: break-word; }
-        th { background-color: #f2f2f2; font-weight: bold; color: #555; width: 25%; }
+        .section {
+            margin-top: 25px;
+            page-break-inside: avoid;
+        }
 
-        .txn-table th { background-color: #e9ecef; width: auto; }
-        .txn-table td { font-family: 'Courier New', monospace; font-size: 11px; }
+        .section-title {
+            background: #1a5276;
+            color: #ffffff;
+            padding: 8px 12px;
+            font-weight: bold;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 4px 4px 0 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+            table-layout: fixed;
+            border: 1px solid #bdc3c7;
+            border-top: none;
+        }
+
+        th, td {
+            border: 1px solid #bdc3c7;
+            padding: 10px 12px;
+            text-align: left;
+            word-wrap: break-word;
+        }
+
+        th {
+            background-color: #f2f4f4;
+            font-weight: bold;
+            color: #34495e;
+            width: 25%;
+        }
+
+        .txn-table th {
+            background-color: #e5e8e8;
+            font-size: 11px;
+            width: auto;
+            text-align: center;
+        }
+
+        .txn-table td {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .txn-table tbody tr:nth-child(even) {
+            background-color: #fafbfc;
+        }
 
         .narrative {
             white-space: pre-wrap;
-            background: #fdfdfd;
+            background: #fdfefe;
             padding: 15px;
-            border: 1px solid #ddd;
-            margin-top: 10px;
+            border: 1px solid #bdc3c7;
+            border-top: none;
             font-style: italic;
-            border-left: 5px solid #004a99;
+            color: #34495e;
+            border-left: 5px solid #1a5276;
+            border-radius: 0 0 4px 4px;
         }
 
         .note-box {
-            margin-bottom: 12px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-left: 3px solid #6c757d;
+            margin-top: 10px;
+            padding: 12px;
+            background: #f9f9f9;
+            border: 1px solid #eeeeee;
+            border-left: 4px solid #95a5a6;
+            border-radius: 0 4px 4px 0;
+            page-break-inside: avoid;
         }
-        .note-meta { font-size: 10px; color: #777; text-transform: uppercase; margin-bottom: 4px; }
+
+        .note-meta {
+            font-size: 10px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-weight: bold;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 4px;
+        }
+
+        .footer-disclaimer {
+            margin-top: 50px;
+            border-top: 1px solid #bdc3c7;
+            padding-top: 15px;
+            font-size: 10px;
+            color: #7f8c8d;
+            text-align: center;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <p class="confidential">STRICTLY CONFIDENTIAL - REGULATORY FILING</p>
-    <h1 style="margin: 5px 0; color: #004a99;">Suspicious Transaction Report (STR)</h1>
-    <p style="margin: 0;"><strong>Reference ID:</strong> <span th:text="${filing.filingReference}">STR-12345</span></p>
+    <p class="confidential">Strictly Confidential - Regulatory Filing</p>
+    <h1>Suspicious Transaction Report (STR)</h1>
+    <p style="margin: 0; font-size: 14px; color: #34495e;">
+        <strong>Reference ID:</strong> <span th:text="${filing.filingReference}">STR-12345</span>
+    </p>
 </div>
 
 <div class="section">
@@ -66,11 +162,17 @@
         <tr>
             <th>Regulatory Body</th>
             <td th:text="${filing.regulatoryBody}">FIU</td>
-            <th>Typology Category</th>
-            <td th:text="${filing.typologyCategory}">Money Laundering</td>
+            <th>Primary Rule Type</th>
+            <td th:text="${filing.ruleType != null ? filing.ruleType : 'N/A'}">STRUCTURING</td>
         </tr>
         <tr>
-            <th>Filing Officer</th>
+            <th>Triggered Typology</th>
+            <td th:text="${filing.typologyTriggered != null ? filing.typologyTriggered : 'N/A'}" colspan="3">
+                Suspicious Structuring (Under Threshold Smurfing)
+            </td>
+        </tr>
+        <tr>
+            <th>Filing Officer ID</th>
             <td th:text="${filing.filedBy}">OFFICER-UUID</td>
             <th>Submission Date</th>
             <td th:text="${formattedCreatedAt}">26-04-2026 18:00</td>
@@ -83,9 +185,13 @@
     <table>
         <tr>
             <th>Subject Name</th>
-            <td th:text="${filing.subjectName}">John Doe</td>
+            <td th:text="${filing.customer != null ? filing.customer.customerName : 'N/A'}">John Doe</td>
             <th>Primary Account</th>
-            <td th:text="${filing.subjectAccountNo}">123456789</td>
+            <td th:text="${filing.customer != null ? filing.customer.accountNumber : 'N/A'}">123456789</td>
+        </tr>
+        <tr>
+            <th>Internal Risk Rating</th>
+            <td th:text="${filing.customer != null ? filing.customer.riskRating : 'N/A'}" colspan="3">HIGH</td>
         </tr>
     </table>
 </div>
@@ -102,18 +208,20 @@
     <table class="txn-table">
         <thead>
         <tr>
-            <th style="width: 20%;">Reference</th>
+            <th style="width: 15%;">Reference</th>
             <th style="width: 15%;">Date</th>
+            <th style="width: 15%;">Type</th>
             <th style="width: 15%;">Amount</th>
-            <th style="width: 25%;">Originator</th>
-            <th style="width: 25%;">Beneficiary</th>
+            <th style="width: 20%;">Originator A/C</th>
+            <th style="width: 20%;">Beneficiary A/C</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="txn : ${transactions}">
             <td th:text="${txn.transactionRef}">REF123</td>
             <td th:text="${txn.transactionTimestamp != null ? dateHelper.format(txn.transactionTimestamp) : 'N/A'}">2026-04-27</td>
-            <td th:text="${txn.amount + ' ' + txn.currencyCode}">1000.00 USD</td>
+            <td th:text="${txn.transactionType != null ? txn.transactionType.name() : 'N/A'}">WIRE</td>
+            <td style="text-align: right; font-weight: bold;" th:text="${txn.amount + ' ' + txn.currencyCode}">1000.00 USD</td>
             <td th:text="${txn.originatorAccountNo}">-</td>
             <td th:text="${txn.beneficiaryAccountNo}">-</td>
         </tr>
@@ -123,18 +231,20 @@
 
 <div class="section">
     <div class="section-title">5. Internal Investigation Notes</div>
-    <div th:if="${#lists.isEmpty(notes)}" style="padding: 10px; color: #999;">No internal notes associated with this filing.</div>
+    <div th:if="${#lists.isEmpty(notes)}" style="padding: 15px; color: #7f8c8d; font-style: italic; border: 1px solid #bdc3c7; border-top: none;">
+        No internal investigation notes associated with this filing.
+    </div>
     <div th:each="note : ${notes}" class="note-box">
         <div class="note-meta">
             <span th:text="${note.noteType}">INVESTIGATION</span> |
             <span th:text="${note.sysCreatedAt != null ? dateHelper.format(note.sysCreatedAt) : 'N/A'}">Date</span>
         </div>
-        <div th:text="${note.noteContent}">The actual note content detailing the investigation steps...</div>
+        <div th:text="${note.noteContent}" style="white-space: pre-wrap;">The actual note content detailing the investigation steps...</div>
     </div>
 </div>
 
-<div style="margin-top: 50px; border-top: 1px solid #eee; padding-top: 10px; font-size: 10px; color: #999; text-align: center;">
-    This document is generated by the AML Compliance System. Unauthorized distribution is strictly prohibited.
+<div class="footer-disclaimer">
+    This document was securely generated by the AML Compliance System. The information contained herein is privileged, confidential, and intended solely for regulatory review. Unauthorized reproduction or distribution is strictly prohibited.
 </div>
 
 </body>

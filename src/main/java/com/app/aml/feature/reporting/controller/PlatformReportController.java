@@ -24,6 +24,7 @@ public class PlatformReportController {
 
     private final PlatformReportService reportService;
     @GetMapping("/sar-summary")
+
     public ResponseEntity<ApiResponse<List<SarSummaryDto>>> getSarSummary(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,

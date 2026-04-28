@@ -13,6 +13,7 @@ import com.app.aml.feature.ruleengine.mapper.GlobalScenarioRuleMapper;
 import com.app.aml.feature.ruleengine.repository.GlobalRuleRepository;
 import com.app.aml.feature.ruleengine.repository.GlobalScenarioRepository;
 import com.app.aml.feature.ruleengine.repository.GlobalScenarioRuleRepository;
+import com.app.aml.annotation.AuditAction;
 import com.app.aml.shared.audit.service.AuditLogService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -41,6 +42,7 @@ public class GlobalScenarioServiceImpl implements GlobalScenarioService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "CREATE_GLOBAL_SCENARIO", entityType = "GLOBAL_SCENARIO")
     public GlobalScenarioResponseDto createScenario(CreateGlobalScenarioRequestDto dto) {
         if (scenarioRepo.existsByScenarioNameAndSysIsDeletedFalse(dto.getScenarioName())) {
             throw new EntityExistsException("Global Scenario name already exists: " + dto.getScenarioName());
@@ -65,6 +67,7 @@ public class GlobalScenarioServiceImpl implements GlobalScenarioService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "UPDATE_GLOBAL_SCENARIO", entityType = "GLOBAL_SCENARIO")
     public GlobalScenarioResponseDto updateScenario(UUID id, UpdateGlobalScenarioRequestDto dto) {
         GlobalScenario scenario = scenarioRepo.findByIdAndSysIsDeletedFalse(id)
                 .orElseThrow(() -> new EntityNotFoundException("Global Scenario not found with ID: " + id));
@@ -95,6 +98,7 @@ public class GlobalScenarioServiceImpl implements GlobalScenarioService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "DELETE_GLOBAL_SCENARIO", entityType = "GLOBAL_SCENARIO")
     public void deleteScenario(UUID id) {
         GlobalScenario scenario = scenarioRepo.findByIdAndSysIsDeletedFalse(id)
                 .orElseThrow(() -> new EntityNotFoundException("Global Scenario not found with ID: " + id));
@@ -118,6 +122,7 @@ public class GlobalScenarioServiceImpl implements GlobalScenarioService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_GLOBAL_SCENARIO", entityType = "GLOBAL_SCENARIO")
     public GlobalScenarioResponseDto getScenarioById(UUID id) {
         return scenarioRepo.findByIdAndSysIsDeletedFalse(id)
                 .map(scenarioMapper::toResponseDto)
@@ -126,6 +131,7 @@ public class GlobalScenarioServiceImpl implements GlobalScenarioService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "LIST_GLOBAL_SCENARIOS", entityType = "GLOBAL_SCENARIO")
     public Page<GlobalScenarioResponseDto> listScenarios(Pageable pageable) {
         return scenarioRepo.findAllBySysIsDeletedFalse(pageable)
                 .map(scenarioMapper::toResponseDto);
@@ -133,6 +139,7 @@ public class GlobalScenarioServiceImpl implements GlobalScenarioService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "ADD_RULE_TO_SCENARIO", entityType = "GLOBAL_SCENARIO_RULE")
     public GlobalScenarioRuleResponseDto addRuleToScenario(UUID scenarioId, UUID ruleId, Integer priority) {
         GlobalScenario scenario = scenarioRepo.findByIdAndSysIsDeletedFalse(scenarioId)
                 .orElseThrow(() -> new EntityNotFoundException("Global Scenario not found with ID: " + scenarioId));
@@ -168,6 +175,7 @@ public class GlobalScenarioServiceImpl implements GlobalScenarioService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "REMOVE_RULE_FROM_SCENARIO", entityType = "GLOBAL_SCENARIO_RULE")
     public void removeRuleFromScenario(UUID scenarioId, UUID ruleId) {
         GlobalScenarioRule scenarioRule = scenarioRuleRepo.findByScenarioIdAndRuleId(scenarioId, ruleId)
                 .orElseThrow(() -> new EntityNotFoundException("Mapping not found for Scenario ID: " + scenarioId + " and Rule ID: " + ruleId));
@@ -189,6 +197,7 @@ public class GlobalScenarioServiceImpl implements GlobalScenarioService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_SCENARIO_RULES", entityType = "GLOBAL_SCENARIO_RULE")
     public List<GlobalScenarioRuleResponseDto> getRulesByScenarioId(UUID scenarioId) {
         if (!scenarioRepo.existsByIdAndSysIsDeletedFalse(scenarioId)) {
             throw new EntityNotFoundException("Global Scenario not found with ID: " + scenarioId);
@@ -201,6 +210,7 @@ public class GlobalScenarioServiceImpl implements GlobalScenarioService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "UPDATE_SCENARIO_RULE_MAPPING", entityType = "GLOBAL_SCENARIO_RULE")
     public GlobalScenarioRuleResponseDto updateRuleInScenario(UUID scenarioId, UUID ruleId, UpdateGlobalScenarioRuleRequestDto dto) {
         GlobalScenarioRule scenarioRule = scenarioRuleRepo.findByScenarioIdAndRuleId(scenarioId, ruleId)
                 .orElseThrow(() -> new EntityNotFoundException("Mapping not found for Scenario ID: " + scenarioId + " and Rule ID: " + ruleId));

@@ -12,7 +12,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -41,15 +41,24 @@ public class DormantReactivationExecutor implements RuleExecutorStrategy {
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
+
+        DateTimeFormatter pgFormatter = new DateTimeFormatterBuilder()
+                .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                .optionalStart()
+                .appendOffsetId()
+                .optionalEnd()
+                .toFormatter();
+
         SimpleModule instantModule = new SimpleModule();
         instantModule.addDeserializer(Instant.class, new JsonDeserializer<Instant>() {
             @Override
             public Instant deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                String text = p.getText();
-                if (text != null && !text.endsWith("Z") && !text.contains("+") && !text.contains("-")) {
-                    text += "Z";
+                String text = p.getText().trim().replace(" ", "T");
+                TemporalAccessor accessor = pgFormatter.parseBest(text, Instant::from, LocalDateTime::from);
+                if (accessor instanceof Instant instant) {
+                    return instant;
                 }
-                return Instant.parse(text);
+                return ((LocalDateTime) accessor).toInstant(ZoneOffset.UTC);
             }
         });
         mapper.registerModule(instantModule);
@@ -65,75 +74,98 @@ public class DormantReactivationExecutor implements RuleExecutorStrategy {
 
     @Override
     public List<RuleBreachResult> executeRule(RuleExecutionContextDto rule) {
-        String dormantPeriodRaw = null;
-        String reactivationWindowRaw = null;
+        String dormantPeriod = null;
+        String reactivationWindow = null;
         BigDecimal thresholdAmount = null;
 
         for (ConditionExecutionContextDto cond : rule.getConditions()) {
             String aggFn = cond.getAggregationFunction() != null ? cond.getAggregationFunction().toUpperCase() : "NONE";
 
             switch (aggFn) {
-                case "MIN" -> dormantPeriodRaw = cond.getLookbackPeriod();
-                case "MAX" -> reactivationWindowRaw = cond.getLookbackPeriod();
+                case "MIN" -> dormantPeriod = cond.getLookbackPeriod();
+                case "MAX" -> reactivationWindow = cond.getLookbackPeriod();
                 case "NONE" -> thresholdAmount = new BigDecimal(cond.getThresholdValue());
             }
         }
 
-        if (dormantPeriodRaw == null || reactivationWindowRaw == null || thresholdAmount == null) {
+        if (dormantPeriod == null || reactivationWindow == null || thresholdAmount == null) {
             throw new IllegalStateException("Required parameters missing for Dormant Reactivation rule: " + rule.getTypologyLabel());
         }
 
-        String dormantPeriod = SqlIntervalParser.parse(dormantPeriodRaw);
-        String reactivationWindow = SqlIntervalParser.parse(reactivationWindowRaw);
+        if (rule.getGlobalLookbackStart() == null || rule.getGlobalLookbackEnd() == null || rule.getDataFetchStart() == null) {
+            throw new IllegalStateException("Global Start, End, and Data Fetch Start (Buffer) times are required for execution.");
+        }
+
         String schema = TenantContext.getSchemaName();
 
         String sql = String.format("""
-            WITH scenario_context AS (
-                SELECT * FROM %s.transactions
-                WHERE transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL) - CAST(? AS INTERVAL)
-            )
-            SELECT 
-                row_to_json(cp.*) as customer_json, 
-                json_agg(row_to_json(t.*)) as transactions_json
-            FROM scenario_context t
-            JOIN %s.customer_profiles cp 
-              ON (t.originator_account_no = cp.account_number OR t.beneficiary_account_no = cp.account_number)
-            WHERE t.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-            GROUP BY cp.id, cp.account_number
-            HAVING SUM(t.amount) >= ?
-               AND NOT EXISTS (
-                   SELECT 1 FROM scenario_context t2 
-                   WHERE (t2.originator_account_no = cp.account_number OR t2.beneficiary_account_no = cp.account_number)
-                     AND t2.transaction_timestamp < CURRENT_TIMESTAMP - CAST(? AS INTERVAL)
-                     AND t2.transaction_timestamp >= CURRENT_TIMESTAMP - CAST(? AS INTERVAL) - CAST(? AS INTERVAL)
-               )
-        """, schema, schema);
-
+    WITH data_universe AS (
+        SELECT t.*, cp.id as customer_profile_id, cp.account_number
+        FROM %s.transactions t
+        JOIN %s.customer_profiles cp 
+          ON (t.originator_account_no = cp.account_number OR t.beneficiary_account_no = cp.account_number)
+        WHERE t.transaction_timestamp BETWEEN ? AND ?
+    ),
+    breaching_customers AS (
+        SELECT DISTINCT t1.customer_profile_id
+        FROM data_universe t1
+        WHERE t1.transaction_timestamp BETWEEN ? AND ?
+        AND (
+            -- Subquery 1: Calculate sum in the reactivation window leading up to this txn
+            SELECT SUM(t2.amount)
+            FROM data_universe t2
+            WHERE (t2.originator_account_no = t1.account_number OR t2.beneficiary_account_no = t1.account_number)
+              AND t2.transaction_timestamp BETWEEN t1.transaction_timestamp - CAST(? AS INTERVAL) AND t1.transaction_timestamp
+        ) >= ?
+        AND NOT EXISTS (
+            -- Subquery 2: Ensure zero activity in the dormant period before the reactivation window
+            SELECT 1
+            FROM %s.transactions t3
+            WHERE (t3.originator_account_no = t1.account_number OR t3.beneficiary_account_no = t1.account_number)
+              AND t3.transaction_timestamp >= t1.transaction_timestamp - CAST(? AS INTERVAL) - CAST(? AS INTERVAL)
+              AND t3.transaction_timestamp < t1.transaction_timestamp - CAST(? AS INTERVAL)
+        )
+    )
+    SELECT 
+        ? as rule_type, 
+        ? as rule_label,
+        row_to_json(cp.*) as customer_json, 
+        json_agg(row_to_json(du.*)) as transactions_json
+    FROM data_universe du
+    JOIN breaching_customers bc ON du.customer_profile_id = bc.customer_profile_id
+    JOIN %s.customer_profiles cp ON bc.customer_profile_id = cp.id
+    WHERE du.transaction_timestamp BETWEEN ? AND ?
+    GROUP BY cp.id
+""", schema, schema, schema, schema, schema);
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
                     try {
                         CustomerProfile customer = objectMapper.readValue(
-                                rs.getString("customer_json"),
-                                CustomerProfile.class
+                                rs.getString("customer_json"), CustomerProfile.class
                         );
-
                         List<Transaction> transactions = objectMapper.readValue(
-                                rs.getString("transactions_json"),
-                                new TypeReference<List<Transaction>>() {}
+                                rs.getString("transactions_json"), new TypeReference<List<Transaction>>() {}
                         );
 
-                        return new RuleBreachResult(customer, transactions);
-
+                        String type = rs.getString("rule_type");
+                        String label = rs.getString("rule_label");
+                        return new RuleBreachResult(customer, transactions, type, label);
                     } catch (Exception e) {
-                        log.error("Failed to parse JSON from database for Dormant Reactivation Rule", e);
                         throw new RuntimeException("Failed to parse JSON from database", e);
                     }
                 },
-                reactivationWindow,
-                dormantPeriod,
+                Timestamp.from(rule.getDataFetchStart()),
+                Timestamp.from(rule.getGlobalLookbackEnd()),
+                Timestamp.from(rule.getGlobalLookbackStart()),
+                Timestamp.from(rule.getGlobalLookbackEnd()),
                 reactivationWindow,
                 thresholdAmount,
                 reactivationWindow,
+                dormantPeriod,
                 reactivationWindow,
-                dormantPeriod);
+                getRuleType(),
+                rule.getTypologyLabel(),
+                Timestamp.from(rule.getGlobalLookbackStart()),
+                Timestamp.from(rule.getGlobalLookbackEnd())
+        );
     }
 }

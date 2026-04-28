@@ -12,6 +12,7 @@ import com.app.aml.feature.casemanagement.repository.CaseAuditTrailRepository;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
 import com.app.aml.feature.alert.entity.Alert;
 import com.app.aml.feature.alert.repository.AlertRepository;
+import com.app.aml.annotation.AuditAction;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class CaseClosureServiceImpl implements CaseClosureService {
 
     @Override
     @Transactional
+    @AuditAction(category = "CASE_MGMT", action = "CLOSE_FALSE_POSITIVE", entityType = "CASE")
     public void closeAsFalsePositive(UUID caseId, String rationale, UUID closedBy, String ip) {
         if (rationale == null || rationale.trim().isEmpty()) {
             throw new IllegalArgumentException("Rationale cannot be blank for False Positive closure");
@@ -65,6 +67,7 @@ public class CaseClosureServiceImpl implements CaseClosureService {
 
     @Override
     @Transactional
+    @AuditAction(category = "COMPLIANCE", action = "CLOSE_STR_FILED", entityType = "CASE")
     public void closeAfterStr(UUID caseId, UUID filingId, UUID closedBy, String ip) {
         CaseRecord caseRecord = caseRepo.findById(caseId)
                 .orElseThrow(() -> new EntityNotFoundException("Case not found"));

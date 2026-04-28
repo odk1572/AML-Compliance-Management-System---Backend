@@ -12,9 +12,6 @@ public class StrFilingRequestDto {
     @NotBlank
     private String regulatoryBody;
 
-    @NotNull
-    private TypologyCategory typologyCategory;
-
     @NotBlank
     private String suspicionNarrative;
 

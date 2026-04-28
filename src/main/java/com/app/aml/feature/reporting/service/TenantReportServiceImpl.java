@@ -7,6 +7,7 @@ import com.app.aml.feature.alert.repository.AlertRepository;
 import com.app.aml.feature.ingestion.repository.TransactionBatchRepository;
 import com.app.aml.feature.reporting.dtos.TenantReportDtos.*;
 import com.app.aml.feature.strfiling.repository.StrFilingRepository;
+import com.app.aml.annotation.AuditAction;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +15,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -33,11 +33,12 @@ public class TenantReportServiceImpl implements TenantReportService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "REPORTING", action = "VIEW_STR_LOG", entityType = "STR")
     public Page<StrLogDto> getStrLog(Pageable pageable) {
         return strRepo.findAll(pageable).map(filing -> StrLogDto.builder()
                 .filingReference(filing.getFilingReference())
-                .typology(filing.getTypologyCategory())
-                .subjectName(filing.getSubjectName())
+                .typology(filing.getRuleType())
+                .subjectName(filing.getCustomer().getCustomerName())
                 .filedBy(filing.getFiledBy())
                 .filedAt(filing.getSysCreatedAt())
                 .build());
@@ -45,6 +46,7 @@ public class TenantReportServiceImpl implements TenantReportService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "REPORTING", action = "VIEW_BATCH_REPORT", entityType = "BATCH")
     public Page<BatchSummaryDto> getBatchSummary(Pageable pageable) {
         return batchRepo.findAll(pageable).map(batch -> BatchSummaryDto.builder()
                 .batchId(batch.getId())
@@ -57,6 +59,7 @@ public class TenantReportServiceImpl implements TenantReportService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "REPORTING", action = "VIEW_CO_PERFORMANCE", entityType = "ANALYTICS")
     public List<CoPerformanceDto> getCoPerformance() {
         // Get all closed cases to calculate lead time
         List<CaseRecord> closedCases = caseRepo.findByStatusIn(List.of(CaseStatus.CLOSED_NO_ACTION,CaseStatus.CLOSED_STR));

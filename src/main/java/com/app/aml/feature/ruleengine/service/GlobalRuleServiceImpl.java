@@ -13,6 +13,7 @@ import com.app.aml.feature.ruleengine.mapper.GlobalRuleConditionMapper;
 import com.app.aml.feature.ruleengine.mapper.GlobalRuleMapper;
 import com.app.aml.feature.ruleengine.repository.GlobalRuleConditionRepository;
 import com.app.aml.feature.ruleengine.repository.GlobalRuleRepository;
+import com.app.aml.annotation.AuditAction;
 import com.app.aml.shared.audit.service.AuditLogService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,6 +40,7 @@ public class GlobalRuleServiceImpl implements GlobalRuleService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "CREATE_GLOBAL_RULE", entityType = "GLOBAL_RULE")
     public GlobalRuleResponseDto createRule(CreateGlobalRuleRequestDto dto) {
         if (ruleRepo.existsByRuleNameAndSysIsDeletedFalse(dto.getRuleName())) {
             throw new EntityExistsException("Rule name already exists: " + dto.getRuleName());
@@ -63,6 +65,7 @@ public class GlobalRuleServiceImpl implements GlobalRuleService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "UPDATE_GLOBAL_RULE", entityType = "GLOBAL_RULE")
     public GlobalRuleResponseDto updateRule(UUID id, UpdateGlobalRuleRequestDto dto) {
         GlobalRule rule = ruleRepo.findByIdAndSysIsDeletedFalse(id)
                 .orElseThrow(() -> new EntityNotFoundException("Global Rule not found with ID: " + id));
@@ -93,6 +96,7 @@ public class GlobalRuleServiceImpl implements GlobalRuleService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "DELETE_GLOBAL_RULE", entityType = "GLOBAL_RULE")
     public void deleteRule(UUID id) {
         GlobalRule rule = ruleRepo.findByIdAndSysIsDeletedFalse(id)
                 .orElseThrow(() -> new EntityNotFoundException("Global Rule not found with ID: " + id));
@@ -116,6 +120,7 @@ public class GlobalRuleServiceImpl implements GlobalRuleService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_GLOBAL_RULE", entityType = "GLOBAL_RULE")
     public GlobalRuleResponseDto getRuleById(UUID id) {
         return ruleRepo.findByIdAndSysIsDeletedFalse(id)
                 .map(ruleMapper::toResponseDto)
@@ -124,6 +129,7 @@ public class GlobalRuleServiceImpl implements GlobalRuleService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "LIST_GLOBAL_RULES", entityType = "GLOBAL_RULE")
     public Page<GlobalRuleResponseDto> listRules(Pageable pageable) {
         return ruleRepo.findAllBySysIsDeletedFalse(pageable)
                 .map(ruleMapper::toResponseDto);
@@ -131,12 +137,14 @@ public class GlobalRuleServiceImpl implements GlobalRuleService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_RULE_ANALYTICS", entityType = "GLOBAL_RULE")
     public Page<Map<String, Object>> listRulesWithAlertCounts(Pageable pageable) {
         return ruleRepo.findAllRulesWithAlertCounts(pageable);
     }
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "ADD_RULE_CONDITION", entityType = "RULE_CONDITION")
     public GlobalRuleConditionResponseDto addConditionToRule(CreateGlobalRuleConditionRequestDto dto) {
         if (!ruleRepo.existsByIdAndSysIsDeletedFalse(dto.getRuleId())) {
             throw new EntityNotFoundException("Global Rule not found with ID: " + dto.getRuleId());
@@ -161,6 +169,7 @@ public class GlobalRuleServiceImpl implements GlobalRuleService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "UPDATE_RULE_CONDITION", entityType = "RULE_CONDITION")
     public GlobalRuleConditionResponseDto updateCondition(UUID conditionId, UpdateGlobalRuleConditionRequestDto dto) {
         GlobalRuleCondition condition = condRepo.findById(conditionId)
                 .orElseThrow(() -> new EntityNotFoundException("Rule Condition not found with ID: " + conditionId));
@@ -187,6 +196,7 @@ public class GlobalRuleServiceImpl implements GlobalRuleService {
 
     @Override
     @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "REMOVE_RULE_CONDITION", entityType = "RULE_CONDITION")
     public void removeCondition(UUID conditionId) {
         GlobalRuleCondition condition = condRepo.findById(conditionId)
                 .orElseThrow(() -> new EntityNotFoundException("Rule Condition not found with ID: " + conditionId));
@@ -208,6 +218,7 @@ public class GlobalRuleServiceImpl implements GlobalRuleService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_RULE_CONDITIONS", entityType = "RULE_CONDITION")
     public List<GlobalRuleConditionResponseDto> getConditionsByRuleId(UUID ruleId) {
         if (!ruleRepo.existsByIdAndSysIsDeletedFalse(ruleId)) {
             throw new EntityNotFoundException("Global Rule not found with ID: " + ruleId);

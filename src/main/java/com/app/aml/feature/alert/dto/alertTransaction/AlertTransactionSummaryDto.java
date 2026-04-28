@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Value;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Value // Immutable DTO
@@ -15,5 +16,7 @@ public class AlertTransactionSummaryDto {
     String transactionRef;
     BigDecimal amount;
     String currency;
+    Instant transactionTimestamp; // NEW
+    String transactionType;       // NEW (e.g., TRANSFER, CASH)
     InvolvementRole role;
 }

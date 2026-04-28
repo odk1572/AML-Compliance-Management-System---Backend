@@ -8,6 +8,7 @@ import com.app.aml.feature.tenantuser.mapper.TenantUserMapper;
 import com.app.aml.feature.tenantuser.repository.TenantUserRepository;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
 import com.app.aml.security.rbac.Role;
+import com.app.aml.annotation.AuditAction;
 import com.app.aml.shared.audit.service.AuditLogService;
 import com.app.aml.feature.notification.service.interfaces.MailService;
 import jakarta.persistence.EntityNotFoundException;
@@ -36,6 +37,7 @@ public class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     @Transactional
+    @AuditAction(category = "USER_MGMT", action = "CREATE_TENANT_USER", entityType = "USER")
     public TenantUserResponseDto createComplianceOfficer(CreateTenantUserRequestDto dto) {
         if (userRepo.existsByEmailAndSysIsDeletedFalse(dto.getEmail())) {
             throw new IllegalArgumentException("Email already exists: " + dto.getEmail());
@@ -71,6 +73,7 @@ public class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     @Transactional
+    @AuditAction(category = "SECURITY", action = "DEACTIVATE_USER", entityType = "USER")
     public void deactivateUser(UUID id) {
         TenantUser user = userRepo.findByIdAndSysIsDeletedFalse(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
@@ -97,6 +100,7 @@ public class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     @Transactional
+    @AuditAction(category = "SECURITY", action = "ADMIN_PASSWORD_RESET", entityType = "USER")
     public void resetPassword(UUID id) {
         TenantUser user = userRepo.findByIdAndSysIsDeletedFalse(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
@@ -127,6 +131,7 @@ public class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "LIST_TENANT_USERS", entityType = "USER")
     public Page<TenantUserResponseDto> listUsers(Role role, Pageable pageable) {
         if (role != null) {
             return userRepo.findByRoleAndSysIsDeletedFalse(role, pageable)
@@ -138,6 +143,7 @@ public class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     @Transactional
+    @AuditAction(category = "USER_MGMT", action = "UPDATE_USER_PROFILE", entityType = "USER")
     public TenantUserResponseDto updateUser(UUID id, UpdateTenantUserRequestDto dto) {
         TenantUser user = userRepo.findByIdAndSysIsDeletedFalse(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
@@ -171,6 +177,7 @@ public class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_USER_DETAILS", entityType = "USER")
     public TenantUserResponseDto getUserById(UUID id) {
         return userRepo.findByIdAndSysIsDeletedFalse(id)
                 .map(mapper::toResponseDto)
@@ -179,6 +186,7 @@ public class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     @Transactional
+    @AuditAction(category = "SECURITY", action = "REACTIVATE_USER", entityType = "USER")
     public void reactivateUser(UUID id) {
         TenantUser user = userRepo.findDeletedById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Deleted user not found with ID: " + id));
@@ -204,6 +212,7 @@ public class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     @Transactional
+    @AuditAction(category = "SECURITY", action = "CHANGE_PASSWORD_SELF", entityType = "USER")
     public void changePassword(UUID userId, String oldPassword, String newPassword) {
         TenantUser user = userRepo.findByIdAndSysIsDeletedFalse(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -231,6 +240,7 @@ public class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     @Transactional
+    @AuditAction(category = "SECURITY", action = "UNLOCK_USER_ACCOUNT", entityType = "USER")
     public void unlockUser(UUID id) {
         TenantUser user = userRepo.findByIdAndSysIsDeletedFalse(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));

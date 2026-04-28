@@ -1,7 +1,8 @@
 package com.app.aml.feature.strfiling.entity;
 
-import com.app.aml.enums.TypologyCategory;
 import com.app.aml.feature.casemanagement.entity.CaseRecord;
+import com.app.aml.feature.ingestion.entity.CustomerProfile;
+import com.app.aml.feature.ingestion.entity.Transaction;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -12,6 +13,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -39,21 +42,28 @@ public class StrFiling {
     @Size(max = 50)
     @Column(name = "regulatory_body", nullable = false, length = 50)
     private String regulatoryBody;
-
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "typology_category", nullable = false, length = 100)
-    private TypologyCategory typologyCategory;
+    
+    @NotBlank
+    @Size(max = 100)
+    @Column(name = "rule_type", nullable = false, length = 100)
+    private String ruleType;
 
     @NotBlank
     @Size(max = 255)
-    @Column(name = "subject_name", nullable = false, length = 255)
-    private String subjectName;
+    @Column(name = "typology_triggered", nullable = false, length = 255)
+    private String typologyTriggered;
 
-    @NotBlank
-    @Size(max = 50)
-    @Column(name = "subject_account_no", nullable = false, length = 50)
-    private String subjectAccountNo;
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_profile_id", nullable = false)
+    private CustomerProfile customer;
+
+    @OneToMany(
+            mappedBy = "strFiling",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<StrFilingTransaction> strTransactions = new ArrayList<>();
 
     @NotBlank
     @Column(name = "suspicion_narrative", nullable = false, columnDefinition = "TEXT")
@@ -66,4 +76,11 @@ public class StrFiling {
     @NotNull
     @Column(name = "sys_created_at", nullable = false, updatable = false)
     private Instant sysCreatedAt = Instant.now();
+
+    public void addTransaction(Transaction transaction) {
+        StrFilingTransaction strTxn = new StrFilingTransaction();
+        strTxn.setStrFiling(this);
+        strTxn.setTransaction(transaction);
+        this.strTransactions.add(strTxn);
+    }
 }

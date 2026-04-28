@@ -19,6 +19,7 @@ import com.app.aml.security.repository.PlatformUserSessionRepository;
 import com.app.aml.security.repository.UserSessionRepository;
 import com.app.aml.security.userDetails.PlatformUserDetails;
 import com.app.aml.security.userDetails.TenantUserDetails;
+import com.app.aml.shared.audit.service.AuditLogService;
 import io.jsonwebtoken.Claims;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,7 @@ public class AuthServiceImpl implements AuthService {
     private final JtiBlacklistService jtiBlacklistService;
     private final PasswordEncoder passwordEncoder;
     private final TenantRepository tenantRepository;
+    private final AuditLogService auditLogService;
 
     @Value("${app.security.jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
