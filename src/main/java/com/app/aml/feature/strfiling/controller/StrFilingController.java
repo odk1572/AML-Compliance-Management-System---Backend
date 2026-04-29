@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -85,4 +86,23 @@ public class StrFilingController {
                 .headers(headers)
                 .body(pdfBytes);
     }
+
+    @GetMapping("/cases/{caseId}")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    public ResponseEntity<ApiResponse<StrFilingResponseDto>> getFilingByCaseId(
+            @PathVariable UUID caseId,
+            HttpServletRequest request) {
+
+        StrFilingResponseDto responseDto = strFilingService.getFilingByCaseId(caseId);
+        return ResponseEntity.ok(ApiResponse.of(HttpStatus.OK, "Filing retrieved", request.getRequestURI(), responseDto));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    public ResponseEntity<ApiResponse<List<StrFilingResponseDto>>> listFilings(HttpServletRequest request) {
+        List<StrFilingResponseDto> filings = strFilingService.getAllFilings();
+        return ResponseEntity.ok(ApiResponse.of(HttpStatus.OK, "All filings retrieved", request.getRequestURI(), filings));
+    }
+
+
 }

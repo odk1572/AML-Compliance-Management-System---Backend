@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -166,4 +167,25 @@ public class StrFilingServiceImpl implements StrFilingService {
             throw new IllegalStateException("Tenant context is missing. Request cannot be processed.");
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_STR_BY_CASE", entityType = "STR")
+    public StrFilingResponseDto getFilingByCaseId(UUID caseId) {
+        ensureTenantContext();
+        StrFiling filing = strRepo.findByCaseRecordId(caseId)
+                .orElseThrow(() -> new EntityNotFoundException("STR Filing not found for Case ID: " + caseId));
+        return strFilingMapper.toResponseDto(filing);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "LIST_STR_FILINGS", entityType = "STR")
+    public List<StrFilingResponseDto> getAllFilings() {
+        ensureTenantContext();
+        return strRepo.findAll().stream()
+                .map(strFilingMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
 }
