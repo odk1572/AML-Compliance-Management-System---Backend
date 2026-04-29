@@ -1,4 +1,4 @@
-package com.app.aml.feature.ingestion.service;
+package com.app.aml.feature.investigation.service;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
 import com.app.aml.feature.ingestion.dto.customerProfile.response.CustomerProfileResponseDto;
 import com.app.aml.feature.ingestion.dto.customerProfile.response.TransactionSummaryDto;

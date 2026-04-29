@@ -1,7 +1,7 @@
-package com.app.aml.audit.service;
+package com.app.aml.annotation;
 
 
-import com.app.aml.annotation.AuditAction;
+import com.app.aml.audit.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;

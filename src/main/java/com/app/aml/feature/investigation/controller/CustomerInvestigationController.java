@@ -1,9 +1,9 @@
-package com.app.aml.feature.ingestion.controller;
+package com.app.aml.feature.investigation.controller;
 
 import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.ingestion.dto.customerProfile.response.CustomerProfileResponseDto;
 import com.app.aml.feature.ingestion.dto.customerProfile.response.TransactionSummaryDto;
-import com.app.aml.feature.ingestion.service.CustomerInvestigationService;
+import com.app.aml.feature.investigation.service.CustomerInvestigationService;
 import com.app.aml.annotation.AuditAction;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class CustomerInvestigationController {
     private final CustomerInvestigationService customerService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     @AuditAction(category = "DATA_ACCESS", action = "LIST_ALL_CUSTOMERS", entityType = "CUSTOMER")
     public ResponseEntity<ApiResponse<Page<CustomerProfileResponseDto>>> getAllCustomers(
             Pageable pageable,
@@ -41,6 +43,7 @@ public class CustomerInvestigationController {
     }
 
     @GetMapping("/{accountNo}/360")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     @AuditAction(category = "DATA_ACCESS", action = "VIEW_CUSTOMER_360", entityType = "CUSTOMER")
     public ResponseEntity<ApiResponse<CustomerProfileResponseDto>> getCustomer360(
             @PathVariable String accountNo,
@@ -59,6 +62,7 @@ public class CustomerInvestigationController {
     }
 
     @GetMapping("/{accountNo}/transactions")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     @AuditAction(category = "DATA_ACCESS", action = "VIEW_CUSTOMER_TRANSACTIONS", entityType = "CUSTOMER")
     public ResponseEntity<ApiResponse<Page<TransactionSummaryDto>>> getTransactionHistory(
             @PathVariable String accountNo,
@@ -78,6 +82,7 @@ public class CustomerInvestigationController {
     }
 
     @GetMapping("/{accountNo}/links")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     @AuditAction(category = "DATA_ACCESS", action = "VIEW_CUSTOMER_LINKS", entityType = "CUSTOMER")
     public ResponseEntity<ApiResponse<List<String>>> getLinkedAccounts(
             @PathVariable String accountNo,

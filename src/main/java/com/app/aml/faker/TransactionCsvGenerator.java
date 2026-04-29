@@ -59,26 +59,21 @@ public class TransactionCsvGenerator {
         return csvBuilder.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    // ====================================================================
-    // TYPOLOGY INJECTORS (The "Bad Actor" logic)
-    // ====================================================================
+
     private List<String[]> injectBreach(String strategy, List<FakeCustomer> customers) {
         List<String[]> breachTxns = new ArrayList<>();
         FakeCustomer primary = getRandomCustomer(customers, null);
 
-        // Use OffsetDateTime to guarantee correct timezone parsing in PostgreSQL
         OffsetDateTime now = OffsetDateTime.now();
 
         switch (strategy) {
             case "VELOCITY" -> {
-                // High frequency: 15 transactions in 15 minutes (Beats standard threshold of 10)
                 FakeCustomer target = findSpecificTarget(customers, "BRK-VELOCITY-01", primary);
                 for (int i = 0; i < 15; i++) {
                     breachTxns.add(createCustomTxn(target, getRandomCustomer(customers, target), "500.00", now.minus(i, ChronoUnit.MINUTES), "ATM"));
                 }
             }
             case "STRUCTURING" -> {
-                // Smurfing: 8 transactions of $9000 (total $72k) over 3 days (Beats standard threshold of $50k / 5 txns)
                 FakeCustomer target = findSpecificTarget(customers, "BRK-STRUCT-01", primary);
                 for (int i = 0; i < 8; i++) {
                     breachTxns.add(createCustomTxn(target, getRandomCustomer(customers, target), "9000.00", now.minus(i * 5L, ChronoUnit.HOURS), "CASH"));
@@ -90,17 +85,15 @@ public class TransactionCsvGenerator {
                 breachTxns.add(createCustomTxn(target, getRandomCustomer(customers, target), "25000.00", now.minus(1, ChronoUnit.HOURS), "WIRE"));
             }
             case "LOW_INCOME_HIGH_TRANSFER" -> {
-                // Income is $800, but moves $50,000
                 FakeCustomer target = findSpecificTarget(customers, "BRK-LOW-INCOME-01", primary);
                 breachTxns.add(createCustomTxn(target, getRandomCustomer(customers, target), "50000.00", now.minus(30, ChronoUnit.MINUTES), "WIRE"));
             }
             case "SUDDEN_SPIKE" -> {
-                // Normally does small amounts, suddenly does huge amount
+
                 FakeCustomer target = findSpecificTarget(customers, "BRK-SPIKE-01", primary);
                 breachTxns.add(createCustomTxn(target, getRandomCustomer(customers, target), "95000.00", now.minus(12, ChronoUnit.HOURS), "RTGS"));
             }
             case "PASS_THROUGH" -> {
-                // Money in, money out almost immediately
                 FakeCustomer middleMan = primary;
                 FakeCustomer sender = getRandomCustomer(customers, middleMan);
                 FakeCustomer ultimateReceiver = getRandomCustomer(customers, middleMan);
@@ -108,7 +101,6 @@ public class TransactionCsvGenerator {
                 breachTxns.add(createCustomTxn(middleMan, ultimateReceiver, "79950.00", now.minus(1, ChronoUnit.HOURS), "WIRE")); // Leaves $50
             }
             case "FUNNEL" -> {
-                // Many to One: 4 different people send large amounts to 1 person in a short time
                 FakeCustomer funnelTarget = primary;
                 for (int i = 0; i < 4; i++) {
                     FakeCustomer sender = getRandomCustomer(customers, funnelTarget);
@@ -123,9 +115,7 @@ public class TransactionCsvGenerator {
         return breachTxns;
     }
 
-    // ====================================================================
-    // HELPER METHODS
-    // ====================================================================
+
 
     private String[] createCustomTxn(FakeCustomer orig, FakeCustomer ben, String amount, OffsetDateTime timestamp, String type) {
         String ref = "TXN-BRCH-" + System.currentTimeMillis() + random.nextInt(999);
@@ -151,9 +141,7 @@ public class TransactionCsvGenerator {
         return c;
     }
 
-    // ====================================================================
-    // BACKGROUND NOISE GENERATOR
-    // ====================================================================
+
     private String[] buildNoiseRow(int index, List<FakeCustomer> customers) {
         String transactionRef = "TXN" + System.currentTimeMillis() + faker.number().digits(6);
         FakeCustomer primaryCustomer = customers.get(random.nextInt(customers.size()));
@@ -161,7 +149,6 @@ public class TransactionCsvGenerator {
         String originatorAccountNo, originatorName, originatorBankCode, originatorCountry;
         String beneficiaryAccountNo, beneficiaryName, beneficiaryBankCode, beneficiaryCountry;
 
-        // 60% internal transfers, 40% external
         boolean isInternalTransfer = random.nextInt(100) < 60;
 
         if (isInternalTransfer) {
@@ -209,13 +196,12 @@ public class TransactionCsvGenerator {
         int currRoll = random.nextInt(100);
         String currencyCode = currRoll < 60 ? "INR" : currRoll < 85 ? "USD" : CURRENCIES[random.nextInt(CURRENCIES.length)];
 
-        // Keep normal amounts safely under $10k most of the time to avoid accidental structuring flags
+
         double amountBase = 100 + (8000 * random.nextDouble());
 
         String transactionType = TXN_TYPES[random.nextInt(TXN_TYPES.length)];
         String channel = CHANNELS[random.nextInt(CHANNELS.length)];
 
-        // Edge Cases
         if (index % 31 == 0) { amountBase = 9900 + (99 * random.nextDouble()); channel = "CASH"; }
         if (random.nextInt(100) < 8) { amountBase = 10000 + (25000 * random.nextDouble()); }
         if (random.nextInt(100) < 5) {

@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -16,9 +17,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     boolean existsByTransactionRef(String ref);
     Page<Transaction> findByOriginatorAccountNoOrBeneficiaryAccountNo(String originatorAccountNo, String beneficiaryAccountNo, Pageable pageable);
 
-    @Query(value = "SELECT DISTINCT originator_account_no FROM transactions WHERE originator_name = :name " +
-            "UNION " +
-            "SELECT DISTINCT beneficiary_account_no FROM transactions WHERE beneficiary_name = :name",
+    @Query(value =
+            "SELECT originator_account_no FROM transactions WHERE UPPER(originator_name) = UPPER(:name) " +
+                    "UNION " +
+                    "SELECT beneficiary_account_no FROM transactions WHERE UPPER(beneficiary_name) = UPPER(:name)",
             nativeQuery = true)
     List<String> findLinkedAccountsByName(@Param("name") String name);
+
+
+    Optional<Transaction> findByTransactionRef(String transactionRef);
 }

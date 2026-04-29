@@ -23,20 +23,16 @@ public class DormantTransactionCsvGenerator {
     public byte[] generate(int noiseCount, List<FakeCustomer> customers) {
         List<String[]> allTransactions = new ArrayList<>();
 
-        // 1. Generate Noise (EXCLUDING the Dormant Target)
-        // We must ensure the dormant account has ZERO activity in the noise data
+
         for (int i = 1; i <= noiseCount; i++) {
             String[] row = buildNoiseRow(i, customers);
-            // If noise accidentally picks the dormant account, we re-roll or skip
             if (!row[1].equals("BRK-DORMANT-01") && !row[5].equals("BRK-DORMANT-01")) {
                 allTransactions.add(row);
             }
         }
 
-        // 2. Inject the Reactivation Breach
         allTransactions.addAll(injectDormantBreach(customers));
 
-        // 3. Compile to CSV
         StringBuilder csvBuilder = new StringBuilder();
         csvBuilder.append(HEADER);
         for (String[] row : allTransactions) {
@@ -46,11 +42,7 @@ public class DormantTransactionCsvGenerator {
         return csvBuilder.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    /**
-     * Logic to break the Dormant SQL:
-     * - Dormant Period: No txns between (Now - ReactivationWindow - DormantPeriod) and (Now - ReactivationWindow).
-     * - Reactivation: High value txns within the ReactivationWindow (Now - Window to Now).
-     */
+
     private List<String[]> injectDormantBreach(List<FakeCustomer> customers) {
         List<String[]> breachTxns = new ArrayList<>();
 
@@ -61,16 +53,13 @@ public class DormantTransactionCsvGenerator {
 
         OffsetDateTime now = OffsetDateTime.now();
 
-        // SCENARIO: Account was dormant for 2 years, suddenly moves $60,000 in 2 days.
-        // We generate 3 transactions in the last 24 hours.
+
         for (int i = 0; i < 3; i++) {
             FakeCustomer otherParty = getRandomCustomer(customers, target);
             OffsetDateTime timestamp = now.minus(i * 4, ChronoUnit.HOURS);
 
-            // Amount high enough to exceed the threshold (?)
             String amount = "20000.00";
 
-            // Typical reactivation happens via WIRE or ATM
             breachTxns.add(createCustomTxn(target, otherParty, amount, timestamp, "WIRE", "ONLINE"));
         }
 

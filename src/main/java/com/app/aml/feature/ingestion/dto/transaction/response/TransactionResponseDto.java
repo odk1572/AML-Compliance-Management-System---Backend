@@ -20,7 +20,6 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransactionResponseDto {
     private UUID id;
-    private UUID batchId;
     private UUID customerId;
     private String transactionRef;
     private String originatorAccountNo;

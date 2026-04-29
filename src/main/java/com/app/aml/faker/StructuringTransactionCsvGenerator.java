@@ -32,12 +32,10 @@ public class StructuringTransactionCsvGenerator {
 
         List<String[]> allTransactions = new ArrayList<>();
 
-        // 1. Generate normal background noise
         for (int i = 1; i <= noiseCount; i++) {
             allTransactions.add(buildNoiseRow(i, customers));
         }
 
-        // 2. Inject the specific Structuring Breach
         allTransactions.addAll(injectStructuringBreach(customers));
 
         // 3. Compile to CSV
@@ -52,7 +50,6 @@ public class StructuringTransactionCsvGenerator {
     private List<String[]> injectStructuringBreach(List<FakeCustomer> customers) {
         List<String[]> breachTxns = new ArrayList<>();
 
-        // Find our target persona, or fallback to the first customer
         FakeCustomer target = customers.stream()
                 .filter(c -> c.getAccountNumber().equals("BRK-STRUCT-01"))
                 .findFirst()
@@ -60,17 +57,14 @@ public class StructuringTransactionCsvGenerator {
 
         OffsetDateTime windowEnd = OffsetDateTime.now().minus(1, ChronoUnit.DAYS);
 
-        // Generate 8 transactions, spaced 6 hours apart (Total window: 48 hours)
-        // Each transaction is exactly $9,500 (Usually below the $10k reporting limit)
+
         for (int i = 0; i < 8; i++) {
             FakeCustomer receiver = getRandomCustomer(customers, target);
             OffsetDateTime timestamp = windowEnd.minus(i * 6L, ChronoUnit.HOURS);
 
-            // Add a slight randomization to the amount so it looks organic ($9,400 to $9,900)
             double amount = 9400.00 + (500.00 * random.nextDouble());
             String formattedAmount = BigDecimal.valueOf(amount).setScale(2, RoundingMode.HALF_UP).toString();
 
-            // Structuring is almost always done via CASH at a BRANCH or ATM
             String channel = random.nextBoolean() ? "BRANCH" : "ATM";
 
             breachTxns.add(createCustomTxn(target, receiver, formattedAmount, timestamp, "CASH", channel));
@@ -96,9 +90,7 @@ public class StructuringTransactionCsvGenerator {
         return c;
     }
 
-    // ====================================================================
-    // BACKGROUND NOISE GENERATOR
-    // ====================================================================
+
     private String[] buildNoiseRow(int index, List<FakeCustomer> customers) {
         String transactionRef = "TXN" + System.currentTimeMillis() + faker.number().digits(6);
         FakeCustomer primaryCustomer = customers.get(random.nextInt(customers.size()));

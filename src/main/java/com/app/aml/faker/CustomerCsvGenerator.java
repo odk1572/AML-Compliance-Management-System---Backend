@@ -25,18 +25,13 @@ public class CustomerCsvGenerator {
     public List<FakeCustomer> generateCustomerList(int count) {
         List<FakeCustomer> customers = new ArrayList<>();
 
-        // ====================================================================
-        // TARGET PERSONAS: Guaranteed Rule Breakers for Testing
-        // ====================================================================
+
         customers.add(buildPersona("BRK-VELOCITY-01", "Velocity Breaker LLC", "CORPORATE", "HIGH", "15000.00", false, LocalDate.now().minusYears(2)));
         customers.add(buildPersona("BRK-STRUCT-01", "Structuring Smurf Inc", "INDIVIDUAL", "HIGH", "5000.00", false, LocalDate.now().minusYears(1)));
         customers.add(buildPersona("BRK-DORMANT-01", "Rip Van Winkle", "INDIVIDUAL", "MEDIUM", "2000.00", true, LocalDate.now().minusYears(5)));
         customers.add(buildPersona("BRK-LOW-INCOME-01", "Low Income High Vol", "INDIVIDUAL", "CRITICAL", "800.00", false, LocalDate.now().minusMonths(6)));
         customers.add(buildPersona("BRK-SPIKE-01", "Steady Eddy", "INDIVIDUAL", "LOW", "4000.00", false, LocalDate.now().minusYears(3)));
 
-        // ====================================================================
-        // NORMAL RANDOMIZED CUSTOMERS (Background Noise)
-        // ====================================================================
         for (int i = customers.size() + 1; i <= count; i++) {
             customers.add(buildRandomCustomer(i));
         }
@@ -89,7 +84,6 @@ public class CustomerCsvGenerator {
         String[] kycStatuses = {"APPROVED", "PENDING", "REJECTED"};
         String kycStatus = kycStatuses[random.nextInt(100) < 85 ? 0 : random.nextInt(3)];
 
-        // Random Edge Cases
         if (index % 47 == 0) { nationality = "PRK"; countryOfResidence = "IRN"; riskRating = "CRITICAL"; riskScore = 99; }
         if (index % 83 == 0) { isPep = true; monthlyIncomeBase = 500.00; netWorthBase = 95000000.00; riskRating = "HIGH"; }
         if (index % 137 == 0) { idType = ""; idNumber = ""; kycStatus = "PENDING"; }
@@ -114,7 +108,6 @@ public class CustomerCsvGenerator {
                 .build();
     }
 
-    // Helper for creating predictable targets dynamically
     private FakeCustomer buildPersona(String acct, String name, String type, String risk, String income, boolean dormant, LocalDate opened) {
         LocalDate lastActivity = dormant ? opened.plusDays(10) : LocalDate.now();
         return FakeCustomer.builder()
@@ -122,7 +115,7 @@ public class CustomerCsvGenerator {
                 .customerName(name)
                 .customerType(type)
                 .idType("PAN")
-                .idNumber(faker.regexify("[A-Z]{5}[0-9]{4}[A-Z]{1}")) // Generates valid-looking PAN format
+                .idNumber(faker.regexify("[A-Z]{5}[0-9]{4}[A-Z]{1}"))
                 .nationality("IND")
                 .countryOfResidence("IND")
                 .monthlyIncome(income)

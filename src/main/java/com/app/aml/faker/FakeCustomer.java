@@ -24,7 +24,6 @@ public class FakeCustomer {
     private String lastActivityDate;
     private String kycStatus;
 
-    // Helper method to convert the object to a CSV row
     public String toCsvRow() {
         return String.join(",",
                 accountNumber, customerName, customerType, idType, idNumber,

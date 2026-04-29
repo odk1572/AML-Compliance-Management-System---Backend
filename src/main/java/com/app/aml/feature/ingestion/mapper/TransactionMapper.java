@@ -14,7 +14,6 @@ import java.util.UUID;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TransactionMapper {
 
-    @Mapping(target = "batchId", source = "batch.id")
     @Mapping(target = "customerId", source = "customer.id")
     TransactionResponseDto toResponseDto(Transaction entity);
 
