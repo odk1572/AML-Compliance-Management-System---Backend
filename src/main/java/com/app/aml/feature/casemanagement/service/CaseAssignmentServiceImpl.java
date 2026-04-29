@@ -59,15 +59,11 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
     @AuditAction(category = "CASE_MGMT", action = "CREATE_CASE", entityType = "CASE")
     public CaseResponseDto createCase(CreateCaseRequest request) {
 
-        // 1. Resolve Actor securely from the JWT context
         UUID actorId = SecurityUtils.getCurrentUserId();
 
-        // 2. Resolve Assignee by Employee ID (Tenant-scoped)
-        // Assuming request.getAssigneeUserCode() passes the "EMP-123" value
         TenantUser assignee = tenantUserRepo.findByEmployeeId(request.getAssigneeUserCode())
                 .orElseThrow(() -> new EntityNotFoundException("Assignee not found with Employee ID: " + request.getAssigneeUserCode()));
 
-        // 3. Resolve Alerts by Reference
         List<Alert> alerts = alertRepo.findAllByAlertReferenceIn(request.getAlertReferences());
         if (alerts.isEmpty() || alerts.size() != request.getAlertReferences().size()) {
             throw new IllegalArgumentException("One or more alert references are invalid");
@@ -89,7 +85,7 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
                 .mapToInt(Integer::intValue)
                 .sum();
 
-        // 4. Initialize Case Record
+
         CaseRecord caseRecord = new CaseRecord();
         caseRecord.setAssignedTo(assignee.getId());
         caseRecord.setAssignedBy(actorId);
@@ -114,7 +110,7 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
 
         CaseRecord savedCase = caseRepo.save(caseRecord);
 
-        // 5. Link Alerts
+
         boolean isFirst = true;
         for (Alert alert : alerts) {
             CaseAlertLink link = new CaseAlertLink();
@@ -131,7 +127,6 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
         alertRepo.saveAll(alerts);
         saveInitialAssignment(savedCase, assignee.getId(), actorId);
 
-        // Pass human-readable employee ID to audit trail
         saveAuditTrails(savedCase, actorId, assignee.getEmployeeId(), alerts.size(), transactionsToMigrate.size());
 
         eventPublisher.publishEvent(new CaseAssignedEvent(this, savedCase.getCaseReference(), assignee.getEmail()));
@@ -185,28 +180,24 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
     @AuditAction(category = "CASE_MGMT", action = "REASSIGN_CASE", entityType = "CASE")
     public void reassignCase(String caseReference, ReassignCaseRequest request) {
 
-        // 1. Resolve Case
         CaseRecord caseRecord = caseRepo.findByCaseReference(caseReference)
                 .orElseThrow(() -> new EntityNotFoundException("Case not found: " + caseReference));
 
-        // 2. Resolve Actor and New Assignee via TenantUserRepository
         UUID actorId = SecurityUtils.getCurrentUserId();
         TenantUser newAssignee = tenantUserRepo.findByEmployeeId(request.getNewAssigneeUserCode())
                 .orElseThrow(() -> new EntityNotFoundException("Assignee not found with Employee ID: " + request.getNewAssigneeUserCode()));
 
         UUID oldAssigneeId = caseRecord.getAssignedTo();
 
-        // 3. Look up old assignee's employee ID for a perfect audit log
         String oldAssigneeCode = tenantUserRepo.findById(oldAssigneeId)
                 .map(TenantUser::getEmployeeId)
                 .orElse("UNKNOWN");
 
-        // 4. Update Entity
+
         caseRecord.setAssignedTo(newAssignee.getId());
         caseRecord.setLastActivityAt(Instant.now());
         caseRepo.save(caseRecord);
 
-        // 5. Record Assignment History
         CaseAssignment assignment = new CaseAssignment();
         assignment.setCaseRecord(caseRecord);
         assignment.setAssignedFrom(oldAssigneeId);
@@ -215,7 +206,7 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
         assignment.setAssignmentReason(request.getReason());
         assignmentRepo.save(assignment);
 
-        // 6. Clean Audit Trail Logging using Employee IDs
+
         CaseAuditTrail reassignedTrail = new CaseAuditTrail();
         reassignedTrail.setCaseRecord(caseRecord);
         reassignedTrail.setActorId(actorId);

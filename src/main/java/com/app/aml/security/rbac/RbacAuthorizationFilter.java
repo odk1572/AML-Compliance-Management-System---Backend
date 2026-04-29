@@ -51,7 +51,6 @@ public class RbacAuthorizationFilter extends OncePerRequestFilter {
         PATH_PERMISSION_MAP.put("GET:/api/v1/alerts/**", Permission.ALERT_READ);
 
         PATH_PERMISSION_MAP.put("GET:/api/v1/transactions/**", Permission.TRANSACTION_READ);
-        PATH_PERMISSION_MAP.put("GET:/api/v1/customers/**", Permission.TRANSACTION_READ); // Grouped with Historical Review context
     }
 
     @Override

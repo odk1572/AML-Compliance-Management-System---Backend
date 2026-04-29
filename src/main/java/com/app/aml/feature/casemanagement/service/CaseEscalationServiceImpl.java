@@ -12,6 +12,7 @@ import com.app.aml.feature.casemanagement.repository.CaseEscalationRepository;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
 import com.app.aml.feature.notification.event.CaseEscalatedEvent;
 import com.app.aml.annotation.AuditAction;
+import com.app.aml.utils.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -64,6 +65,6 @@ public class CaseEscalationServiceImpl implements CaseEscalationService {
     }
 
     private String resolveUserEmail(UUID userId) {
-        return "admin_" + userId.toString().substring(0, 8) + "@bank.com";
+        return SecurityUtils.getCurrentUserEmail();
     }
 }

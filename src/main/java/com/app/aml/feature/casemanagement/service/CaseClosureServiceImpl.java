@@ -13,8 +13,11 @@ import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
 import com.app.aml.feature.alert.entity.Alert;
 import com.app.aml.feature.alert.repository.AlertRepository;
 import com.app.aml.annotation.AuditAction;
+import com.app.aml.feature.notification.event.CaseClosedEvent;
+import com.app.aml.utils.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +33,7 @@ public class CaseClosureServiceImpl implements CaseClosureService {
     private final CaseAlertLinkRepository linkRepo;
     private final AlertRepository alertRepo;
     private final CaseAuditTrailRepository trailRepo;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -63,6 +67,13 @@ public class CaseClosureServiceImpl implements CaseClosureService {
         trail.setEventType("CLOSED");
         trail.setEventMetadata("{\"disposition\": \"FALSE_POSITIVE\", \"rationale\": \"" + rationale.replace("\"", "\\\"") + "\"}");
         trailRepo.save(trail);
+
+        eventPublisher.publishEvent(new CaseClosedEvent(
+                this,
+                caseRecord.getCaseReference(),
+                "FALSE_POSITIVE",
+                SecurityUtils.getCurrentUserEmail()
+        ));
     }
 
     @Override
@@ -92,5 +103,12 @@ public class CaseClosureServiceImpl implements CaseClosureService {
         trail.setEventType("CLOSED");
         trail.setEventMetadata("{\"disposition\": \"STR_FILED\", \"strFilingId\": \"" + filingId + "\"}");
         trailRepo.save(trail);
+
+        eventPublisher.publishEvent(new CaseClosedEvent(
+                this,
+                caseRecord.getCaseReference(),
+                "STR_FILED_CASE_CLOSED",
+                SecurityUtils.getCurrentUserEmail()
+        ));
     }
 }

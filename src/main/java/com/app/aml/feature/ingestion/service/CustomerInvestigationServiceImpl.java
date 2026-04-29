@@ -85,4 +85,24 @@ public class CustomerInvestigationServiceImpl implements CustomerInvestigationSe
 
         return txnRepo.findLinkedAccountsByName(profile.getCustomerName());
     }
+
+    @Override
+    @AuditAction(category = "DATA_ACCESS", action = "LIST_ALL_CUSTOMERS", entityType = "CUSTOMER")
+    public Page<CustomerProfileResponseDto> getAllCustomers(Pageable pageable) {
+
+        return customerRepo.findAll(pageable)
+                .map(profile -> CustomerProfileResponseDto.builder()
+                        .id(profile.getId())
+                        .accountNumber(profile.getAccountNumber())
+                        .customerName(profile.getCustomerName())
+                        .customerType(profile.getCustomerType())
+                        .riskRating(profile.getRiskRating())
+                        .riskScore(profile.getRiskScore())
+                        .kycStatus(profile.getKycStatus())
+                        .nationality(profile.getNationality())
+                        .accountOpenedOn(profile.getAccountOpenedOn())
+                        .lastActivityDate(profile.getLastActivityDate())
+                        .isPep(profile.isPep())
+                        .build());
+    }
 }

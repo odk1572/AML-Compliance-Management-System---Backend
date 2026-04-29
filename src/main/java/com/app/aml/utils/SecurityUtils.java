@@ -1,6 +1,8 @@
 package com.app.aml.utils;
 
 
+import com.app.aml.security.userDetails.PlatformUserDetails;
+import com.app.aml.security.userDetails.TenantUserDetails;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -36,6 +38,31 @@ public class SecurityUtils {
             log.error("Failed to parse User ID from Security Context", e);
             return Optional.empty();
         }
+    }
+
+    public static String getCurrentUserEmail() {
+        return getCurrentUserEmailOptional()
+                .orElseThrow(() -> new RuntimeException("Unauthorized: No email found in security context."));
+    }
+
+    public static Optional<String> getCurrentUserEmailOptional() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {
+            return Optional.empty();
+        }
+
+        Object principal = auth.getPrincipal();
+
+        if (principal instanceof PlatformUserDetails details) {
+            return Optional.ofNullable(details.getPlatformUser().getEmail());
+        }
+
+        if (principal instanceof TenantUserDetails details) {
+            return Optional.ofNullable(details.getTenantUser().getEmail());
+        }
+
+        return Optional.ofNullable(auth.getName());
     }
 
     public static String getRemoteIp() {

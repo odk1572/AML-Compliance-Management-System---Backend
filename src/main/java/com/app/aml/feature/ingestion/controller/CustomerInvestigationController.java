@@ -22,6 +22,24 @@ public class CustomerInvestigationController {
 
     private final CustomerInvestigationService customerService;
 
+    @GetMapping
+    @AuditAction(category = "DATA_ACCESS", action = "LIST_ALL_CUSTOMERS", entityType = "CUSTOMER")
+    public ResponseEntity<ApiResponse<Page<CustomerProfileResponseDto>>> getAllCustomers(
+            Pageable pageable,
+            HttpServletRequest request) {
+
+        Page<CustomerProfileResponseDto> data = customerService.getAllCustomers(pageable);
+
+        ApiResponse<Page<CustomerProfileResponseDto>> response = ApiResponse.of(
+                HttpStatus.OK,
+                "Customer directory retrieved successfully.",
+                request.getRequestURI(),
+                data
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{accountNo}/360")
     @AuditAction(category = "DATA_ACCESS", action = "VIEW_CUSTOMER_360", entityType = "CUSTOMER")
     public ResponseEntity<ApiResponse<CustomerProfileResponseDto>> getCustomer360(

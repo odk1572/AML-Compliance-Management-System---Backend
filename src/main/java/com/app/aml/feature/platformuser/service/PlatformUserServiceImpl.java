@@ -132,7 +132,6 @@ public class PlatformUserServiceImpl implements PlatformUserService {
 
         user.lockAccount();
 
-        // Explicitly save and flush to ensure the DB state is current before mapping
         PlatformUser savedUser = platformUserRepository.saveAndFlush(user);
 
         return platformUserMapper.toResponseDto(savedUser);

@@ -5,6 +5,7 @@ import com.app.aml.feature.auth.entity.RefreshToken;
 import com.app.aml.feature.auth.repository.RefreshTokenRepository;
 import com.app.aml.feature.auth.service.interfaces.AuthService;
 import com.app.aml.feature.notification.event.AccountLockedEvent;
+import com.app.aml.feature.notification.event.UserLoginEvent;
 import com.app.aml.feature.platformuser.entity.PlatformUser;
 import com.app.aml.feature.platformuser.repository.PlatformUserRepository;
 import com.app.aml.feature.tenant.entity.Tenant;
@@ -21,6 +22,7 @@ import com.app.aml.security.repository.UserSessionRepository;
 import com.app.aml.security.userDetails.PlatformUserDetails;
 import com.app.aml.security.userDetails.TenantUserDetails;
 import com.app.aml.audit.service.AuditLogService;
+import com.app.aml.utils.SecurityUtils;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -143,13 +145,22 @@ public class AuthServiceImpl implements AuthService {
             String rawRefreshToken = UUID.randomUUID().toString();
             saveRefreshToken(UUID.fromString(userId), finalTenantId, rawRefreshToken);
 
+            log.info("Publishing UserLoginEvent for user: {}", dto.getEmail());
+            eventPublisher.publishEvent(new UserLoginEvent(
+                    this,
+                    UUID.fromString(userId),
+                    dto.getEmail(),
+                    SecurityUtils.getRemoteIp(),
+                    dto.getTenantCode()
+            ));
+
 
             return LoginResponseDto.builder()
                     .accessToken(accessToken)
                     .refreshToken(rawRefreshToken)
                     .username(dto.getEmail())
                     .role(role)
-                    .tenantId(finalTenantId) // Returns the UUID so frontend has it for the session
+                    .tenantId(finalTenantId)
                     .isFirstLogin(isFirstLogin)
                     .build();
         } finally {

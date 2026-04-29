@@ -12,4 +12,5 @@ public interface CustomerInvestigationService {
     CustomerProfileResponseDto get360View(String accountNo);
     Page<TransactionSummaryDto> getTransactionHistory(String accountNo, Pageable pageable);
     List<String> getLinkedAccounts(String accountNo);
+    Page<CustomerProfileResponseDto> getAllCustomers(Pageable pageable);
 }

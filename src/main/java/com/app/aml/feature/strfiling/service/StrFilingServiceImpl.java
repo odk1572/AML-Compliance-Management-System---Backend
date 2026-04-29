@@ -21,6 +21,7 @@ import com.app.aml.feature.strfiling.repository.StrFilingTransactionRepository;
 import com.app.aml.multitenency.TenantContext;
 import com.app.aml.annotation.AuditAction;
 import com.app.aml.cloudinary.CloudinaryService;
+import com.app.aml.utils.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -156,7 +157,7 @@ public class StrFilingServiceImpl implements StrFilingService {
     }
 
     private String resolveUserEmail(UUID userId) {
-        return "compliance_" + userId.toString().substring(0, 8) + "@bank.com";
+        return SecurityUtils.getCurrentUserEmail();
     }
 
     private void ensureTenantContext() {

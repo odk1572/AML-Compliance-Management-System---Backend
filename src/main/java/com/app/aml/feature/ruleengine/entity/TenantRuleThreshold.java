@@ -11,11 +11,7 @@ import lombok.Setter;
 
 import java.util.UUID;
 
-/**
- * Entity for tenant-specific overrides of global rule conditions.
- * If an override field is NULL, the system defaults to the GlobalRuleCondition value.
- * This entity does not carry its own audit fields as it is managed as part of the TenantRule.
- */
+
 @Entity
 @Table(
         name = "tenant_rule_thresholds",
@@ -33,7 +29,7 @@ public class TenantRuleThreshold {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
 
-    @Column(name = "threshold_code", unique = true, nullable = false, updatable = false, length = 50)
+    @Column(name = "trt_reference", unique = true, nullable = false, updatable = false, length = 50)
     private String thresholdCode;
 
     @NotNull(message = "Tenant rule reference is required")
