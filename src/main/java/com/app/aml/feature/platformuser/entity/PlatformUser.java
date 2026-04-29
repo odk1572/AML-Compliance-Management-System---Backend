@@ -1,5 +1,6 @@
 package com.app.aml.feature.platformuser.entity;
 
+import com.app.aml.UX.ReferenceGenerator;
 import com.app.aml.security.rbac.Role;
 import com.app.aml.audit.SoftDeletableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
@@ -31,6 +32,9 @@ public class PlatformUser extends SoftDeletableEntity implements Persistable<UUI
     @Builder.Default
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
+
+    @Column(name = "user_code", unique = true, updatable = false, length = 50)
+    private String userCode;
 
     @Email
     @NotBlank
@@ -89,11 +93,6 @@ public class PlatformUser extends SoftDeletableEntity implements Persistable<UUI
         return isNewRecord;
     }
 
-    @PostLoad
-    @PrePersist
-    void markNotNew() {
-        this.isNewRecord = false;
-    }
 
     @Override
     public UUID getId() {
@@ -116,6 +115,14 @@ public class PlatformUser extends SoftDeletableEntity implements Persistable<UUI
         this.locked = false;
         this.lockedAt = null;
         this.failedLoginAttempts = 0;
+    }
+
+    @PrePersist
+    public void prePersistActions() {
+        if (this.userCode == null || this.userCode.isBlank()) {
+            this.userCode = ReferenceGenerator.generate("USR");
+        }
+        this.isNewRecord = false;
     }
 
     public void recordSuccessfulLogin(String ip) {

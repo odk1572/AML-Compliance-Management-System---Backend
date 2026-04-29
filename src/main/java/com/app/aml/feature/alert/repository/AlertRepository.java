@@ -17,6 +17,8 @@ import java.util.UUID;
 @Repository
 public interface AlertRepository extends JpaRepository<Alert, UUID> {
 
+    List<Alert> findAllByAlertReferenceIn( List<String> alertReferences);
+
     @Query("""
     SELECT a FROM Alert a 
     WHERE (:severity IS NULL OR a.severity = :severity) 

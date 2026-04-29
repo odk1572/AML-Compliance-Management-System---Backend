@@ -33,12 +33,14 @@ public class CaseEscalationServiceImpl implements CaseEscalationService {
     @Override
     @Transactional
     @AuditAction(category = "CASE_MGMT", action = "ESCALATE_CASE", entityType = "CASE")
-    public void escalate(UUID caseId, EscalationRequestDto dto, UUID escalatedById, String ip) {
-        CaseRecord caseRecord = caseRepo.findById(caseId)
+    public void escalate(String caseRef, EscalationRequestDto dto, UUID escalatedById, String ip) {
+        CaseRecord caseRecord = caseRepo.findByCaseReference(caseRef)
                 .orElseThrow(() -> new EntityNotFoundException("Case not found"));
 
         caseRecord.setStatus(CaseStatus.ESCALATED);
         caseRecord.setLastActivityAt(Instant.now());
+        caseRecord.setAssignedTo(dto.getEscalatedTo());
+        caseRecord.setAssignedBy(escalatedById);
         caseRepo.save(caseRecord);
 
         CaseEscalation escalation = new CaseEscalation();

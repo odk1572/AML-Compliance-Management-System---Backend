@@ -1,22 +1,20 @@
 package com.app.aml.feature.casemanagement.dto;
 
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.List;
-import java.util.UUID;
 
 @Data
 public class CreateCaseRequest {
-    @NotEmpty
-    private List<UUID> alertIds;
-    @NotNull
-    private UUID assigneeId;
-    @NotNull
-    private UUID assignedById;
-    @NotBlank
+
+    @NotEmpty(message = "At least one alert reference must be provided")
+    private List<String> alertReferences; 
+
+    @NotBlank(message = "Assignee user code is required")
+    private String assigneeUserCode;
+
+    @NotBlank(message = "Priority is required")
     private String priority;
 }

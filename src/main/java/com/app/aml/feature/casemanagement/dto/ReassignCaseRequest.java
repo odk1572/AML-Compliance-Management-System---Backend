@@ -1,18 +1,14 @@
 package com.app.aml.feature.casemanagement.dto;
 
-
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-
-import java.util.UUID;
 
 @Data
 public class ReassignCaseRequest {
-    @NotNull
-    private UUID newAssigneeId;
-    @NotNull
-    private UUID reassignedById;
-    @NotBlank
+
+    @NotBlank(message = "New assignee user code is required")
+    private String newAssigneeUserCode; // e.g., "USR-ALEX-02"
+
+    @NotBlank(message = "A reason for reassignment must be provided")
     private String reason;
 }

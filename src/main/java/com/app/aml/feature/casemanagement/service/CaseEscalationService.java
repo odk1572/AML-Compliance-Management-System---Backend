@@ -7,5 +7,5 @@ import com.app.aml.feature.casemanagement.dto.caseEscalation.request.EscalationR
 import java.util.UUID;
 
 public interface CaseEscalationService {
-    void escalate(UUID caseId, EscalationRequestDto dto, UUID escalatedById, String ip);
+    void escalate(String caseRef, EscalationRequestDto dto, UUID escalatedById, String ip);
 }

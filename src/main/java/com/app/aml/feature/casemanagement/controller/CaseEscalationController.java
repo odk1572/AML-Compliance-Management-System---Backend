@@ -1,9 +1,10 @@
 package com.app.aml.feature.casemanagement.controller;
 
-
 import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.casemanagement.dto.caseEscalation.request.EscalationRequestDto;
 import com.app.aml.feature.casemanagement.service.CaseEscalationService;
+
+import com.app.aml.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,16 +22,18 @@ public class CaseEscalationController {
 
     private final CaseEscalationService caseEscalationService;
 
-    @PostMapping("/{caseId}/escalate")
+    // Notice the path variable is now {caseReference} instead of {caseId}
+    @PostMapping("/{caseReference}/escalate")
     @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<Void>> escalateCase(
-            @PathVariable UUID caseId,
+            @PathVariable String caseReference,
             @Valid @RequestBody EscalationRequestDto requestDto,
-            @RequestParam UUID escalatedById,
             HttpServletRequest request) {
 
+        UUID escalatedById = SecurityUtils.getCurrentUserId();
+
         caseEscalationService.escalate(
-                caseId,
+                caseReference,
                 requestDto,
                 escalatedById,
                 request.getRemoteAddr()

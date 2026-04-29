@@ -5,6 +5,7 @@ import com.app.aml.feature.casemanagement.dto.caseAuditTrail.CaseAuditTrailRespo
 import com.app.aml.feature.casemanagement.dto.request.CaseNoteRequestDto;
 import com.app.aml.feature.casemanagement.service.CaseInvestigationService;
 import com.app.aml.feature.alert.dto.alert.response.AlertResponseDto;
+import com.app.aml.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,9 +42,9 @@ public class CaseInvestigationController {
     public ResponseEntity<ApiResponse<Void>> addNote(
             @PathVariable UUID caseId,
             @Valid @RequestBody CaseNoteRequestDto dto,
-            @RequestParam UUID authoredBy,
             HttpServletRequest request) {
 
+        UUID authoredBy = SecurityUtils.getCurrentUserId();
         investigationService.addNote(caseId, dto, authoredBy, request.getRemoteAddr());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(HttpStatus.CREATED, "Investigation note added successfully", request.getRequestURI(), null));
     }

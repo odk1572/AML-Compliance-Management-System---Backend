@@ -12,10 +12,13 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface CaseRecordRepository extends JpaRepository<CaseRecord, UUID> {
+
+    Optional<CaseRecord> findByCaseReference(String caseReference);
 
     @Modifying
     @Query("UPDATE CaseRecord c SET c.assignedTo = null WHERE c.assignedTo = :userId AND c.status NOT IN ('CLOSED', 'ARCHIVED')")

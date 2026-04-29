@@ -5,6 +5,7 @@ import com.app.aml.apiResponse.ApiResponse;
 import com.app.aml.feature.strfiling.dto.strFiling.StrFilingRequestDto;
 import com.app.aml.feature.strfiling.dto.strFiling.StrFilingResponseDto;
 import com.app.aml.feature.strfiling.service.StrFilingService;
+import com.app.aml.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,9 +30,10 @@ public class StrFilingController {
     public ResponseEntity<ApiResponse<StrFilingResponseDto>> fileSar(
             @PathVariable UUID caseId,
             @Valid @RequestBody StrFilingRequestDto dto,
-            @RequestParam UUID filedBy,
             HttpServletRequest request) {
 
+
+        UUID filedBy = SecurityUtils.getCurrentUserId();
         StrFilingResponseDto responseDto = strFilingService.fileSar(
                 caseId,
                 dto,

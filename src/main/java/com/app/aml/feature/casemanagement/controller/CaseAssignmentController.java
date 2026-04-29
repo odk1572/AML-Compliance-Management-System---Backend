@@ -32,10 +32,7 @@ public class CaseAssignmentController {
 
 
         CaseResponseDto data = caseAssignmentService.createCase(
-                request.getAlertIds(),
-                request.getAssigneeId(),
-                request.getAssignedById(),
-                request.getPriority()
+                request
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
@@ -48,13 +45,13 @@ public class CaseAssignmentController {
         );
     }
 
-    @GetMapping("/{caseId}")
+    @GetMapping("/{caseRef}")
     @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<CaseResponseDto>> getCaseDetails(
-            @PathVariable UUID caseId,
+            @PathVariable String caseRef,
             HttpServletRequest httpRequest) {
 
-        CaseResponseDto data = caseAssignmentService.getCaseDetails(caseId);
+        CaseResponseDto data = caseAssignmentService.getCaseDetails(caseRef);
 
         return ResponseEntity.ok(
                 ApiResponse.of(
@@ -66,18 +63,15 @@ public class CaseAssignmentController {
         );
     }
 
-    @PatchMapping("/{caseId}/reassign")
+    @PatchMapping("/{caseRef}/reassign")
     @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<Void>> reassignCase(
-            @PathVariable UUID caseId,
+            @PathVariable String caseRef,
             @Valid @RequestBody ReassignCaseRequest request,
             HttpServletRequest httpRequest) {
 
         caseAssignmentService.reassignCase(
-                caseId,
-                request.getNewAssigneeId(),
-                request.getReassignedById(),
-                request.getReason()
+                caseRef,request
         );
 
         return ResponseEntity.ok(

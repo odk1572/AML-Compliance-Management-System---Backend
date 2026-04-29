@@ -1,10 +1,15 @@
 package com.app.aml.feature.casemanagement.service;
 
+import com.app.aml.UX.ReferenceGenerator;
 import com.app.aml.enums.CasePriority;
 import com.app.aml.enums.CaseStatus;
 import com.app.aml.enums.AlertStatus;
+import com.app.aml.feature.alert.entity.Alert;
 import com.app.aml.feature.alert.entity.AlertTransaction;
+import com.app.aml.feature.alert.repository.AlertRepository;
 import com.app.aml.feature.alert.repository.AlertTransactionRepository;
+import com.app.aml.feature.casemanagement.dto.CreateCaseRequest;
+import com.app.aml.feature.casemanagement.dto.ReassignCaseRequest;
 import com.app.aml.feature.casemanagement.dto.caseRecord.response.CaseResponseDto;
 import com.app.aml.feature.casemanagement.entity.CaseAlertLink;
 import com.app.aml.feature.casemanagement.entity.CaseAssignment;
@@ -15,11 +20,13 @@ import com.app.aml.feature.casemanagement.repository.CaseAlertLinkRepository;
 import com.app.aml.feature.casemanagement.repository.CaseAssignmentRepository;
 import com.app.aml.feature.casemanagement.repository.CaseAuditTrailRepository;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
-import com.app.aml.feature.alert.entity.Alert;
-import com.app.aml.feature.alert.repository.AlertRepository;
 import com.app.aml.feature.ingestion.entity.Transaction;
 import com.app.aml.feature.notification.event.CaseAssignedEvent;
+import com.app.aml.feature.tenantuser.entity.TenantUser;
+import com.app.aml.feature.tenantuser.repository.TenantUserRepository;
+
 import com.app.aml.annotation.AuditAction;
+import com.app.aml.utils.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,18 +50,29 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
     private final CaseAuditTrailRepository trailRepo;
     private final AlertRepository alertRepo;
     private final AlertTransactionRepository alertTxnRepo;
+    private final TenantUserRepository tenantUserRepo; // Swapped to Tenant-specific repository
     private final ApplicationEventPublisher eventPublisher;
     private final CaseRecordMapper caseRecordMapper;
-
 
     @Override
     @Transactional
     @AuditAction(category = "CASE_MGMT", action = "CREATE_CASE", entityType = "CASE")
-    public CaseResponseDto createCase(List<UUID> alertIds, UUID assigneeId, UUID assignedById, String priority) {
-        List<Alert> alerts = alertRepo.findAllById(alertIds);
-        if (alerts.isEmpty()) {
-            throw new IllegalArgumentException("No valid alerts provided");
+    public CaseResponseDto createCase(CreateCaseRequest request) {
+
+        // 1. Resolve Actor securely from the JWT context
+        UUID actorId = SecurityUtils.getCurrentUserId();
+
+        // 2. Resolve Assignee by Employee ID (Tenant-scoped)
+        // Assuming request.getAssigneeUserCode() passes the "EMP-123" value
+        TenantUser assignee = tenantUserRepo.findByEmployeeId(request.getAssigneeUserCode())
+                .orElseThrow(() -> new EntityNotFoundException("Assignee not found with Employee ID: " + request.getAssigneeUserCode()));
+
+        // 3. Resolve Alerts by Reference
+        List<Alert> alerts = alertRepo.findAllByAlertReferenceIn(request.getAlertReferences());
+        if (alerts.isEmpty() || alerts.size() != request.getAlertReferences().size()) {
+            throw new IllegalArgumentException("One or more alert references are invalid");
         }
+
         long distinctCustomerCount = alerts.stream()
                 .map(alert -> alert.getCustomer().getId())
                 .distinct()
@@ -71,16 +89,16 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
                 .mapToInt(Integer::intValue)
                 .sum();
 
+        // 4. Initialize Case Record
         CaseRecord caseRecord = new CaseRecord();
-        caseRecord.setCaseReference("CAS-" + Instant.now().toEpochMilli());
-        caseRecord.setAssignedTo(assigneeId);
-        caseRecord.setAssignedBy(assignedById);
+        caseRecord.setAssignedTo(assignee.getId());
+        caseRecord.setAssignedBy(actorId);
         caseRecord.setStatus(CaseStatus.OPEN);
-        caseRecord.setPriority(CasePriority.valueOf(priority.toUpperCase()));
+        caseRecord.setCaseReference(ReferenceGenerator.generate("CAS"));
+        caseRecord.setPriority(CasePriority.valueOf(request.getPriority().toUpperCase()));
         caseRecord.setAggregatedRiskScore(totalRisk);
         caseRecord.setOpenedAt(Instant.now());
         caseRecord.setLastActivityAt(Instant.now());
-
         caseRecord.setRuleType(primaryAlertMetadata.getRuleType());
         caseRecord.setTypologyTriggered(primaryAlertMetadata.getTypologyTriggered());
         caseRecord.setCustomer(primaryAlertMetadata.getCustomer());
@@ -96,12 +114,13 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
 
         CaseRecord savedCase = caseRepo.save(caseRecord);
 
+        // 5. Link Alerts
         boolean isFirst = true;
         for (Alert alert : alerts) {
             CaseAlertLink link = new CaseAlertLink();
             link.setCaseRecord(savedCase);
             link.setAlert(alert);
-            link.setLinkedBy(assignedById);
+            link.setLinkedBy(actorId);
             link.setPrimaryAlert(isFirst);
             linkRepo.save(link);
             isFirst = false;
@@ -110,11 +129,12 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
         }
 
         alertRepo.saveAll(alerts);
-        saveInitialAssignment(savedCase, assigneeId, assignedById);
-        saveAuditTrails(savedCase, assignedById, assigneeId, alerts.size(), transactionsToMigrate.size());
+        saveInitialAssignment(savedCase, assignee.getId(), actorId);
 
-        String assigneeEmail = resolveUserEmail(assigneeId);
-        eventPublisher.publishEvent(new CaseAssignedEvent(this, savedCase.getCaseReference(), assigneeEmail));
+        // Pass human-readable employee ID to audit trail
+        saveAuditTrails(savedCase, actorId, assignee.getEmployeeId(), alerts.size(), transactionsToMigrate.size());
+
+        eventPublisher.publishEvent(new CaseAssignedEvent(this, savedCase.getCaseReference(), assignee.getEmail()));
 
         return buildResponse(savedCase);
     }
@@ -123,16 +143,16 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
         return caseRecordMapper.toResponseDto(savedCase);
     }
 
-    private void saveInitialAssignment(CaseRecord caseRecord, UUID assigneeId, UUID assignedById) {
+    private void saveInitialAssignment(CaseRecord caseRecord, UUID assigneeId, UUID actorId) {
         CaseAssignment assignment = new CaseAssignment();
         assignment.setCaseRecord(caseRecord);
         assignment.setAssignedTo(assigneeId);
-        assignment.setAssignedBy(assignedById);
+        assignment.setAssignedBy(actorId);
         assignment.setAssignmentReason("Initial case creation and assignment");
         assignmentRepo.save(assignment);
     }
 
-    private void saveAuditTrails(CaseRecord caseRecord, UUID actorId, UUID assigneeId, int alertCount, int txnCount) {
+    private void saveAuditTrails(CaseRecord caseRecord, UUID actorId, String assigneeEmployeeId, int alertCount, int txnCount) {
         CaseAuditTrail createdTrail = new CaseAuditTrail();
         createdTrail.setCaseRecord(caseRecord);
         createdTrail.setActorId(actorId);
@@ -144,20 +164,18 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
         assignedTrail.setCaseRecord(caseRecord);
         assignedTrail.setActorId(actorId);
         assignedTrail.setEventType("ASSIGNED");
-        assignedTrail.setEventMetadata("{\"assignedTo\": \"" + assigneeId + "\"}");
+        assignedTrail.setEventMetadata("{\"assignedTo\": \"" + assigneeEmployeeId + "\"}");
         trailRepo.save(assignedTrail);
     }
-
-
 
     @Override
     @Transactional(readOnly = true)
     @AuditAction(category = "DATA_ACCESS", action = "VIEW_CASE_DETAILS", entityType = "CASE")
-    public CaseResponseDto getCaseDetails(UUID caseId) {
-        log.info("Fetching details for Case ID: {}", caseId);
+    public CaseResponseDto getCaseDetails(String caseReference) {
+        log.info("Fetching details for Case Reference: {}", caseReference);
 
-        CaseRecord caseRecord = caseRepo.findById(caseId)
-                .orElseThrow(() -> new EntityNotFoundException("Case not found with ID: " + caseId));
+        CaseRecord caseRecord = caseRepo.findByCaseReference(caseReference)
+                .orElseThrow(() -> new EntityNotFoundException("Case not found with reference: " + caseReference));
 
         return buildResponse(caseRecord);
     }
@@ -165,36 +183,46 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
     @Override
     @Transactional
     @AuditAction(category = "CASE_MGMT", action = "REASSIGN_CASE", entityType = "CASE")
-    public void reassignCase(UUID caseId, UUID newAssigneeId, UUID reassignedById, String reason) {
-        CaseRecord caseRecord = caseRepo.findById(caseId)
-                .orElseThrow(() -> new EntityNotFoundException("Case not found"));
+    public void reassignCase(String caseReference, ReassignCaseRequest request) {
+
+        // 1. Resolve Case
+        CaseRecord caseRecord = caseRepo.findByCaseReference(caseReference)
+                .orElseThrow(() -> new EntityNotFoundException("Case not found: " + caseReference));
+
+        // 2. Resolve Actor and New Assignee via TenantUserRepository
+        UUID actorId = SecurityUtils.getCurrentUserId();
+        TenantUser newAssignee = tenantUserRepo.findByEmployeeId(request.getNewAssigneeUserCode())
+                .orElseThrow(() -> new EntityNotFoundException("Assignee not found with Employee ID: " + request.getNewAssigneeUserCode()));
 
         UUID oldAssigneeId = caseRecord.getAssignedTo();
 
-        caseRecord.setAssignedTo(newAssigneeId);
+        // 3. Look up old assignee's employee ID for a perfect audit log
+        String oldAssigneeCode = tenantUserRepo.findById(oldAssigneeId)
+                .map(TenantUser::getEmployeeId)
+                .orElse("UNKNOWN");
+
+        // 4. Update Entity
+        caseRecord.setAssignedTo(newAssignee.getId());
         caseRecord.setLastActivityAt(Instant.now());
         caseRepo.save(caseRecord);
 
+        // 5. Record Assignment History
         CaseAssignment assignment = new CaseAssignment();
         assignment.setCaseRecord(caseRecord);
         assignment.setAssignedFrom(oldAssigneeId);
-        assignment.setAssignedTo(newAssigneeId);
-        assignment.setAssignedBy(reassignedById);
-        assignment.setAssignmentReason(reason);
+        assignment.setAssignedTo(newAssignee.getId());
+        assignment.setAssignedBy(actorId);
+        assignment.setAssignmentReason(request.getReason());
         assignmentRepo.save(assignment);
 
+        // 6. Clean Audit Trail Logging using Employee IDs
         CaseAuditTrail reassignedTrail = new CaseAuditTrail();
         reassignedTrail.setCaseRecord(caseRecord);
-        reassignedTrail.setActorId(reassignedById);
+        reassignedTrail.setActorId(actorId);
         reassignedTrail.setEventType("REASSIGNED");
-        reassignedTrail.setEventMetadata("{\"assignedFrom\": \"" + oldAssigneeId + "\", \"assignedTo\": \"" + newAssigneeId + "\", \"reason\": \"" + reason + "\"}");
+        reassignedTrail.setEventMetadata("{\"assignedFrom\": \"" + oldAssigneeCode + "\", \"assignedTo\": \"" + newAssignee.getEmployeeId() + "\", \"reason\": \"" + request.getReason() + "\"}");
         trailRepo.save(reassignedTrail);
 
-        String newAssigneeEmail = resolveUserEmail(newAssigneeId);
-        eventPublisher.publishEvent(new CaseAssignedEvent(this, caseRecord.getCaseReference(), newAssigneeEmail));
-    }
-
-    private String resolveUserEmail(UUID userId) {
-        return "investigator_" + userId.toString().substring(0, 8) + "@bank.com";
+        eventPublisher.publishEvent(new CaseAssignedEvent(this, caseRecord.getCaseReference(), newAssignee.getEmail()));
     }
 }

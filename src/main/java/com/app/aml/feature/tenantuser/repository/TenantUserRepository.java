@@ -17,6 +17,8 @@ public interface TenantUserRepository extends JpaRepository<TenantUser, UUID> {
     Optional<TenantUser> findByEmail(String email);
     @Query(value = "SELECT * FROM tenant_users WHERE id = :id AND sys_is_deleted = true", nativeQuery = true)
     Optional<TenantUser> findDeletedById(@Param("id") UUID id);
+    Optional<TenantUser> findByEmployeeId(String assigneeUserCode);
+
     Optional<TenantUser> findByEmailIgnoreCase(String email);
     Optional<TenantUser> findByEmailAndSysIsDeletedFalse(String email);
 
