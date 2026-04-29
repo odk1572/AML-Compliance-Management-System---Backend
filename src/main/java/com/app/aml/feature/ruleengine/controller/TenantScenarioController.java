@@ -15,6 +15,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+// Add these imports at the top:
+import com.app.aml.feature.ruleengine.dto.globalScenario.response.GlobalScenarioResponseDto;
+import com.app.aml.feature.ruleengine.service.GlobalScenarioService;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -130,4 +134,22 @@ public class TenantScenarioController {
                 response
         ));
     }
+
+    // Add inside the class (after the listActiveScenariosWithRules method):
+    @GetMapping("/available-globals")
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    public ResponseEntity<ApiResponse<List<GlobalScenarioResponseDto>>> getAvailableGlobalScenarios(
+            HttpServletRequest request) {
+
+        log.info("REST request to fetch available Global Scenarios for tenant activation");
+        List<GlobalScenarioResponseDto> response = tenantScenarioService.getAvailableGlobalScenarios();
+
+        return ResponseEntity.ok(ApiResponse.of(
+                HttpStatus.OK,
+                "Available global scenarios fetched successfully",
+                request.getRequestURI(),
+                response
+        ));
+    }
+
 }

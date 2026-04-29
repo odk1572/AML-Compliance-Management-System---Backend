@@ -1,14 +1,17 @@
 package com.app.aml.feature.ruleengine.service;
 
 import com.app.aml.enums.RuleStatus;
+import com.app.aml.feature.ruleengine.dto.globalScenario.response.GlobalScenarioResponseDto;
 import com.app.aml.feature.ruleengine.dto.tenantRule.response.TenantRuleResponseDto;
 import com.app.aml.feature.ruleengine.dto.tenantScenario.response.TenantScenarioResponseDto;
 import com.app.aml.feature.ruleengine.dto.tenantScenario.response.TenantScenarioWithRulesDto;
 import com.app.aml.feature.ruleengine.entity.GlobalScenarioRule;
 import com.app.aml.feature.ruleengine.entity.TenantRule;
 import com.app.aml.feature.ruleengine.entity.TenantScenario;
+import com.app.aml.feature.ruleengine.mapper.GlobalScenarioMapper;
 import com.app.aml.feature.ruleengine.mapper.TenantRuleMapper;
 import com.app.aml.feature.ruleengine.mapper.TenantScenarioMapper;
+import com.app.aml.feature.ruleengine.repository.GlobalScenarioRepository;
 import com.app.aml.feature.ruleengine.repository.GlobalScenarioRuleRepository;
 import com.app.aml.feature.ruleengine.repository.TenantRuleRepository;
 import com.app.aml.feature.ruleengine.repository.TenantScenarioRepository;
@@ -21,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -38,18 +43,38 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
 
     private final AuditLogService auditLogService;
 
+    private final GlobalScenarioRepository globalScenarioRepository;
+    private final TenantScenarioRepository tenantScenarioRepository;
+    private final GlobalScenarioMapper globalScenarioMapper;
+
     @Transactional
     @Override
     @AuditAction(category = "RULE_ENGINE", action = "ACTIVATE_TENANT_SCENARIO", entityType = "SCENARIO")
     public TenantScenarioResponseDto activateScenario(UUID globalScenarioId) {
         log.info("Activating Global Scenario ID: {} for tenant", globalScenarioId);
 
-        if (tenantScenarioRepo.existsByGlobalScenarioId(globalScenarioId)) {
-            throw new IllegalStateException("Scenario is already activated for this tenant.");
+        // Check if scenario already exists for this tenant
+        Optional<TenantScenario> existing = tenantScenarioRepo.findByGlobalScenarioId(globalScenarioId);
+
+        if (existing.isPresent()) {
+            TenantScenario existingScenario = existing.get();
+            if (existingScenario.getStatus() == RuleStatus.ACTIVE) {
+                // Truly already active — block it
+                throw new IllegalStateException("Scenario is already active for this tenant.");
+            } else {
+                // It was PAUSED — just resume it instead of re-seeding
+                existingScenario.setStatus(RuleStatus.ACTIVE);
+                TenantScenario resumed = tenantScenarioRepo.save(existingScenario);
+                return tenantScenarioMapper.toResponseDto(resumed);
+            }
         }
 
+        // NEW scenario — create and seed rules as before
         TenantScenario tenantScenario = new TenantScenario();
         tenantScenario.setGlobalScenarioId(globalScenarioId);
+        tenantScenario.setStatus(RuleStatus.ACTIVE);
+        // ... rest of your existing code
+
         // Fix: Convert Enum to String
         tenantScenario.setStatus(RuleStatus.ACTIVE);
 
@@ -197,17 +222,39 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
     @Override
     @AuditAction(category = "DATA_ACCESS", action = "LIST_TENANT_SCENARIOS")
     public List<TenantScenarioWithRulesDto> listActiveScenariosWithRules() {
-        log.debug("Fetching all active tenant scenarios with their rules");
+        log.debug("Fetching all tenant scenarios with their rules");
 
-        List<TenantScenario> activeScenarios = tenantScenarioRepo.findByStatus(RuleStatus.ACTIVE);
+        List<TenantScenario> activeScenarios = tenantScenarioRepo.findAll(); // ← CHANGED
 
         return activeScenarios.stream().map(scenario -> {
             List<TenantRule> rules = tenantRuleRepo.findByTenantScenarioId(scenario.getId());
-
             return TenantScenarioWithRulesDto.builder()
                     .scenario(tenantScenarioMapper.toResponseDto(scenario))
                     .rules(tenantRuleMapper.toResponseDtoList(rules))
                     .build();
         }).collect(Collectors.toList());
     }
+
+
+    // Add these injections in the class (Lombok @RequiredArgsConstructor will pick them up):
+// your existing mapper
+
+    // Add this method:
+    @Override
+    public List<GlobalScenarioResponseDto> getAvailableGlobalScenarios() {
+        // Get IDs of global scenarios already activated by this tenant
+        Set<UUID> activatedGlobalIds = tenantScenarioRepository.findAll()
+                .stream()
+                .map(TenantScenario::getGlobalScenarioId)
+                .collect(Collectors.toSet());
+
+        // Return all active global scenarios not yet activated by this tenant
+        return globalScenarioRepository.findAll()
+                .stream()
+                .filter(gs -> !activatedGlobalIds.contains(gs.getId()))
+                .map(globalScenarioMapper::toResponseDto) // use your mapper method name
+                .collect(Collectors.toList());
+    }
+
+
 }
