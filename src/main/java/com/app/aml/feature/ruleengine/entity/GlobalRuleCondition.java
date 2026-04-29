@@ -1,5 +1,6 @@
 package com.app.aml.feature.ruleengine.entity;
 
+import com.app.aml.UX.ReferenceGenerator;
 import com.app.aml.audit.AuditableEntity;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
@@ -23,6 +24,9 @@ public class GlobalRuleCondition extends AuditableEntity {
     @Id
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id = UuidCreator.getTimeOrderedEpoch();
+
+    @Column(name = "condition_reference", unique = true, nullable = false, updatable = false, length = 50)
+    private String conditionCode;
 
     @NotNull(message = "Rule association is required")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -52,4 +56,11 @@ public class GlobalRuleCondition extends AuditableEntity {
     @Size(max = 50)
     @Column(name = "value_data_type", nullable = false, length = 50)
     private String valueDataType;
+
+    @PrePersist
+    public void prePersistActions() {
+        if (this.conditionCode == null || this.conditionCode.isBlank()) {
+            this.conditionCode = ReferenceGenerator.generate("GRC");
+        }
+    }
 }

@@ -19,7 +19,6 @@ public interface TenantRuleThresholdMapper {
     List<TenantRuleThresholdResponseDto> toResponseDtoList(List<TenantRuleThreshold> entities);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "tenantRule", source = "tenantRuleId")
     TenantRuleThreshold toEntity(CreateTenantRuleThresholdRequestDto dto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

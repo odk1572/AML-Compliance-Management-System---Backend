@@ -101,7 +101,6 @@ public class TenantRuleController {
     public ResponseEntity<ApiResponse<TenantRuleThresholdResponseDto>> createThresholdOverride(
             @Valid @RequestBody CreateTenantRuleThresholdRequestDto dto,
             HttpServletRequest request) {
-        log.info("REST request to create threshold override for Tenant Rule ID: {}", dto.getTenantRuleId());
         TenantRuleThresholdResponseDto response = tenantRuleService.createThresholdOverride(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(
                 HttpStatus.CREATED,

@@ -35,10 +35,6 @@ public class GlobalRule extends SoftDeletableEntity {
     @Column(name = "rule_name", nullable = false, length = 150)
     private String ruleName;
 
-    /**
-     * Maps to Strategy identifiers (e.g., "STRUCTURING", "VELOCITY").
-     * Used by RuleExecutorFactory to route execution.
-     */
     @NotBlank(message = "Rule type is required")
     @Size(max = 50)
     @Column(name = "rule_type", nullable = false, length = 50)

@@ -18,7 +18,9 @@ public class GlobalRuleConditionResponseDto {
 
     private UUID id;
 
-    private UUID ruleId; // Flattened for the API
+    private String conditionCode;
+
+    private UUID ruleId;
 
     private String attributeName;
 

@@ -14,6 +14,7 @@ import java.util.UUID;
 public interface GlobalRuleConditionMapper {
 
     @Mapping(target = "ruleId", source = "rule.id")
+    @Mapping(source = "conditionCode", target = "conditionCode")
     GlobalRuleConditionResponseDto toResponseDto(GlobalRuleCondition entity);
 
     List<GlobalRuleConditionResponseDto> toResponseDtoList(List<GlobalRuleCondition> entities);

@@ -1,5 +1,6 @@
 package com.app.aml.feature.ruleengine.service;
 
+import com.app.aml.UX.ReferenceGenerator;
 import com.app.aml.enums.RuleStatus;
 import com.app.aml.feature.ruleengine.dto.globalScenario.response.GlobalScenarioResponseDto;
 import com.app.aml.feature.ruleengine.dto.tenantRule.response.TenantRuleResponseDto;
@@ -91,6 +92,7 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
                     rule.setRuleName(globalLink.getRule().getRuleName());
                     rule.setRuleCode(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
                     rule.setActive(true);
+                    rule.setRuleCode(ReferenceGenerator.generate("TRL-"));
                     return rule;
                 })
                 .collect(Collectors.toList());

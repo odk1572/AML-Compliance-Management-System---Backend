@@ -5,10 +5,12 @@ import com.app.aml.feature.ruleengine.dto.tenantRule.response.TenantRuleResponse
 import com.app.aml.feature.ruleengine.dto.tenantRuleThreshold.request.CreateTenantRuleThresholdRequestDto;
 import com.app.aml.feature.ruleengine.dto.tenantRuleThreshold.request.UpdateTenantRuleThresholdRequestDto;
 import com.app.aml.feature.ruleengine.dto.tenantRuleThreshold.response.TenantRuleThresholdResponseDto;
+import com.app.aml.feature.ruleengine.entity.GlobalRuleCondition;
 import com.app.aml.feature.ruleengine.entity.TenantRule;
 import com.app.aml.feature.ruleengine.entity.TenantRuleThreshold;
 import com.app.aml.feature.ruleengine.mapper.TenantRuleMapper;
 import com.app.aml.feature.ruleengine.mapper.TenantRuleThresholdMapper;
+import com.app.aml.feature.ruleengine.repository.GlobalRuleConditionRepository;
 import com.app.aml.feature.ruleengine.repository.TenantRuleRepository;
 import com.app.aml.feature.ruleengine.repository.TenantRuleThresholdRepository;
 import com.app.aml.annotation.AuditAction;
@@ -31,6 +33,7 @@ public class TenantRuleServiceImpl implements TenantRuleService {
     private final TenantRuleMapper tenantRuleMapper;
     private final TenantRuleThresholdMapper tenantRuleThresholdMapper;
     private final AuditLogService auditLogService;
+    private final GlobalRuleConditionRepository globalConditionRepo;
 
     @Override
     @Transactional(readOnly = true)
@@ -95,12 +98,20 @@ public class TenantRuleServiceImpl implements TenantRuleService {
     @Transactional
     @AuditAction(category = "RULE_ENGINE", action = "CREATE_THRESHOLD_OVERRIDE", entityType = "RULE_THRESHOLD")
     public TenantRuleThresholdResponseDto createThresholdOverride(CreateTenantRuleThresholdRequestDto dto) {
-        if (!tenantRuleRepo.existsById(dto.getTenantRuleId())) {
-            throw new EntityNotFoundException("Tenant Rule not found with ID: " + dto.getTenantRuleId());
-        }
+
+        TenantRule tenantRule = tenantRuleRepo.findByRuleCode(dto.getTenantRuleCode())
+                .orElseThrow(() -> new EntityNotFoundException("Tenant Rule not found with code: " + dto.getTenantRuleCode()));
+
+        GlobalRuleCondition globalCondition = globalConditionRepo.findByConditionCode(dto.getGlobalConditionCode())
+                .orElseThrow(() -> new EntityNotFoundException("Global Condition not found with code: " + dto.getGlobalConditionCode()));
 
         TenantRuleThreshold threshold = tenantRuleThresholdMapper.toEntity(dto);
+
+        threshold.setTenantRule(tenantRule);
+        threshold.setGlobalConditionId(globalCondition.getId());
+
         TenantRuleThreshold savedThreshold = tenantRuleThresholdRepo.save(threshold);
+
         TenantRuleThresholdResponseDto response = tenantRuleThresholdMapper.toResponseDto(savedThreshold);
 
         auditLogService.log(
