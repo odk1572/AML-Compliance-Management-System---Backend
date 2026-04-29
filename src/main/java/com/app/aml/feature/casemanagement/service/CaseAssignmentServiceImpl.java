@@ -31,6 +31,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -215,5 +217,13 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
         trailRepo.save(reassignedTrail);
 
         eventPublisher.publishEvent(new CaseAssignedEvent(this, caseRecord.getCaseReference(), newAssignee.getEmail()));
+    }
+    @Override
+    @Transactional(readOnly = true)
+    @AuditAction(category = "DATA_ACCESS", action = "VIEW_ALL_CASES", entityType = "CASE")
+    public Page<CaseResponseDto> getAllCases(Pageable pageable) {
+        log.info("Fetching paginated list of all cases for investigation");
+        return caseRepo.findAll(pageable)
+                .map(caseRecordMapper::toResponseDto);
     }
 }

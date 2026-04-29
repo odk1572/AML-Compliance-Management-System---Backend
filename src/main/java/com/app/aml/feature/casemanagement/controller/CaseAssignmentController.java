@@ -10,6 +10,10 @@ import com.app.aml.feature.casemanagement.service.CaseAssignmentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +27,24 @@ import java.util.UUID;
 public class CaseAssignmentController {
 
     private final CaseAssignmentService caseAssignmentService;
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
+    public ResponseEntity<ApiResponse<Page<CaseResponseDto>>> getAllCases(
+            @PageableDefault(size = 20, sort = "lastActivityAt", direction = Sort.Direction.DESC) Pageable pageable,
+            HttpServletRequest request) {
+
+        Page<CaseResponseDto> data = caseAssignmentService.getAllCases(pageable);
+
+        return ResponseEntity.ok(
+                ApiResponse.of(
+                        HttpStatus.OK,
+                        "All cases retrieved successfully",
+                        request.getRequestURI(),
+                        data
+                )
+        );
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('BANK_ADMIN')")
