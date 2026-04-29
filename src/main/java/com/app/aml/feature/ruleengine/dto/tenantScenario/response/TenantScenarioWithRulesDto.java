@@ -11,7 +11,6 @@ import java.util.List;
 @Data
 @Builder
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TenantScenarioWithRulesDto {
     private TenantScenarioResponseDto scenario;
     private List<TenantRuleResponseDto> rules;

@@ -137,25 +137,27 @@ public class NotificationEventListenerImpl implements NotificationEventListener 
 
         mailService.sendEmail(event.getAdminEmail(), subject, body);
     }
-//    @Async
-//    @EventListener
-//    public void handleUserLogin(UserLoginEvent event) {
-//        log.info("Caught UserLoginEvent for User: {}", event.getUserEmail());
-//
-//        String subject = "Security Alert: New Login Detected";
-//        String body = String.format(
-//                "Hello,\n\nYour AML platform account (%s) was recently accessed from a new session.\n" +
-//                        "IP Address: %s\nTime: %s\n\n" +
-//                        "If this was not you, please contact your administrator immediately.\n\n" +
-//                        "Thank you,\nAML Platform Security",
-//                event.getUserEmail(), event.getIpAddress(), java.time.Instant.now().toString()
-//        );
-//        mailService.sendEmail(event.getUserEmail(), subject, body);
-//        notificationService.createInPlatform(
-//                event.getUserId(),
-//                "SECURITY",
-//                "New Login Detected",
-//                "Your account was accessed from IP: " + event.getIpAddress()
-//        );
-//    }
+
+    @Async
+    @EventListener
+    @AuditAction(category = "SECURITY", action = "EMAIL_USER_LOGIN", entityType = "USER")
+    public void handleUserLogin(UserLoginEvent event) {
+        log.info("Caught UserLoginEvent for User: {}. Sending security email.", event.getEmail());
+
+        String subject = "Security Alert: New Login Detected";
+        String body = String.format(
+                "Hello,\n\nThis is a security notification to inform you that your AML Platform account was accessed.\n\n" +
+                        "Timestamp: %s\n" +
+                        "IP Address: %s\n\n" +
+                        "If this was not you, please reset your password immediately and contact security support.\n\n" +
+                        "Thank you,\nAML Platform Security",
+                java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                event.getIpAddress()
+        );
+
+        mailService.sendEmail(event.getEmail(), subject, body);
+    }
+
+
+
 }

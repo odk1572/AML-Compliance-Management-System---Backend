@@ -122,9 +122,17 @@ public class PlatformUser extends SoftDeletableEntity implements Persistable<UUI
         if (this.userCode == null || this.userCode.isBlank()) {
             this.userCode = ReferenceGenerator.generate("USR");
         }
-        this.isNewRecord = false;
+
     }
 
+    @PostLoad
+    void markNotNew() {
+        this.isNewRecord = false;
+    }
+    @PostPersist
+    void markSaved() {
+        this.isNewRecord = false;
+    }
     public void recordSuccessfulLogin(String ip) {
         this.lastLoginAt = Instant.now();
         this.lastLoginIp = ip;

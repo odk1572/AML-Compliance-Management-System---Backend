@@ -4,6 +4,7 @@ import com.app.aml.feature.auth.dto.*;
 import com.app.aml.feature.auth.entity.RefreshToken;
 import com.app.aml.feature.auth.repository.RefreshTokenRepository;
 import com.app.aml.feature.auth.service.interfaces.AuthService;
+import com.app.aml.feature.notification.event.AccountLockedEvent;
 import com.app.aml.feature.platformuser.entity.PlatformUser;
 import com.app.aml.feature.platformuser.repository.PlatformUserRepository;
 import com.app.aml.feature.tenant.entity.Tenant;
@@ -24,6 +25,7 @@ import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -58,6 +60,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final TenantRepository tenantRepository;
     private final AuditLogService auditLogService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${app.security.jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
@@ -86,7 +89,12 @@ public class AuthServiceImpl implements AuthService {
 
         if (principal instanceof PlatformUserDetails platformUserDetails) {
             PlatformUser user = platformUserDetails.getPlatformUser();
-            if (user.isLocked()) throw new RuntimeException("Account is locked");
+            if (user.isLocked()) {
+                eventPublisher.publishEvent(new AccountLockedEvent(
+                        this, null, user.getId(), user.getEmail(), "Multiple failed attempts or manual lock"
+                ));
+                throw new RuntimeException("Account is locked");
+            }
 
             userId = user.getId().toString();
             role = user.getRole().name();
@@ -100,7 +108,12 @@ public class AuthServiceImpl implements AuthService {
 
         } else if (principal instanceof TenantUserDetails tenantUserDetails) {
             TenantUser user = tenantUserDetails.getTenantUser();
-            if (user.isLocked()) throw new RuntimeException("Account is locked");
+            if (user.isLocked()){
+                eventPublisher.publishEvent(new AccountLockedEvent(
+                        this, resolvedTenant.getTenantCode(), user.getId(), user.getEmail(), "Security lockout"
+                ));
+                throw new RuntimeException("Account is locked");
+            }
 
             userId = user.getId().toString();
             role = user.getRole().name();

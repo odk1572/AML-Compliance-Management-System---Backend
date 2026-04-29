@@ -13,7 +13,6 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TenantScenarioResponseDto {
     private UUID id;
     private UUID globalScenarioId;

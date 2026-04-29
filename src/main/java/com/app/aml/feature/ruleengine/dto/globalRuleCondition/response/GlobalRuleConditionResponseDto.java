@@ -26,6 +26,8 @@ public class GlobalRuleConditionResponseDto {
 
     private String thresholdValue;
 
+    private String lookbackPeriod;
+
     private String valueDataType;
 
     private Instant sysCreatedAt;
