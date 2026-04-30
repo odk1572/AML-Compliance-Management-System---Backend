@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +33,12 @@ public class TransactionCsvGenerator {
             "PASS_THROUGH", "FUNNEL", "SUDDEN_SPIKE", "DORMANT_REACTIVATION", "LOW_INCOME_HIGH_TRANSFER"
     };
 
+    private static final OffsetDateTime START_DATE = OffsetDateTime.of(2026, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+    private static final OffsetDateTime END_DATE = OffsetDateTime.of(2026, 4, 30, 23, 59, 59, 0, ZoneOffset.UTC);
+
+    // Strict ISO-8601 Formatter to guarantee seconds are always included
+    private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
+
     public byte[] generate(int noiseCount, List<FakeCustomer> customers) {
         if (customers == null || customers.size() < 5) {
             throw new IllegalArgumentException("Customer pool must contain at least 5 profiles for complex typologies.");
@@ -38,18 +46,14 @@ public class TransactionCsvGenerator {
 
         List<String[]> allTransactions = new ArrayList<>();
 
-        // 1. Generate normal background noise
         for (int i = 1; i <= noiseCount; i++) {
             allTransactions.add(buildNoiseRow(i, customers));
         }
 
-        // 2. Inject Random Breaches
-        // Let's guarantee ALL strategies run at least once for thorough testing
         for (String strategy : STRATEGIES) {
             allTransactions.addAll(injectBreach(strategy, customers));
         }
 
-        // 3. Compile to CSV
         StringBuilder csvBuilder = new StringBuilder();
         csvBuilder.append(HEADER);
         for (String[] row : allTransactions) {
@@ -64,7 +68,7 @@ public class TransactionCsvGenerator {
         List<String[]> breachTxns = new ArrayList<>();
         FakeCustomer primary = getRandomCustomer(customers, null);
 
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = END_DATE;
 
         switch (strategy) {
             case "VELOCITY" -> {
@@ -80,7 +84,6 @@ public class TransactionCsvGenerator {
                 }
             }
             case "DORMANT_REACTIVATION" -> {
-                // 1 large transaction exactly 1 hour ago for a previously sleeping account
                 FakeCustomer target = findSpecificTarget(customers, "BRK-DORMANT-01", primary);
                 breachTxns.add(createCustomTxn(target, getRandomCustomer(customers, target), "25000.00", now.minus(1, ChronoUnit.HOURS), "WIRE"));
             }
@@ -122,7 +125,7 @@ public class TransactionCsvGenerator {
         return new String[]{
                 ref, orig.getAccountNumber(), orig.getCustomerName(), "OUR_BANK", orig.getCountryOfResidence(),
                 ben.getAccountNumber(), ben.getCustomerName(), "OUR_BANK", ben.getCountryOfResidence(),
-                amount, "USD", type, "ONLINE", timestamp.toString(), "Suspicious Activity", "CLEAN"
+                amount, "USD", type, "ONLINE", timestamp.format(ISO_FORMATTER), "Suspicious Activity", "CLEAN"
         };
     }
 
@@ -217,10 +220,10 @@ public class TransactionCsvGenerator {
         if (channel.equals("UPI")) transactionType = "WIRE";
         if (channel.equals("ATM")) transactionType = "CASH";
 
-        // Generate background transactions using OffsetDateTime correctly
-        OffsetDateTime transactionTimestamp = OffsetDateTime.now()
-                .minus(random.nextInt(90), ChronoUnit.DAYS)
-                .minus(random.nextInt(24), ChronoUnit.HOURS);
+
+        long totalSeconds = ChronoUnit.SECONDS.between(START_DATE, END_DATE);
+        long randomSeconds = (long) (random.nextDouble() * totalSeconds);
+        OffsetDateTime transactionTimestamp = START_DATE.plusSeconds(randomSeconds);
 
         String referenceNote = "";
         if (index % 89 == 0) referenceNote = "Loan payment";
@@ -232,7 +235,7 @@ public class TransactionCsvGenerator {
         return new String[]{
                 transactionRef, originatorAccountNo, originatorName, originatorBankCode, originatorCountry,
                 beneficiaryAccountNo, beneficiaryName, beneficiaryBankCode, beneficiaryCountry,
-                amount, currencyCode, transactionType, channel, transactionTimestamp.toString(), referenceNote, "CLEAN"
+                amount, currencyCode, transactionType, channel, transactionTimestamp.format(ISO_FORMATTER), referenceNote, "CLEAN"
         };
     }
 }

@@ -1,6 +1,7 @@
 package com.app.aml.feature.ruleengine.service;
 
 import com.app.aml.enums.AlertSeverity;
+import com.app.aml.enums.RuleStatus;
 import com.app.aml.feature.alert.entity.Alert;
 import com.app.aml.feature.alert.entity.AlertEvidence;
 import com.app.aml.feature.alert.repository.AlertEvidenceRepository;
@@ -270,6 +271,39 @@ public class ScenarioOrchestrationService {
             }
         }
     }
+
+
+
+    @Transactional
+    @AuditAction(category = "RULE_ENGINE", action = "RUN_ALL_SCENARIOS_EXECUTION", entityType = "TENANT")
+    public List<RuleBreachResult> executeAllActiveScenarios(ScenarioExecutionRequestDto requestDto) {
+        log.info("Starting batch execution for ALL active scenarios for current tenant");
+
+        List<TenantScenario> activeScenarios = tenantScenarioRepo.findAllByStatus(RuleStatus.ACTIVE);
+
+        if (activeScenarios == null || activeScenarios.isEmpty()) {
+            log.info("No active scenarios found for current tenant. Exiting batch run.");
+            return Collections.emptyList();
+        }
+
+        log.info("Found {} active scenarios to execute.", activeScenarios.size());
+        List<RuleBreachResult> allCombinedBreaches = new ArrayList<>();
+
+        for (TenantScenario scenario : activeScenarios) {
+            try {
+                log.info("--- Handing off Scenario ID: {} ---", scenario.getId());
+                List<RuleBreachResult> scenarioBreaches = executeFullScenario(scenario.getId(), requestDto);
+                allCombinedBreaches.addAll(scenarioBreaches);
+
+            } catch (Exception e) {
+                log.error("Failed to execute Scenario ID [{}]: {}", scenario.getId(), e.getMessage(), e);
+            }
+        }
+
+        log.info("Batch execution complete. Total breaches flagged across all scenarios: {}", allCombinedBreaches.size());
+        return allCombinedBreaches;
+    }
+
 
     private String buildAlertReference() {
         String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));

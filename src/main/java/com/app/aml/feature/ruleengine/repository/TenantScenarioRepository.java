@@ -15,4 +15,7 @@ public interface TenantScenarioRepository extends JpaRepository<TenantScenario, 
     List<TenantScenario> findByStatus(RuleStatus status);;
 
     Optional<TenantScenario> findByGlobalScenarioId(UUID globalScenarioId);
+    List<TenantScenario> findAllByStatus(RuleStatus status);
+
+
 }

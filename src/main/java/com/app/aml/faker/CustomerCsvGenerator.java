@@ -6,13 +6,12 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class CustomerCsvGenerator {
@@ -22,15 +21,18 @@ public class CustomerCsvGenerator {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final String HEADER = "accountNumber,customerName,customerType,idType,idNumber,nationality,countryOfResidence,monthlyIncome,netWorth,riskRating,riskScore,isPep,isDormant,accountOpenedOn,lastActivityDate,kycStatus\n";
 
+    private static final LocalDate START_DATE = LocalDate.of(2026, 1, 1);
+    private static final LocalDate END_DATE = LocalDate.of(2026, 4, 30);
+
     public List<FakeCustomer> generateCustomerList(int count) {
         List<FakeCustomer> customers = new ArrayList<>();
 
-
-        customers.add(buildPersona("BRK-VELOCITY-01", "Velocity Breaker LLC", "CORPORATE", "HIGH", "15000.00", false, LocalDate.now().minusYears(2)));
-        customers.add(buildPersona("BRK-STRUCT-01", "Structuring Smurf Inc", "INDIVIDUAL", "HIGH", "5000.00", false, LocalDate.now().minusYears(1)));
-        customers.add(buildPersona("BRK-DORMANT-01", "Rip Van Winkle", "INDIVIDUAL", "MEDIUM", "2000.00", true, LocalDate.now().minusYears(5)));
-        customers.add(buildPersona("BRK-LOW-INCOME-01", "Low Income High Vol", "INDIVIDUAL", "CRITICAL", "800.00", false, LocalDate.now().minusMonths(6)));
-        customers.add(buildPersona("BRK-SPIKE-01", "Steady Eddy", "INDIVIDUAL", "LOW", "4000.00", false, LocalDate.now().minusYears(3)));
+        // Updated Personas to fit strictly within the Jan 1 2026 - Apr 30 2026 window
+        customers.add(buildPersona("BRK-VELOCITY-01", "Velocity Breaker LLC", "CORPORATE", "HIGH", "15000.00", false, LocalDate.of(2026, 1, 10)));
+        customers.add(buildPersona("BRK-STRUCT-01", "Structuring Smurf Inc", "INDIVIDUAL", "HIGH", "5000.00", false, LocalDate.of(2026, 2, 1)));
+        customers.add(buildPersona("BRK-DORMANT-01", "Rip Van Winkle", "INDIVIDUAL", "MEDIUM", "2000.00", true, LocalDate.of(2026, 1, 5)));
+        customers.add(buildPersona("BRK-LOW-INCOME-01", "Low Income High Vol", "INDIVIDUAL", "CRITICAL", "800.00", false, LocalDate.of(2026, 3, 15)));
+        customers.add(buildPersona("BRK-SPIKE-01", "Steady Eddy", "INDIVIDUAL", "LOW", "4000.00", false, LocalDate.of(2026, 1, 20)));
 
         for (int i = customers.size() + 1; i <= count; i++) {
             customers.add(buildRandomCustomer(i));
@@ -76,10 +78,18 @@ public class CustomerCsvGenerator {
         boolean isPep = random.nextInt(100) < 5;
         boolean isDormant = random.nextInt(100) < 10;
 
-        LocalDate accountOpenedOn = LocalDate.ofInstant(faker.date().past(3650, TimeUnit.DAYS).toInstant(), ZoneId.systemDefault());
-        LocalDate lastActivityDate = isDormant
-                ? accountOpenedOn.plusDays(random.nextInt(Math.max(1, (int) java.time.temporal.ChronoUnit.DAYS.between(accountOpenedOn, LocalDate.now().minusYears(1)))))
-                : LocalDate.now().minusDays(random.nextInt(60));
+
+        long totalDaysInWindow = ChronoUnit.DAYS.between(START_DATE, END_DATE);
+        LocalDate accountOpenedOn = START_DATE.plusDays(random.nextInt((int) totalDaysInWindow + 1));
+
+        LocalDate lastActivityDate;
+        if (isDormant) {
+            long maxDormantDays = Math.min(5, ChronoUnit.DAYS.between(accountOpenedOn, END_DATE));
+            lastActivityDate = accountOpenedOn.plusDays(maxDormantDays > 0 ? random.nextInt((int) maxDormantDays + 1) : 0);
+        } else {
+            long activeDays = ChronoUnit.DAYS.between(accountOpenedOn, END_DATE);
+            lastActivityDate = accountOpenedOn.plusDays(activeDays > 0 ? random.nextInt((int) activeDays + 1) : 0);
+        }
 
         String[] kycStatuses = {"APPROVED", "PENDING", "REJECTED"};
         String kycStatus = kycStatuses[random.nextInt(100) < 85 ? 0 : random.nextInt(3)];
@@ -103,13 +113,21 @@ public class CustomerCsvGenerator {
                 .isPep(String.valueOf(isPep))
                 .isDormant(String.valueOf(isDormant))
                 .accountOpenedOn(accountOpenedOn.format(DATE_FORMATTER))
-                .lastActivityDate(lastActivityDate != null ? lastActivityDate.format(DATE_FORMATTER) : "")
+                .lastActivityDate(lastActivityDate.format(DATE_FORMATTER))
                 .kycStatus(kycStatus)
                 .build();
     }
 
     private FakeCustomer buildPersona(String acct, String name, String type, String risk, String income, boolean dormant, LocalDate opened) {
-        LocalDate lastActivity = dormant ? opened.plusDays(10) : LocalDate.now();
+        LocalDate lastActivity;
+        if (dormant) {
+            lastActivity = opened.plusDays(3);
+            if (lastActivity.isAfter(END_DATE)) lastActivity = END_DATE;
+        } else {
+            lastActivity = END_DATE.minusDays(random.nextInt(10));
+            if (lastActivity.isBefore(opened)) lastActivity = opened;
+        }
+
         return FakeCustomer.builder()
                 .accountNumber(acct)
                 .customerName(name)
