@@ -24,7 +24,8 @@ public class RolePermissionRegistry {
                 Permission.REPORT_INSTITUTIONAL,
                 Permission.ALERT_READ,
                 Permission.CASE_NOTE_READ,
-                Permission.CASE_INVESTIGATE
+                Permission.CASE_INVESTIGATE,
+                Permission.GLOBAL_RULE_MANAGE
         ));
 
         REGISTRY.put(Role.COMPLIANCE_OFFICER, EnumSet.of(

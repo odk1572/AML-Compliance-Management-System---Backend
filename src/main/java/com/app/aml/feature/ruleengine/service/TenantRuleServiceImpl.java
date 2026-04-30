@@ -193,27 +193,30 @@ public class TenantRuleServiceImpl implements TenantRuleService {
 
         tenantRuleThresholdRepo.deleteByTenantRuleId(ruleId);
 
+        tenantRuleThresholdRepo.flush();
         List<TenantRuleThreshold> newThresholds = overrides.stream()
                 .map(dto -> {
                     TenantRuleThreshold threshold = tenantRuleThresholdMapper.toEntity(dto);
                     threshold.setTenantRule(rule);
+                    if (dto.getGlobalConditionId() != null) {
+                        threshold.setGlobalConditionId(dto.getGlobalConditionId());
+                    }
+
                     return threshold;
                 })
                 .collect(Collectors.toList());
 
         List<TenantRuleThreshold> savedThresholds = tenantRuleThresholdRepo.saveAll(newThresholds);
+        tenantRuleThresholdRepo.flush();
         List<TenantRuleThresholdResponseDto> response = tenantRuleThresholdMapper.toResponseDtoList(savedThresholds);
 
         auditLogService.log(
-                null,
-                "TENANT_RULE_THRESHOLD",
-                "BULK_UPDATE",
-                "TenantRule",
-                ruleId,
-                null,
-                response
+                null, "TENANT_RULE_THRESHOLD", "BULK_UPDATE",
+                "TenantRule", ruleId, null, response
         );
 
         return response;
     }
+
+
 }

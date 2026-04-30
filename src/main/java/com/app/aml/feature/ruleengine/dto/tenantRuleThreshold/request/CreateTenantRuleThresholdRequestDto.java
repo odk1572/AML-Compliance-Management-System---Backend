@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -15,6 +17,8 @@ public class CreateTenantRuleThresholdRequestDto {
 
     @NotBlank(message = "Tenant Rule reference code is required")
     private String tenantRuleCode;
+
+    private UUID globalConditionId; 
 
     @NotBlank(message = "Global Condition reference code is required")
     private String globalConditionCode;

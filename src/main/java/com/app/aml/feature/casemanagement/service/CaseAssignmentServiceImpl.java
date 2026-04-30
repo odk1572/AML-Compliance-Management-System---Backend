@@ -185,6 +185,10 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
         CaseRecord caseRecord = caseRepo.findByCaseReference(caseReference)
                 .orElseThrow(() -> new EntityNotFoundException("Case not found: " + caseReference));
 
+        if(caseRecord.getStatus()==CaseStatus.CLOSED_NO_ACTION || caseRecord.getStatus()==CaseStatus.CLOSED_STR ){
+            throw new RuntimeException("Case is already closed");
+        }
+
         UUID actorId = SecurityUtils.getCurrentUserId();
         TenantUser newAssignee = tenantUserRepo.findByEmployeeId(request.getNewAssigneeUserCode())
                 .orElseThrow(() -> new EntityNotFoundException("Assignee not found with Employee ID: " + request.getNewAssigneeUserCode()));
