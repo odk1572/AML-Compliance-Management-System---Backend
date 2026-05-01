@@ -109,8 +109,8 @@ public class AlertDashboardServiceImpl implements AlertDashboardService {
         Alert alert = alertRepo.findById(alertId)
                 .orElseThrow(() -> new EntityNotFoundException("Alert alertId " + alertId + " not found"));
 
-        if (resolution != AlertStatus.CLOSED_FALSE_POSITIVE && resolution != AlertStatus.CLOSED_CONFIRMED) {
-            throw new IllegalArgumentException("Use bundleToCase() for investigations. This method is only for final closure.");
+        if (resolution != AlertStatus.CLOSED_FALSE_POSITIVE && resolution != AlertStatus.CLOSED_CONFIRMED && resolution != AlertStatus.UNDER_REVIEW) {
+            throw new IllegalArgumentException("Use bundleToCase() for investigations. This method is only for final closure or confirmation.");
         }
 
         alert.setStatus(resolution);
