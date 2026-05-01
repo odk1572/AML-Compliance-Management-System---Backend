@@ -203,24 +203,30 @@ public class ScenarioOrchestrationService {
 
     private void persistResults(List<RuleBreachResult> breachingResults, RuleExecutionContextDto rule, TenantScenario tenantScenario) {
         for (RuleBreachResult result : breachingResults) {
+
             UUID customerId = result.getCustomer().getId();
             List<Transaction> transactions = result.getTransactions();
 
-            // 1. DUPLICATE CHECK LOGIC
+            String resolvedRuleType = result.getRuleType() != null ? result.getRuleType() : rule.getRuleType();
+
             if (transactions != null && !transactions.isEmpty()) {
                 List<UUID> transactionIds = transactions.stream()
                         .map(Transaction::getId)
                         .toList();
 
-                boolean alreadyExists = alertRepo.existsByCustomerIdAndTransactionIds(customerId, transactionIds);
+                boolean duplicateFound = alertRepo.existsByCustomerRuleAndTransactions(
+                        customerId,
+                        resolvedRuleType,
+                        transactionIds
+                );
 
-                if (alreadyExists) {
-                    log.info("Skipping alert creation: Alert already exists for Customer {} with these transactions.", customerId);
-                    continue; // Skip this breach and move to the next one
+                if (duplicateFound) {
+                    log.info("Duplicate Alert Blocked: Alert already exists for Customer {} with Rule Type [{}] for these transactions.",
+                            customerId, resolvedRuleType);
+                    continue;
                 }
             }
 
-            // 2. PROCEED WITH ALERT CREATION IF NO DUPLICATE FOUND
             double geoMultiplier = geoRiskEvaluator.getGeographicRiskMultiplier(
                     customerId,
                     rule.getGlobalLookbackStart(),
@@ -239,25 +245,17 @@ public class ScenarioOrchestrationService {
             alert.setCustomer(result.getCustomer());
             alert.setSeverity(finalSeverity);
             alert.setRiskScore(BigDecimal.valueOf(finalRiskScore));
+            alert.setRuleType(resolvedRuleType);
+            alert.setTypologyTriggered(result.getRuleLabel() != null ? result.getRuleLabel() : rule.getTypologyLabel());
 
-            String type = result.getRuleType() != null ? result.getRuleType() : rule.getRuleType();
-            String label = result.getRuleLabel() != null ? result.getRuleLabel() : rule.getTypologyLabel();
-
-            alert.setRuleType(type);
-            alert.setTypologyTriggered(label);
-
-            // Add transactions to the link table
-            if (transactions != null && !transactions.isEmpty()) {
-                for (Transaction txn : transactions) {
-                    if (txn != null) {
-                        alert.addAlertTransaction(txn);
-                    }
+            for (Transaction txn : transactions) {
+                if (txn != null) {
+                    alert.addAlertTransaction(txn);
                 }
             }
 
             Alert savedAlert = alertRepo.save(alert);
 
-            // Persist Evidence
             List<AlertEvidence> evidences = rule.getConditions().stream().map(cond -> {
                 AlertEvidence evidence = new AlertEvidence();
                 evidence.setAlert(savedAlert);
@@ -277,11 +275,10 @@ public class ScenarioOrchestrationService {
 
             evidenceRepo.saveAll(evidences);
 
-            log.info("Alert {} created successfully for Customer {}", savedAlert.getAlertReference(), customerId);
+            log.info("Alert {} created successfully for Customer {} (Rule: {})",
+                    savedAlert.getAlertReference(), customerId, resolvedRuleType);
         }
     }
-
-
 
     @Transactional
     @AuditAction(category = "RULE_ENGINE", action = "RUN_ALL_SCENARIOS_EXECUTION", entityType = "TENANT")
