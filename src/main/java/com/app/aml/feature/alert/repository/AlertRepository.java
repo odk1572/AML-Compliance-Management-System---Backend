@@ -19,6 +19,15 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
 
     List<Alert> findAllByAlertReferenceIn( List<String> alertReferences);
 
+    @Query("SELECT COUNT(a) > 0 FROM Alert a " +
+            "JOIN a.alertTransactions at " +
+            "WHERE a.customer.id = :customerId " +
+            "AND at.transaction.id IN :transactionIds")
+    boolean existsByCustomerIdAndTransactionIds(
+            @Param("customerId") UUID customerId,
+            @Param("transactionIds") List<UUID> transactionIds
+    );
+
     @Query("""
     SELECT a FROM Alert a 
     WHERE (:severity IS NULL OR a.severity = :severity) 

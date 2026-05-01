@@ -203,9 +203,24 @@ public class ScenarioOrchestrationService {
 
     private void persistResults(List<RuleBreachResult> breachingResults, RuleExecutionContextDto rule, TenantScenario tenantScenario) {
         for (RuleBreachResult result : breachingResults) {
-
             UUID customerId = result.getCustomer().getId();
+            List<Transaction> transactions = result.getTransactions();
 
+            // 1. DUPLICATE CHECK LOGIC
+            if (transactions != null && !transactions.isEmpty()) {
+                List<UUID> transactionIds = transactions.stream()
+                        .map(Transaction::getId)
+                        .toList();
+
+                boolean alreadyExists = alertRepo.existsByCustomerIdAndTransactionIds(customerId, transactionIds);
+
+                if (alreadyExists) {
+                    log.info("Skipping alert creation: Alert already exists for Customer {} with these transactions.", customerId);
+                    continue; // Skip this breach and move to the next one
+                }
+            }
+
+            // 2. PROCEED WITH ALERT CREATION IF NO DUPLICATE FOUND
             double geoMultiplier = geoRiskEvaluator.getGeographicRiskMultiplier(
                     customerId,
                     rule.getGlobalLookbackStart(),
@@ -221,9 +236,7 @@ public class ScenarioOrchestrationService {
             alert.setGlobalScenarioId(tenantScenario.getGlobalScenarioId());
             alert.setGlobalRuleId(rule.getGlobalRuleId());
             alert.setTenantRuleId(rule.getTenantRuleId());
-
             alert.setCustomer(result.getCustomer());
-
             alert.setSeverity(finalSeverity);
             alert.setRiskScore(BigDecimal.valueOf(finalRiskScore));
 
@@ -233,8 +246,9 @@ public class ScenarioOrchestrationService {
             alert.setRuleType(type);
             alert.setTypologyTriggered(label);
 
-            if (result.getTransactions() != null && !result.getTransactions().isEmpty()) {
-                for (Transaction txn : result.getTransactions()) {
+            // Add transactions to the link table
+            if (transactions != null && !transactions.isEmpty()) {
+                for (Transaction txn : transactions) {
                     if (txn != null) {
                         alert.addAlertTransaction(txn);
                     }
@@ -243,6 +257,7 @@ public class ScenarioOrchestrationService {
 
             Alert savedAlert = alertRepo.save(alert);
 
+            // Persist Evidence
             List<AlertEvidence> evidences = rule.getConditions().stream().map(cond -> {
                 AlertEvidence evidence = new AlertEvidence();
                 evidence.setAlert(savedAlert);
@@ -262,13 +277,7 @@ public class ScenarioOrchestrationService {
 
             evidenceRepo.saveAll(evidences);
 
-            if (savedAlert.getAlertTransactions() != null && !savedAlert.getAlertTransactions().isEmpty()) {
-                log.info("Alert {} created: Linked {} transactions for Customer {} using Rule Type [{}] and Label [{}]",
-                        savedAlert.getAlertReference(), savedAlert.getAlertTransactions().size(), customerId, type, label);
-            } else {
-                log.warn("Alert {} created WITHOUT transactions for Rule Type [{}].",
-                        savedAlert.getAlertReference(), type);
-            }
+            log.info("Alert {} created successfully for Customer {}", savedAlert.getAlertReference(), customerId);
         }
     }
 
