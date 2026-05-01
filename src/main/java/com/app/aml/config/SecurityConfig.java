@@ -49,6 +49,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+
                         .requestMatchers("/api/v1/dev/faker/**").permitAll()// Login/Refresh public
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll() // OpenAPI
                         .anyRequest().authenticated()                             // Everything else locked
@@ -70,6 +71,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("http://localhost:4200","https://aml-frontend-e5pz.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Tenant-ID"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
 
