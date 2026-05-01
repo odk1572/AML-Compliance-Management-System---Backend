@@ -44,13 +44,15 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
     WHERE (:severity IS NULL OR a.severity = :severity) 
       AND (:status IS NULL OR a.status = :status) 
       AND (a.sysCreatedAt BETWEEN :start AND :end)
+      AND (:customer IS NULL OR LOWER(a.customer.customerName) LIKE :customer OR LOWER(a.customer.accountNumber) LIKE :customer)
 """)
     Page<Alert> findWithFilters(
             @Param("severity") AlertSeverity severity,
             @Param("status") AlertStatus status,
             @Param("start") Instant start,
             @Param("end") Instant end,
-            Pageable pageable);
+            Pageable pageable,
+            @Param("customer") String customer);
 
     @Query("SELECT a.severity, COUNT(a) FROM Alert a WHERE a.status = :status GROUP BY a.severity")
     List<Object[]> countByStatusAndGroupBySeverity(@Param("status") AlertStatus status);

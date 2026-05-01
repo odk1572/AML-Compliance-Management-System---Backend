@@ -35,10 +35,11 @@ public class AlertDashboardController {
             @RequestParam(required = false) AlertStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String customer,
             Pageable pageable,
             HttpServletRequest request) {
 
-        Page<AlertResponseDto> data = alertDashboardService.getAlerts(severity, status, from, to,Pageable.unpaged());
+        Page<AlertResponseDto> data = alertDashboardService.getAlerts(severity, status, from, to, pageable, customer);
         return ResponseEntity.ok(ApiResponse.of(HttpStatus.OK, "Alerts retrieved successfully", request.getRequestURI(), data));
     }
 

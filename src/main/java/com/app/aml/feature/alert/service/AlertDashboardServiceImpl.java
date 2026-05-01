@@ -42,7 +42,7 @@ public class AlertDashboardServiceImpl implements AlertDashboardService {
     @Transactional(readOnly = true)
     @AuditAction(category = "DATA_ACCESS", action = "LIST_ALERTS", entityType = "ALERT")
     public Page<AlertResponseDto> getAlerts(AlertSeverity severity, AlertStatus status,
-                                            LocalDate from, LocalDate to, Pageable pageable) {
+                                            LocalDate from, LocalDate to, Pageable pageable, String customer) {
 
         Instant start = (from != null)
                 ? from.atStartOfDay(ZoneId.systemDefault()).toInstant()
@@ -52,8 +52,11 @@ public class AlertDashboardServiceImpl implements AlertDashboardService {
                 ? to.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant()
                 : Instant.parse("2099-12-31T23:59:59.999Z");
 
-        // The updated AlertMapper now automatically includes the "Rich" Customer object here
-        return alertRepo.findWithFilters(severity, status, start, end, pageable)
+        String customerPattern = (customer != null && !customer.trim().isEmpty())
+                ? "%" + customer.toLowerCase() + "%"
+                : null;
+
+        return alertRepo.findWithFilters(severity, status, start, end, pageable, customerPattern)
                 .map(alertMapper::toResponseDto);
     }
 

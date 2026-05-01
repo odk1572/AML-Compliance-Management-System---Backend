@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public interface AlertDashboardService {
     Page<AlertResponseDto> getAlerts(AlertSeverity severity, AlertStatus status,
-                                     LocalDate from, LocalDate to, Pageable pageable);
+                                     LocalDate from, LocalDate to, Pageable pageable, String customer);
     AlertDetailResponseDto getAlertDetail(UUID alertId);
     Map<String, Long> getSeverityCounts();
     void closeAlert(UUID alertId, AlertStatus resolution, String comment);
