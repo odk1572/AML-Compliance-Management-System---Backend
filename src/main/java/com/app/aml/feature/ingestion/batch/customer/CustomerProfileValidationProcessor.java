@@ -40,13 +40,13 @@ public class CustomerProfileValidationProcessor implements ItemProcessor<Custome
         int line = dto.getLineNumber();
         String accNum = require(dto.getAccountNumber(), line, "accountNumber");
 
-        if (customerProfileRepository.existsByAccountNumber(accNum)) {
-            log.debug("Skipping existing customer at line {}: {}", line, accNum);
-            return null;
-        }
-
-        CustomerProfile profile = new CustomerProfile();
-        profile.setAccountNumber(accNum);
+        CustomerProfile profile = customerProfileRepository.findByAccountNumber(accNum)
+                .orElseGet(() -> {
+                    CustomerProfile newProfile = new CustomerProfile();
+                    newProfile.setAccountNumber(accNum);
+                    return newProfile;
+                });
+        // --- UPSERT LOGIC END ---
 
         profile.setCustomerName(require(dto.getCustomerName(), line, "customerName"));
         profile.setIdType(safe(dto.getIdType()));
