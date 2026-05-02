@@ -16,7 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class StrFilingTransactionResponseDto {
     private UUID id;
-    private UUID strFilingId;   // Flattened from StrFiling
-    private UUID transactionId; // Flattened from Transaction
+    private UUID strFilingId;
+    private UUID transactionId;
     private Instant sysCreatedAt;
 }

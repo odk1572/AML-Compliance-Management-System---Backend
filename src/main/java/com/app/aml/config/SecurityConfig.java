@@ -50,9 +50,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
 
-                        .requestMatchers("/api/v1/dev/faker/**").permitAll()// Login/Refresh public
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll() // OpenAPI
-                        .anyRequest().authenticated()                             // Everything else locked
+                        .requestMatchers("/api/v1/dev/faker/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                        .anyRequest().authenticated()
                 )
 
                 // First: Validate JWT (Who are you?)

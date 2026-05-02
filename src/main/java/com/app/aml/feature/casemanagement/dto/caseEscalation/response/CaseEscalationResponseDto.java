@@ -17,7 +17,7 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CaseEscalationResponseDto {
     private UUID id;
-    private UUID caseId; // Flattened from CaseRecord
+    private UUID caseId;
     private UUID escalatedBy;
     private UUID escalatedTo;
     private String escalationReason;

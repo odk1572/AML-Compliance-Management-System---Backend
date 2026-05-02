@@ -61,10 +61,8 @@ public class TenantReportServiceImpl implements TenantReportService {
     @Transactional(readOnly = true)
     @AuditAction(category = "REPORTING", action = "VIEW_CO_PERFORMANCE", entityType = "ANALYTICS")
     public List<CoPerformanceDto> getCoPerformance() {
-        // Get all closed cases to calculate lead time
         List<CaseRecord> closedCases = caseRepo.findByStatusIn(List.of(CaseStatus.CLOSED_NO_ACTION,CaseStatus.CLOSED_STR));
 
-        // Group by Compliance Officer (assigned_to)
         Map<Object, List<CaseRecord>> groupedByCo = closedCases.stream()
                 .filter(c -> c.getAssignedTo() != null && c.getClosedAt() != null)
                 .collect(Collectors.groupingBy(CaseRecord::getAssignedTo));

@@ -17,8 +17,6 @@ public interface PlatformUserSessionRepository extends JpaRepository<PlatformUse
 
     boolean existsByJwtJtiAndIsRevokedTrue(String jwtJti);
 
-    Optional<PlatformUserSession> findByJwtJti(String jwtJti);
-
     @Modifying
     @Query("UPDATE PlatformUserSession s SET s.isRevoked = true, s.revokedAt = ?2 WHERE s.jwtJti = ?1")
     void revokeSessionByJti(String jwtJti, Instant revokedAt);

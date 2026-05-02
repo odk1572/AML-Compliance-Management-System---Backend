@@ -22,12 +22,12 @@ public class BatchInfrastructureConfig extends DefaultBatchConfiguration {
 
     @Override
     protected DataSource getDataSource() {
-        return dataSource; // Forces Batch to use your TenantAwareDataSource
+        return dataSource;
     }
 
     @Override
     protected PlatformTransactionManager getTransactionManager() {
-        return transactionManager; // Forces Batch to use your custom transaction manager
+        return transactionManager;
     }
 
     @Override

@@ -15,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CreateCaseRequestDto {
 
-    private UUID assignedTo; // Optional: can be created as unassigned
+    private UUID assignedTo;
 
     @NotNull(message = "Initial priority is required")
     private CasePriority priority;

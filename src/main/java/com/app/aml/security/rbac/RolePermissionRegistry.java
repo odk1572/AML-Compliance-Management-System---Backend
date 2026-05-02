@@ -33,7 +33,6 @@ public class RolePermissionRegistry {
                 Permission.CASE_NOTE_WRITE,
                 Permission.CASE_NOTE_READ,
                 Permission.STR_FILE,
-
                 Permission.ALERT_READ,
                 Permission.TRANSACTION_READ
         ));

@@ -50,7 +50,6 @@ public class TenantContextFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } finally {
-            // 3. Clear everything
             TenantContext.clear();
         }
     }

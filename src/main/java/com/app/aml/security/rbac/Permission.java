@@ -1,8 +1,6 @@
 package com.app.aml.security.rbac;
 
-/**
- * Granular permissions mapped strictly to the AML System Access Control matrix.
- */
+
 public enum Permission {
 
     GLOBAL_RULE_MANAGE,

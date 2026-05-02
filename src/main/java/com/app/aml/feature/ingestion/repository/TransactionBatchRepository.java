@@ -11,5 +11,4 @@ import java.util.UUID;
 public interface TransactionBatchRepository extends JpaRepository<TransactionBatch, UUID> {
     boolean existsByFileHashSha256(String fileHash);
 
-    Page<TransactionBatch> findByUploadedByOrderBySysCreatedAtDesc(UUID uploadedBy, Pageable pageable);
 }

@@ -30,8 +30,7 @@ public class UniversalBatchIngestionService {
 
     private final TransactionBatchRepository batchRepository;
     private final TransactionBatchMapper batchMapper;
-    private final AsyncBatchLauncher asyncBatchLauncher; // Inject our new Async Launcher
-
+    private final AsyncBatchLauncher asyncBatchLauncher;
 
     @AuditAction(category = "DATA_INGESTION", action = "UPLOAD_BATCH", entityType = "BATCH")
     public TransactionBatchResponseDto uploadAndRouteBatch(MultipartFile file, UUID uploadedBy, BatchFileType fileType) {
@@ -62,8 +61,8 @@ public class UniversalBatchIngestionService {
             TransactionBatch savedBatch = batchRepository.save(batch);
 
             String currentTenantId = TenantContext.getTenantId();
-            String currentSchemaName = TenantContext.getSchemaName(); // <-- Capture this
-        asyncBatchLauncher.triggerTargetedBatchJobAsync(
+            String currentSchemaName = TenantContext.getSchemaName();
+            asyncBatchLauncher.triggerTargetedBatchJobAsync(
                     savedBatch.getId(),
                     tempFilePath.toAbsolutePath().toString(),
                     fileType,

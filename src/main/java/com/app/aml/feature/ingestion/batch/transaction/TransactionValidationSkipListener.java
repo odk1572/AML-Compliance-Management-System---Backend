@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Slf4j // Add this
+@Slf4j
 @Component
 public class TransactionValidationSkipListener implements SkipListener<TransactionCsvDto, Transaction> {
 

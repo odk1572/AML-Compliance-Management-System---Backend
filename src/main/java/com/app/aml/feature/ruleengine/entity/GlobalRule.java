@@ -15,10 +15,7 @@ import lombok.Setter;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Entity representing a specific AML Rule.
- * The ruleType field maps directly to the RuleExecutor Strategy identifiers.
- */
+
 @Entity
 @Table(name = "global_rules", schema = "common_schema")
 @Getter

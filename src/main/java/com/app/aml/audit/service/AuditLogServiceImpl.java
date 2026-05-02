@@ -100,7 +100,6 @@ public class AuditLogServiceImpl implements AuditLogService {
         log(null, "SYSTEM", action, "SYSTEM_EVENT", parsedEntityId, null, details);
     }
 
-    // --- Helpers ---
 
     private String toJsonSafe(Object obj) {
         if (obj == null) return null;

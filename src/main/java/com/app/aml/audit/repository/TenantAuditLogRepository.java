@@ -12,16 +12,4 @@ import java.util.UUID;
 
 @Repository
 public interface TenantAuditLogRepository extends JpaRepository<TenantAuditLog, UUID> {
-
-    Page<TenantAuditLog> findByActorId(UUID actorId, Pageable pageable);
-
-    Page<TenantAuditLog> findByActionCategory(String actionCategory, Pageable pageable);
-
-    Page<TenantAuditLog> findByTargetEntityTypeAndTargetEntityId(
-            String targetEntityType,
-            UUID targetEntityId,
-            Pageable pageable
-    );
-
-    Page<TenantAuditLog> findBySysCreatedAtBetween(Instant start, Instant end, Pageable pageable);
 }

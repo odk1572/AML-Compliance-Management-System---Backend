@@ -13,10 +13,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Link entity connecting GlobalScenarios to GlobalRules.
- * Includes priority ordering and activation toggles.
- */
+
 @Entity
 @Table(
         name = "global_scenario_rules",
@@ -52,10 +49,6 @@ public class GlobalScenarioRule {
     @Column(name = "priority_order", nullable = false)
     private int priorityOrder = 0;
 
-    /**
-     * Audit field for creation time only.
-     * UpdatedAt is excluded as per specific DB requirements for this link table.
-     */
     @CreatedDate
     @CreationTimestamp
     @Column(name = "sys_created_at", nullable = false, updatable = false)

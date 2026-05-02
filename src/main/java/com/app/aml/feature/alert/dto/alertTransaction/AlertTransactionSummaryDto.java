@@ -16,7 +16,7 @@ public class AlertTransactionSummaryDto {
     String transactionRef;
     BigDecimal amount;
     String currency;
-    Instant transactionTimestamp; // NEW
-    String transactionType;       // NEW (e.g., TRANSFER, CASH)
+    Instant transactionTimestamp;
+    String transactionType;
     InvolvementRole role;
 }

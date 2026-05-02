@@ -23,7 +23,6 @@ public final class BatchValidationUtils {
     }
 
     public static String require(String value, int line, String field) {
-        // Calls the strict version but passes null for maxLength
         return require(value, line, field, null);
     }
 

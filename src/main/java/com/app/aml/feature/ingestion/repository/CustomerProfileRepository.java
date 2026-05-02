@@ -10,6 +10,6 @@ import java.util.UUID;
 
 @Repository
 public interface CustomerProfileRepository extends JpaRepository<CustomerProfile, UUID> {
-    boolean existsByAccountNumber(String accNum);
 
-    Optional<CustomerProfile> findByAccountNumber(String accountNumber);}
+    Optional<CustomerProfile> findByAccountNumber(String accountNumber);
+}

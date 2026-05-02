@@ -59,7 +59,7 @@ public class CaseRecord extends SoftDeletableEntity {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private List<CaseAlertLink> caseAlertLinks = new ArrayList<>(); // This fixes 'getCaseAlertLinks'
+    private List<CaseAlertLink> caseAlertLinks = new ArrayList<>(); 
 
     @Column(name = "rule_type")
     private String ruleType;

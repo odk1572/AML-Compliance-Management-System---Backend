@@ -18,16 +18,6 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
 
     boolean existsByJwtJtiAndIsRevokedTrue(String jwtJti);
 
-    
-
-    List<UserSession> findAllByUserIdAndIsRevokedFalse(UUID userId);
-
-    @Modifying
-    @Query("UPDATE UserSession s SET s.isRevoked = true WHERE s.userId = :userId AND s.isRevoked = false")
-    void revokeAllActiveSessions(@Param("userId") UUID userId);
-
-    Optional<UserSession> findByJwtJti(String jwtJti);
-
     @Modifying
     @Query("UPDATE UserSession s SET s.isRevoked = true, s.revokedAt = ?2 WHERE s.jwtJti = ?1")
     void revokeSessionByJti(String jwtJti, Instant revokedAt);

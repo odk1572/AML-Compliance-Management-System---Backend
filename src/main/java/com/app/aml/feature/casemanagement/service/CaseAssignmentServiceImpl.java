@@ -52,9 +52,10 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
     private final CaseAuditTrailRepository trailRepo;
     private final AlertRepository alertRepo;
     private final AlertTransactionRepository alertTxnRepo;
-    private final TenantUserRepository tenantUserRepo; // Swapped to Tenant-specific repository
+    private final TenantUserRepository tenantUserRepo;
     private final ApplicationEventPublisher eventPublisher;
     private final CaseRecordMapper caseRecordMapper;
+
 
     @Override
     @Transactional
@@ -71,6 +72,15 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
             throw new IllegalArgumentException("One or more alert references are invalid");
         }
 
+        List<String> alreadyBundledAlerts = alerts.stream()
+                .filter(alert -> alert.getStatus() == AlertStatus.BUNDLED_TO_CASE)
+                .map(Alert::getAlertReference)
+                .toList();
+
+        if (!alreadyBundledAlerts.isEmpty()) {
+            throw new IllegalStateException("Duplicate Operation: The following alerts are already bundled to a case: " + alreadyBundledAlerts);
+        }
+
         long distinctCustomerCount = alerts.stream()
                 .map(alert -> alert.getCustomer().getId())
                 .distinct()
@@ -82,11 +92,33 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
 
         Alert primaryAlertMetadata = alerts.get(0);
 
+        List<Transaction> transactionsToMigrate = alerts.stream()
+                .flatMap(alert -> alert.getAlertTransactions().stream())
+                .map(AlertTransaction::getTransaction)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        if (!transactionsToMigrate.isEmpty()) {
+            List<UUID> transactionIds = transactionsToMigrate.stream()
+                    .map(Transaction::getId)
+                    .toList();
+
+            boolean duplicateTransactionExists = caseRepo.existsByCustomerAndStatusInAndCaseTransactions_Transaction_IdIn(
+                    primaryAlertMetadata.getCustomer(),
+                    List.of(CaseStatus.OPEN, CaseStatus.IN_PROGRESS),
+                    transactionIds
+            );
+
+            if (duplicateTransactionExists) {
+                throw new IllegalStateException("Duplicate Investigation: An active case already exists for this customer involving one or more of these specific transactions.");
+            }
+        }
+
         int totalRisk = alerts.stream()
                 .map(alert -> alert.getRiskScore() != null ? alert.getRiskScore().intValue() : 0)
                 .mapToInt(Integer::intValue)
                 .sum();
-
 
         CaseRecord caseRecord = new CaseRecord();
         caseRecord.setAssignedTo(assignee.getId());
@@ -101,17 +133,9 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
         caseRecord.setTypologyTriggered(primaryAlertMetadata.getTypologyTriggered());
         caseRecord.setCustomer(primaryAlertMetadata.getCustomer());
 
-        List<Transaction> transactionsToMigrate = alerts.stream()
-                .flatMap(alert -> alert.getAlertTransactions().stream())
-                .map(AlertTransaction::getTransaction)
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
-
         transactionsToMigrate.forEach(caseRecord::addTransaction);
 
         CaseRecord savedCase = caseRepo.save(caseRecord);
-
 
         boolean isFirst = true;
         for (Alert alert : alerts) {

@@ -22,7 +22,7 @@ public class CreateGeographicRiskRequestDto {
     private String countryName;
 
     @NotBlank(message = "FATF status is required")
-    private String fatfStatus; // e.g., "BLACK_LISTED", "GREY_LISTED", "COMPLIANT"
+    private String fatfStatus;
 
     @NotNull(message = "Basel AML Index Score is required")
     @Min(0) @Max(100)

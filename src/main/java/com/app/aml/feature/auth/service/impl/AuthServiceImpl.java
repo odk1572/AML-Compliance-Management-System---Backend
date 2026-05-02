@@ -132,7 +132,6 @@ public class AuthServiceImpl implements AuthService {
         String jti = tokenProvider.extractJti(accessToken);
         java.time.Instant expiry = tokenProvider.extractAllClaims(accessToken).getExpiration().toInstant();
 
-        // 6. Ensure context is set correctly for Session Persistence
         if (finalTenantId != null && sessionSchema != null && !sessionSchema.equals("common_schema")) {
             TenantContext.setTenantId(sessionSchema);
         } else {

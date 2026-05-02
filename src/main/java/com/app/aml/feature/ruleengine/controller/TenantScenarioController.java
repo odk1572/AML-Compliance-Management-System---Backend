@@ -135,7 +135,6 @@ public class TenantScenarioController {
         ));
     }
 
-    // Add inside the class (after the listActiveScenariosWithRules method):
     @GetMapping("/available-globals")
     @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<List<GlobalScenarioResponseDto>>> getAvailableGlobalScenarios(

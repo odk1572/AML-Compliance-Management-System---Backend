@@ -54,29 +54,22 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
     public TenantScenarioResponseDto activateScenario(UUID globalScenarioId) {
         log.info("Activating Global Scenario ID: {} for tenant", globalScenarioId);
 
-        // Check if scenario already exists for this tenant
         Optional<TenantScenario> existing = tenantScenarioRepo.findByGlobalScenarioId(globalScenarioId);
 
         if (existing.isPresent()) {
             TenantScenario existingScenario = existing.get();
             if (existingScenario.getStatus() == RuleStatus.ACTIVE) {
-                // Truly already active — block it
                 throw new IllegalStateException("Scenario is already active for this tenant.");
             } else {
-                // It was PAUSED — just resume it instead of re-seeding
                 existingScenario.setStatus(RuleStatus.ACTIVE);
                 TenantScenario resumed = tenantScenarioRepo.save(existingScenario);
                 return tenantScenarioMapper.toResponseDto(resumed);
             }
         }
 
-        // NEW scenario — create and seed rules as before
         TenantScenario tenantScenario = new TenantScenario();
         tenantScenario.setGlobalScenarioId(globalScenarioId);
         tenantScenario.setStatus(RuleStatus.ACTIVE);
-        // ... rest of your existing code
-
-        // Fix: Convert Enum to String
         tenantScenario.setStatus(RuleStatus.ACTIVE);
 
         TenantScenario savedScenario = tenantScenarioRepo.save(tenantScenario);
@@ -238,23 +231,17 @@ public class TenantScenarioServiceImpl implements TenantScenarioService {
     }
 
 
-    // Add these injections in the class (Lombok @RequiredArgsConstructor will pick them up):
-// your existing mapper
-
-    // Add this method:
     @Override
     public List<GlobalScenarioResponseDto> getAvailableGlobalScenarios() {
-        // Get IDs of global scenarios already activated by this tenant
         Set<UUID> activatedGlobalIds = tenantScenarioRepository.findAll()
                 .stream()
                 .map(TenantScenario::getGlobalScenarioId)
                 .collect(Collectors.toSet());
 
-        // Return all active global scenarios not yet activated by this tenant
         return globalScenarioRepository.findAll()
                 .stream()
                 .filter(gs -> !activatedGlobalIds.contains(gs.getId()))
-                .map(globalScenarioMapper::toResponseDto) // use your mapper method name
+                .map(globalScenarioMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 

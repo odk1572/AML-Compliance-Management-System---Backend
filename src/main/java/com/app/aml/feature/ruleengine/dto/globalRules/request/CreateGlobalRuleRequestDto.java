@@ -23,7 +23,7 @@ public class CreateGlobalRuleRequestDto {
 
     @NotBlank(message = "Rule type is required")
     @Size(max = 50, message = "Rule type cannot exceed 50 characters")
-    private String ruleType; // e.g., "STRUCTURING", "VELOCITY"
+    private String ruleType;
 
     @NotNull(message = "Severity is required")
     private AlertSeverity severity;

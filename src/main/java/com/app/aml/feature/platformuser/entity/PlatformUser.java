@@ -26,7 +26,7 @@ import java.util.UUID;
 @Builder
 @SQLDelete(sql = "UPDATE common_schema.platform_users SET sys_is_deleted = true, sys_deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("sys_is_deleted = false")
-public class PlatformUser extends SoftDeletableEntity implements Persistable<UUID> { // Added Persistable
+public class PlatformUser extends SoftDeletableEntity implements Persistable<UUID> {
 
     @Id
     @Builder.Default
@@ -137,7 +137,5 @@ public class PlatformUser extends SoftDeletableEntity implements Persistable<UUI
         this.lastLoginAt = Instant.now();
         this.lastLoginIp = ip;
         this.failedLoginAttempts = 0;
-        // Optionally mark first login complete here if your business logic requires it
-        // this.isFirstLogin = false;
     }
 }

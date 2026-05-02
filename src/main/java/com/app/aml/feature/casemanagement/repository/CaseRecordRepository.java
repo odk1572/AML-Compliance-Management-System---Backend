@@ -2,6 +2,7 @@ package com.app.aml.feature.casemanagement.repository;
 
 import com.app.aml.enums.CaseStatus;
 import com.app.aml.feature.casemanagement.entity.CaseRecord;
+import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,6 +30,10 @@ public interface CaseRecordRepository extends JpaRepository<CaseRecord, UUID> {
 
     List<CaseRecord> findByStatusIn(Collection<CaseStatus> statuses);
 
-    @Query("SELECT DISTINCT c FROM CaseRecord c JOIN CaseAlertLink cal ON c.id = cal.caseRecord.id JOIN cal.alert a WHERE a.customer.id = :profileId ORDER BY c.openedAt DESC")
-    Page<CaseRecord> findRecentCasesByCustomerProfileId(@Param("profileId") UUID profileId, Pageable pageable);
+    boolean existsByCustomerAndStatusInAndCaseTransactions_Transaction_IdIn(
+            CustomerProfile customer,
+            List<CaseStatus> statuses,
+            List<UUID> transactionIds
+    );
+
 }

@@ -75,7 +75,6 @@ public class StrFilingServiceImpl implements StrFilingService {
 
         filing.setRuleType(caseRecord.getRuleType());
         filing.setTypologyTriggered(caseRecord.getTypologyTriggered());
-        // -----------------------------------------------------------------------------
 
         filing.setSuspicionNarrative(dto.getSuspicionNarrative());
         filing.setFiledBy(filedBy);

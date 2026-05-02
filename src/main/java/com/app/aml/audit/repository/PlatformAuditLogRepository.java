@@ -11,16 +11,4 @@ import java.util.UUID;
 
 @Repository
 public interface PlatformAuditLogRepository extends JpaRepository<PlatformAuditLog, UUID> {
-
-    Page<PlatformAuditLog> findByActorId(UUID actorId, Pageable pageable);
-
-    Page<PlatformAuditLog> findByTenantId(UUID tenantId, Pageable pageable);
-
-    Page<PlatformAuditLog> findByActionCategory(String actionCategory, Pageable pageable);
-
-    Page<PlatformAuditLog> findByTargetEntityTypeAndTargetEntityId(
-            String targetEntityType,
-            UUID targetEntityId,
-            Pageable pageable
-    );
 }

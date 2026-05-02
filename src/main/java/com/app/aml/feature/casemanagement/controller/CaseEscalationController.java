@@ -22,7 +22,6 @@ public class CaseEscalationController {
 
     private final CaseEscalationService caseEscalationService;
 
-    // Notice the path variable is now {caseReference} instead of {caseId}
     @PostMapping("/{caseReference}/escalate")
     @PreAuthorize("hasAnyRole('BANK_ADMIN', 'COMPLIANCE_OFFICER')")
     public ResponseEntity<ApiResponse<Void>> escalateCase(

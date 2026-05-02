@@ -46,7 +46,6 @@ public class CustomerProfileValidationProcessor implements ItemProcessor<Custome
                     newProfile.setAccountNumber(accNum);
                     return newProfile;
                 });
-        // --- UPSERT LOGIC END ---
 
         profile.setCustomerName(require(dto.getCustomerName(), line, "customerName"));
         profile.setIdType(safe(dto.getIdType()));

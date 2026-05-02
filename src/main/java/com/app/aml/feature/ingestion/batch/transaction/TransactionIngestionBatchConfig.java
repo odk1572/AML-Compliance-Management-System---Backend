@@ -68,11 +68,8 @@ public class TransactionIngestionBatchConfig {
         return new JobBuilder("transactionIngestionJob", jobRepository)
                 .listener(completionListener)
                 .start(transactionValidationStep())
-                // Only proceed to ingestion if validation was SUCCESSFUL and had 0 skips
                 .on(ExitStatus.COMPLETED.getExitCode()).to(transactionIngestionStep())
-                // If validation finished but had skips, stop here
                 .from(transactionValidationStep()).on("COMPLETED_WITH_SKIPS").end()
-                // Fail if anything else happens
                 .from(transactionValidationStep()).on("*").fail()
                 .end()
                 .build();
@@ -104,7 +101,6 @@ public class TransactionIngestionBatchConfig {
                         .build())
                 .processor(processor)
                 .writer(transactionWriter())
-                // Use taskExecutor only if you are SURE your DB handles concurrent tenant writes
                 .taskExecutor(batchTaskExecutor)
                 .listener(tenantContextStepListener())
                 .build();
@@ -115,7 +111,6 @@ public class TransactionIngestionBatchConfig {
         return new StepExecutionListenerSupport() {
             @Override
             public ExitStatus afterStep(StepExecution stepExecution) {
-                // If any records were skipped due to errors, we block the save step
                 if (stepExecution.getSkipCount() > 0 || stepExecution.getProcessSkipCount() > 0) {
                     log.warn("Validation failed with {} skips. Saving aborted.", stepExecution.getSkipCount());
                     return new ExitStatus("COMPLETED_WITH_SKIPS");
@@ -154,7 +149,7 @@ public class TransactionIngestionBatchConfig {
     public RepositoryItemWriter<Transaction> transactionWriter() {
         return new RepositoryItemWriterBuilder<Transaction>()
                 .repository(repository)
-                .methodName("save") // Use "save" for RepositoryItemWriter (it calls it per item/list)
+                .methodName("save")
                 .build();
     }
 }

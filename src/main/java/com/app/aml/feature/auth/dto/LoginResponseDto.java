@@ -20,7 +20,7 @@ public class LoginResponseDto {
 
     private String username;
     private String role;
-    private UUID tenantId; // Null for Platform Users
+    private UUID tenantId;
 
     private boolean isFirstLogin;
 }

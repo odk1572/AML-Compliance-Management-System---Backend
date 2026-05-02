@@ -14,20 +14,4 @@ import java.util.UUID;
 @Repository
 public interface InPlatformNotificationRepository extends JpaRepository<InPlatformNotification, UUID> {
 
-    List<InPlatformNotification> findByRecipientIdOrderBySysCreatedAtDesc(UUID recipientId);
-
-    List<InPlatformNotification> findByRecipientIdAndIsReadFalseOrderBySysCreatedAtDesc(UUID recipientId);
-
-    long countByRecipientIdAndIsReadFalse(UUID recipientId);
-
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE InPlatformNotification n SET n.isRead = true, n.readAt = :now " +
-            "WHERE n.recipientId = :recipientId AND n.isRead = false")
-    void markAllAsReadByRecipientId(@Param("recipientId") UUID recipientId, @Param("now") Instant now);
-
-
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE InPlatformNotification n SET n.isRead = true, n.readAt = :now " +
-            "WHERE n.id IN :ids")
-    void markAsReadByIds(@Param("ids") List<UUID> ids, @Param("now") Instant now);
 }

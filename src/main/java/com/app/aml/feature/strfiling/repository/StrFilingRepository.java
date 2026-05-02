@@ -9,6 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface StrFilingRepository extends JpaRepository<StrFiling, UUID> {
-        // Add this method
         Optional<StrFiling> findByCaseRecordId(UUID caseId);
 }

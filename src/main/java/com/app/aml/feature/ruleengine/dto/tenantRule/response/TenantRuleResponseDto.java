@@ -22,7 +22,6 @@ public class TenantRuleResponseDto {
     private String ruleName;
     private boolean isActive;
 
-    // Audit & Soft Delete Info
     private UUID sysCreatedBy;
     private Instant sysCreatedAt;
     private Instant sysUpdatedAt;

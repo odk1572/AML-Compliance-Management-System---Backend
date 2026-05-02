@@ -27,7 +27,6 @@ public class CustomerCsvGenerator {
     public List<FakeCustomer> generateCustomerList(int count) {
         List<FakeCustomer> customers = new ArrayList<>();
 
-        // Updated Personas to fit strictly within the Jan 1 2026 - Apr 30 2026 window
         customers.add(buildPersona("BRK-VELOCITY-01", "Velocity Breaker LLC", "CORPORATE", "HIGH", "15000.00", false, LocalDate.of(2026, 1, 10)));
         customers.add(buildPersona("BRK-STRUCT-01", "Structuring Smurf Inc", "INDIVIDUAL", "HIGH", "5000.00", false, LocalDate.of(2026, 2, 1)));
         customers.add(buildPersona("BRK-DORMANT-01", "Rip Van Winkle", "INDIVIDUAL", "MEDIUM", "2000.00", true, LocalDate.of(2026, 1, 5)));

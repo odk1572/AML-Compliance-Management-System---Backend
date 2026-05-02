@@ -55,7 +55,7 @@ public class TenantServiceImpl implements TenantService {
     private final ApplicationEventPublisher eventPublisher;
 
     private final PlatformTransactionManager transactionManager;
-    private final EntityManager entityManager; // <--- Add this!
+    private final EntityManager entityManager;
 
     @Override
     @AuditAction(category = "TENANT_MGMT", action = "CREATE_NEW_TENANT", entityType = "TENANT")
