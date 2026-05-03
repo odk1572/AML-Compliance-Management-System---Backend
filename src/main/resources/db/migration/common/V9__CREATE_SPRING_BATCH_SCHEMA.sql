@@ -1,4 +1,3 @@
--- Modified for common_schema and Spring Batch 5 compatibility
 
 CREATE TABLE common_schema.BATCH_JOB_INSTANCE (
                                                   JOB_INSTANCE_ID BIGINT  NOT NULL PRIMARY KEY,
@@ -73,7 +72,6 @@ CREATE TABLE common_schema.BATCH_JOB_EXECUTION_CONTEXT (
                                                                references common_schema.BATCH_JOB_EXECUTION(JOB_EXECUTION_ID)
 ) ;
 
--- Sequences adjusted for Spring Batch 5
 CREATE SEQUENCE common_schema.BATCH_STEP_EXECUTION_SEQ MAXVALUE 9223372036854775807 NO CYCLE;
 CREATE SEQUENCE common_schema.BATCH_JOB_EXECUTION_SEQ MAXVALUE 9223372036854775807 NO CYCLE;
 CREATE SEQUENCE common_schema.BATCH_JOB_SEQ MAXVALUE 9223372036854775807 NO CYCLE;

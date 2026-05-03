@@ -10,5 +10,4 @@ CREATE TABLE common_schema.refresh_tokens (
                                               sys_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Index for fast lookups during the /refresh call
 CREATE INDEX idx_refresh_token_hash ON common_schema.refresh_tokens(token_hash);

@@ -3,7 +3,6 @@ CREATE TABLE in_platform_notifications (
                                            recipient_id UUID NOT NULL REFERENCES tenant_users(id) ON DELETE CASCADE,
 
                                            notification_type VARCHAR(50) NOT NULL,
-    -- CASE_ASSIGNED / STR_FILED / ESCALATION / BATCH_DONE
 
                                            title VARCHAR(255) NOT NULL,
                                            body TEXT NOT NULL,
@@ -11,15 +10,14 @@ CREATE TABLE in_platform_notifications (
                                            is_read BOOLEAN NOT NULL DEFAULT FALSE,
                                            read_at TIMESTAMP,
 
-    -- Metadata & Soft Deletion
+
                                            sys_is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
                                            sys_deleted_at TIMESTAMP,
                                            sys_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                            sys_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    -- Constraint to ensure only valid notification types are used
                                            CONSTRAINT chk_notification_type CHECK (notification_type IN (
-                                                                                                         'CASE_ASSIGNED',
+                                                                                                          'CASE_ASSIGNED',
                                                                                                          'STR_FILED',
                                                                                                          'ESCALATION',
                                                                                                          'BATCH_DONE'

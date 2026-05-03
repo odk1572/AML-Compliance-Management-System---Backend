@@ -2,14 +2,12 @@ CREATE TABLE case_assignments (
                                   id UUID PRIMARY KEY,
                                   case_id UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
 
-    -- Handover Details
                                   assigned_from UUID REFERENCES tenant_users(id) ON DELETE SET NULL, -- Previous CO
                                   assigned_to UUID NOT NULL REFERENCES tenant_users(id) ON DELETE SET NULL, -- New CO
                                   assigned_by UUID NOT NULL REFERENCES tenant_users(id) ON DELETE SET NULL, -- Admin/System
 
                                   assignment_reason TEXT,
 
-    -- Immutable record of the handover event
                                   sys_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -1,8 +1,6 @@
--- 1. Drop the existing constraint
 ALTER TABLE global_rules
 DROP CONSTRAINT chk_global_rules_type;
 
--- 2. Add the new constraint including 'SCATTER'
 ALTER TABLE global_rules
     ADD CONSTRAINT chk_global_rules_type CHECK (
         rule_type IN (

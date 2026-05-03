@@ -3,16 +3,15 @@ CREATE TABLE cases (
                        id UUID PRIMARY KEY,
                        case_reference VARCHAR(50) UNIQUE NOT NULL, -- Format: CASE-YYYYMMDD-XXXXX
 
-    -- Assignment Logic
                        assigned_to UUID REFERENCES tenant_users(id) ON DELETE SET NULL, -- Current CO
                        assigned_by UUID REFERENCES tenant_users(id) ON DELETE SET NULL, -- Bank Admin
 
-    -- Case State
+
                        status VARCHAR(30) NOT NULL DEFAULT 'OPEN', -- OPEN / IN_PROGRESS / ESCALATED / CLOSED_STR / CLOSED_NO_ACTION
                        priority VARCHAR(20) NOT NULL DEFAULT 'MEDIUM', -- CRITICAL / HIGH / MEDIUM / LOW
                        aggregated_risk_score INT DEFAULT 0, -- Sum/Max of linked alert scores
 
-    -- Investigation Lifecycle
+
                        opened_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        last_activity_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        closed_at TIMESTAMP,
@@ -21,7 +20,6 @@ CREATE TABLE cases (
                        false_positive_rationale TEXT, -- Mandatory if disposition is FALSE_POSITIVE
                        has_investigation_note BOOLEAN NOT NULL DEFAULT FALSE, -- Gateway for STR filing
 
-    -- Metadata & Soft Deletion
                        sys_is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
                        sys_deleted_at TIMESTAMP,
                        sys_deleted_by UUID REFERENCES tenant_users(id) ON DELETE SET NULL,

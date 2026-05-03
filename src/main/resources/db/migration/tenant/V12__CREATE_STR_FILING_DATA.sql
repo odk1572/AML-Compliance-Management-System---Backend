@@ -6,7 +6,6 @@ CREATE TABLE str_filings (
                              regulatory_body VARCHAR(50) NOT NULL,        -- e.g., FinCEN / FIU_IND
                              typology_category VARCHAR(100) NOT NULL,     -- e.g., STRUCTURING / LAYERING
 
-    -- Snapshot of the subject at the time of filing
                              subject_name VARCHAR(255) NOT NULL,
                              subject_account_no VARCHAR(50) NOT NULL,
 

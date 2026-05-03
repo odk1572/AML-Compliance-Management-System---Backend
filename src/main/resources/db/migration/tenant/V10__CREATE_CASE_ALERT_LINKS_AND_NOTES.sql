@@ -5,10 +5,8 @@ CREATE TABLE case_alert_links (
                                   linked_by UUID NOT NULL REFERENCES tenant_users(id),
                                   is_primary_alert BOOLEAN NOT NULL DEFAULT FALSE,
 
-    -- Immutable record
                                   sys_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    -- Prevents the same alert from being linked to the same case twice
                                   CONSTRAINT uk_case_alert_link UNIQUE (case_id, alert_id)
 );
 

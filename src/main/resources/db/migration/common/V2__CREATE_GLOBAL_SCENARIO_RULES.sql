@@ -1,12 +1,6 @@
--- ============================================================
--- SCHEMA SETUP
--- ============================================================
 CREATE SCHEMA IF NOT EXISTS common_schema;
 SET search_path TO common_schema;
 
--- ============================================================
--- 1. TABLE: global_scenarios
--- ============================================================
 CREATE TABLE IF NOT EXISTS global_scenarios (
                                                 id                  UUID            NOT NULL DEFAULT gen_random_uuid(),
     scenario_name       VARCHAR(255)    UNIQUE NOT NULL,
@@ -24,9 +18,6 @@ CREATE TABLE IF NOT EXISTS global_scenarios (
 CREATE INDEX IF NOT EXISTS idx_global_scenarios_category ON global_scenarios(category);
 CREATE INDEX IF NOT EXISTS idx_global_scenarios_sys_is_deleted ON global_scenarios(sys_is_deleted);
 
--- ============================================================
--- 2. TABLE: global_rules (Refactored: logic column removed)
--- ============================================================
 CREATE TABLE IF NOT EXISTS global_rules (
                                             id                  UUID            NOT NULL DEFAULT gen_random_uuid(),
     rule_name           VARCHAR(150)    NOT NULL,
@@ -57,9 +48,6 @@ CREATE INDEX IF NOT EXISTS idx_global_rules_severity ON global_rules(severity);
 CREATE INDEX IF NOT EXISTS idx_global_rules_sys_deleted ON global_rules(sys_is_deleted);
 CREATE INDEX IF NOT EXISTS idx_global_rules_type ON global_rules(rule_type);
 
--- ============================================================
--- 3. TABLE: global_rule_conditions (Aligned with Java Entity)
--- ============================================================
 CREATE TABLE IF NOT EXISTS global_rule_conditions (
                                                       id                  UUID            NOT NULL DEFAULT gen_random_uuid(),
     rule_id             UUID            NOT NULL,
@@ -76,9 +64,6 @@ CREATE TABLE IF NOT EXISTS global_rule_conditions (
 
 CREATE INDEX IF NOT EXISTS idx_global_rule_conditions_rule_id ON global_rule_conditions(rule_id);
 
--- ============================================================
--- 4. TABLE: global_scenario_rules (Link Table)
--- ============================================================
 CREATE TABLE IF NOT EXISTS global_scenario_rules (
                                                      id                  UUID            PRIMARY KEY,
                                                      scenario_id         UUID            NOT NULL REFERENCES global_scenarios(id) ON DELETE CASCADE,
@@ -92,23 +77,16 @@ CREATE TABLE IF NOT EXISTS global_scenario_rules (
 
 CREATE INDEX IF NOT EXISTS idx_global_scenario_rules_scenario_id ON global_scenario_rules(scenario_id);
 
--- ============================================================
--- TRIGGERS: Updated At Sync
--- ============================================================
-
--- Scenarios
 DROP TRIGGER IF EXISTS trg_global_scenarios_updated_at ON global_scenarios;
 CREATE TRIGGER trg_global_scenarios_updated_at
     BEFORE UPDATE ON global_scenarios
     FOR EACH ROW EXECUTE FUNCTION update_sys_updated_at_column();
 
--- Rules
 DROP TRIGGER IF EXISTS trg_global_rules_updated_at ON global_rules;
 CREATE TRIGGER trg_global_rules_updated_at
     BEFORE UPDATE ON global_rules
     FOR EACH ROW EXECUTE FUNCTION update_sys_updated_at_column();
 
--- Conditions
 DROP TRIGGER IF EXISTS trg_global_rule_conditions_updated_at ON global_rule_conditions;
 CREATE TRIGGER trg_global_rule_conditions_updated_at
     BEFORE UPDATE ON global_rule_conditions

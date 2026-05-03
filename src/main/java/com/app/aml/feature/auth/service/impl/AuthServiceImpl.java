@@ -102,7 +102,7 @@ public class AuthServiceImpl implements AuthService {
             role = user.getRole().name();
             isFirstLogin = user.isFirstLogin();
 
-            user.recordSuccessfulLogin("unknown-ip"); // You can pass HttpServletRequest to get real IP later
+            user.recordSuccessfulLogin(SecurityUtils.getRemoteIp());
             platformUserRepository.save(user);
 
             finalTenantId = null;

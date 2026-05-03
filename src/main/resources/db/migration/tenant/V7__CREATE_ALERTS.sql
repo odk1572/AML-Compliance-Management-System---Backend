@@ -1,20 +1,16 @@
 CREATE TABLE alerts (
                         id UUID PRIMARY KEY,
 
-    -- The primary customer associated with the alert
                         customer_profile_id UUID NOT NULL REFERENCES customer_profiles(id) ON DELETE RESTRICT,
 
-    -- The primary/triggering transaction associated with the alert
                         transaction_id UUID NOT NULL REFERENCES transactions(id) ON DELETE RESTRICT,
 
-    -- Local Scenario Execution Context
                         tenant_scenario_id UUID NOT NULL REFERENCES tenant_scenarios(id) ON DELETE RESTRICT,
 
-    -- Cross-Schema FKs: Links to the Global Library for reporting and analytics
                         global_scenario_id UUID NOT NULL REFERENCES common_schema.global_scenarios(id) ON DELETE RESTRICT,
                         global_rule_id UUID NOT NULL REFERENCES common_schema.global_rules(id) ON DELETE RESTRICT,
 
-    -- Local FK: Points to the specific bank-customized version of the rule (if any)
+
                         tenant_rule_id UUID REFERENCES tenant_rules(id) ON DELETE SET NULL,
 
                         alert_reference VARCHAR(50) UNIQUE NOT NULL, -- Format: ALT-YYYYMMDD-XXXXX
