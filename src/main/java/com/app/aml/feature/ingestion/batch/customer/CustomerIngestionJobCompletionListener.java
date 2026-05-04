@@ -5,6 +5,7 @@ import com.app.aml.feature.ingestion.entity.TransactionBatch;
 import com.app.aml.feature.ingestion.repository.TransactionBatchRepository;
 import com.app.aml.feature.notification.service.interfaces.MailService;
 import com.app.aml.multitenency.TenantContext;
+import com.app.aml.utils.SecurityUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -82,7 +83,7 @@ public class CustomerIngestionJobCompletionListener implements JobExecutionListe
             jobExecution.setExitStatus(ExitStatus.FAILED);
 
             mailService.sendEmail(
-                    "admin@yourdomain.com",
+                    SecurityUtils.getCurrentUserEmail(),
                     "Customer Batch Failed: " + batch.getFileName(),
                     "Validation errors found in customer ingestion. Please check the dashboard."
             );

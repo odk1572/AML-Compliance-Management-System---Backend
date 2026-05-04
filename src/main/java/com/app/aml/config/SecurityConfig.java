@@ -55,11 +55,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                // First: Validate JWT (Who are you?)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                // Second: Set Tenant Context (Which bank do you belong to?)
                 .addFilterAfter(tenantContextFilter, JwtAuthenticationFilter.class)
-                // Third: Check RBAC (Do you have permission for this path?)
                 .addFilterAfter(rbacFilter, TenantContextFilter.class);
 
         return http.build();

@@ -24,8 +24,4 @@ public abstract class SoftDeletableEntity extends AuditableEntity {
     @Column(name = "sys_deleted_at")
     private Instant sysDeletedAt;
 
-    public void markDeleted() {
-        this.sysIsDeleted = true;
-        this.sysDeletedAt = Instant.now();
-    }
 }

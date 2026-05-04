@@ -19,8 +19,7 @@ public class CloudinaryService {
 
     private final Cloudinary cloudinary;
 
-    public record
-    CloudinaryUploadResult(String publicId, String secureUrl) {}
+    public record CloudinaryUploadResult(String publicId, String secureUrl) {}
 
     public CloudinaryUploadResult uploadRawBytes(byte[] bytes, String fileName, String folder) {
         try {

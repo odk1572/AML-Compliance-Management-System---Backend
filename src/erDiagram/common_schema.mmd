@@ -1,0 +1,113 @@
+
+erDiagram
+  geographic_risk_ratings {
+    uuid id PK
+    varchar risk_rating_ref
+    varchar country_code
+    varchar country_name
+    varchar fatf_status
+    integer basel_aml_index_score
+    varchar risk_tier
+    text notes
+    timestamp effective_from
+  }
+  global_rules {
+    uuid id PK
+    varchar rule_reference
+    varchar rule_name
+    varchar rule_type
+    varchar severity
+    smallint base_risk_score
+    boolean sys_is_deleted
+  }
+  global_rule_conditions {
+    uuid id PK
+    varchar condition_reference
+    uuid rule_id FK
+    varchar attribute_name
+    varchar threshold_value
+    varchar value_data_type
+    varchar aggregation_function
+    varchar lookback_period
+  }
+  global_scenarios {
+    uuid id PK
+    varchar scenario_reference
+    varchar scenario_name
+    varchar category
+    text description
+    uuid created_by FK
+    boolean sys_is_deleted
+  }
+  global_scenario_rules {
+    uuid id PK
+    varchar gsr_reference
+    uuid scenario_id FK
+    uuid rule_id FK
+    boolean is_active
+    integer priority_order
+  }
+  platform_users {
+    uuid id PK
+    varchar user_code
+    varchar email
+    varchar full_name
+    varchar role
+    boolean is_first_login
+    boolean is_locked
+    boolean sys_is_deleted
+  }
+  platform_user_sessions {
+    uuid id PK
+    uuid user_id FK
+    varchar jwt_jti
+    varchar ip_address
+    timestamp expires_at
+    boolean is_revoked
+  }
+  platform_audit_log {
+    uuid id PK
+    uuid actor_id FK
+    varchar actor_role
+    uuid tenant_id FK
+    varchar schema_name
+    varchar action_category
+    varchar action_performed
+    varchar target_entity_type
+    uuid target_entity_id
+    jsonb previous_state
+    jsonb new_state
+  }
+  tenants {
+    uuid id PK
+    varchar tenant_code
+    varchar schema_name
+    varchar institution_name
+    varchar country_code
+    varchar regulatory_jurisdiction
+    varchar contact_email
+    varchar status
+    uuid sys_created_by FK
+    uuid sys_deleted_by FK
+    boolean sys_is_deleted
+  }
+  refresh_tokens {
+    uuid id PK
+    uuid user_id FK
+    uuid tenant_id FK
+    text token_hash
+    timestamp expiry_date
+    boolean is_revoked
+  }
+
+  global_rules ||--o{ global_rule_conditions : "has"
+  global_rules ||--o{ global_scenario_rules : "used in"
+  global_scenarios ||--o{ global_scenario_rules : "has"
+  global_scenarios }o--|| platform_users : "created by"
+  platform_users ||--o{ platform_user_sessions : "has"
+  platform_users ||--o{ platform_audit_log : "acts in"
+  platform_users ||--o{ refresh_tokens : "has"
+  tenants ||--o{ platform_audit_log : "scoped to"
+  tenants ||--o{ refresh_tokens : "scoped to"
+  tenants }o--|| platform_users : "created by"
+  tenants }o--o| platform_users : "deleted by"

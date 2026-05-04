@@ -21,9 +21,6 @@ public class AsyncConfig {
         executor.setQueueCapacity(100);
         executor.setThreadNamePrefix("aml-async-");
         executor.initialize();
-
         return executor;
     }
-
-
 }

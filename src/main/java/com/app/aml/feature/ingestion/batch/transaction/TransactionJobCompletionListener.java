@@ -5,6 +5,7 @@ import com.app.aml.feature.ingestion.entity.TransactionBatch;
 import com.app.aml.feature.ingestion.repository.TransactionBatchRepository;
 import com.app.aml.feature.notification.service.interfaces.MailService;
 import com.app.aml.multitenency.TenantContext;
+import com.app.aml.utils.SecurityUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -90,7 +91,7 @@ public class TransactionJobCompletionListener implements JobExecutionListener {
             jobExecution.setExitStatus(ExitStatus.FAILED);
 
             mailService.sendEmail(
-                    "admin@yourdomain.com",
+                    SecurityUtils.getCurrentUserEmail(),
                     "Transaction Batch Failed: " + batch.getFileName(),
                     "Validation failed for " + errors.size() + " lines."
             );

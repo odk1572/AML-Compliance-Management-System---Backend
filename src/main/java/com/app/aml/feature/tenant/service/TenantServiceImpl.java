@@ -71,6 +71,12 @@ public class TenantServiceImpl implements TenantService {
             if (tenantRepository.existsBySchemaName(requestDto.getSchemaName())) {
                 throw new EntityExistsException("Schema name already exists");
             }
+            if(tenantRepository.existsByContactPhone(requestDto.getContactPhone())) {
+                throw new EntityExistsException("Contact phone already exists");
+            }
+            if(tenantRepository.existsByContactEmail(requestDto.getContactEmail())) {
+                throw new EntityExistsException("Contact email already exists");
+            }
 
             Tenant tenant = tenantMapper.toEntity(requestDto);
             tenant.setId(UuidCreator.getTimeOrderedEpoch());

@@ -19,7 +19,7 @@ public interface AlertTransactionMapper {
     @Mapping(source = "transaction.transactionTimestamp", target = "transactionTimestamp")
     @Mapping(source = "transaction.originatorAccountNo", target = "originatorAccountNo")
     @Mapping(source = "transaction.beneficiaryAccountNo", target = "beneficiaryAccountNo")
-        // Removed role and transactionType as they belong to the Summary DTO
+
     AlertTransactionResponseDto toResponseDto(AlertTransaction entity);
 
     List<AlertTransactionResponseDto> toResponseDtoList(List<AlertTransaction> entities);

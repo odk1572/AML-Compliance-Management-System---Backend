@@ -1,0 +1,226 @@
+erDiagram
+   customer_profiles {
+      uuid id PK
+      varchar account_number
+      varchar customer_name
+      varchar customer_type
+      varchar id_type
+      varchar id_number
+      varchar nationality
+      varchar risk_rating
+      integer risk_score
+      boolean is_pep
+      varchar kyc_status
+   }
+   transactions {
+      uuid id PK
+      uuid batch_id FK
+      uuid customer_id FK
+      varchar transaction_ref
+      varchar originator_account_no
+      varchar originator_name
+      varchar beneficiary_account_no
+      varchar beneficiary_name
+      numeric amount
+      varchar currency_code
+      varchar transaction_type
+      varchar channel
+      timestamp transaction_timestamp
+      varchar status
+   }
+   transaction_batches {
+      uuid id PK
+      varchar batch_reference
+      uuid uploaded_by FK
+      varchar file_name
+      integer total_records
+      varchar batch_status
+      timestamp processed_at
+   }
+   alerts {
+      uuid id PK
+      uuid customer_profile_id FK
+      uuid triggering_transaction_id FK
+      uuid tenant_scenario_id FK
+      uuid tenant_rule_id FK
+      varchar alert_reference
+      varchar severity
+      varchar status
+      varchar typology_triggered
+      numeric risk_score
+      varchar rule_type
+   }
+   alert_evidence {
+      uuid id PK
+      uuid alert_id FK
+      varchar attribute_name
+      varchar aggregation_function
+      varchar operator
+      varchar threshold_applied
+      varchar actual_evaluated_value
+   }
+   alert_transactions {
+      uuid id PK
+      uuid alert_id FK
+      uuid transaction_id FK
+      varchar involvement_role
+   }
+   cases {
+      uuid id PK
+      varchar case_reference
+      uuid customer_profile_id FK
+      uuid assigned_to FK
+      uuid assigned_by FK
+      varchar status
+      varchar priority
+      integer aggregated_risk_score
+      timestamp opened_at
+      timestamp closed_at
+      varchar closure_disposition
+      varchar typology_triggered
+   }
+   case_alert_links {
+      uuid id PK
+      uuid case_id FK
+      uuid alert_id FK
+      uuid linked_by FK
+      boolean is_primary_alert
+   }
+   case_assignments {
+      uuid id PK
+      uuid case_id FK
+      uuid assigned_from FK
+      uuid assigned_to FK
+      uuid assigned_by FK
+      text assignment_reason
+   }
+   case_notes {
+      uuid id PK
+      uuid case_id FK
+      uuid authored_by FK
+      varchar note_type
+      text note_content
+   }
+   case_audit_trail {
+      uuid id PK
+      uuid case_id FK
+      uuid actor_id FK
+      varchar event_type
+      jsonb event_metadata
+   }
+   case_escalations {
+      uuid id PK
+      uuid case_id FK
+      uuid escalated_by FK
+      uuid escalated_to FK
+      text escalation_reason
+      varchar escalation_status
+   }
+   case_transactions {
+      uuid id PK
+      uuid case_id FK
+      uuid transaction_id FK
+   }
+   str_filings {
+      uuid id PK
+      uuid case_id FK
+      uuid customer_profile_id FK
+      uuid filed_by FK
+      varchar filing_reference
+      varchar regulatory_body
+      text suspicion_narrative
+      varchar rule_type
+   }
+   str_filing_transactions {
+      uuid id PK
+      uuid str_filing_id FK
+      uuid transaction_id FK
+   }
+   tenant_scenarios {
+      uuid id PK
+      uuid global_scenario_id
+      varchar status
+      uuid sys_activated_by FK
+   }
+   tenant_rules {
+      uuid id PK
+      uuid tenant_scenario_id FK
+      uuid global_rule_id
+      varchar rule_code
+      varchar rule_name
+      boolean is_active
+      uuid sys_created_by FK
+   }
+   tenant_rule_thresholds {
+      uuid id PK
+      uuid tenant_rule_id FK
+      uuid global_condition_id
+      varchar override_value
+      varchar override_lookback_period
+      varchar override_aggregation_function
+   }
+   tenant_users {
+      uuid id PK
+      varchar employee_id
+      varchar full_name
+      varchar email
+      varchar role
+      boolean is_locked
+      uuid sys_created_by FK
+   }
+   user_sessions {
+      uuid id PK
+      uuid user_id FK
+      varchar jwt_jti
+      varchar ip_address
+      boolean is_revoked
+      timestamp expires_at
+   }
+   tenant_audit_log {
+      uuid id PK
+      uuid actor_id FK
+      varchar action_category
+      varchar action_performed
+      varchar target_entity_type
+      uuid target_entity_id
+      jsonb prev_state
+      jsonb next_state
+   }
+
+   customer_profiles ||--o{ transactions : "has"
+   customer_profiles ||--o{ alerts : "triggers"
+   customer_profiles ||--o{ cases : "subject of"
+   customer_profiles ||--o{ str_filings : "filed for"
+   transaction_batches ||--o{ transactions : "contains"
+   transaction_batches }o--|| tenant_users : "uploaded by"
+   transactions ||--o{ alert_transactions : "linked via"
+   transactions ||--o{ case_transactions : "linked via"
+   transactions ||--o{ str_filing_transactions : "linked via"
+   transactions }o--o| alerts : "triggers"
+   alerts ||--o{ alert_evidence : "has"
+   alerts ||--o{ alert_transactions : "has"
+   alerts ||--o{ case_alert_links : "linked via"
+   cases ||--o{ case_alert_links : "has"
+   cases ||--o{ case_assignments : "has"
+   cases ||--o{ case_notes : "has"
+   cases ||--o{ case_audit_trail : "has"
+   cases ||--o{ case_escalations : "has"
+   cases ||--o{ case_transactions : "has"
+   cases ||--|| str_filings : "leads to"
+   str_filings ||--o{ str_filing_transactions : "has"
+   tenant_scenarios ||--o{ tenant_rules : "has"
+   tenant_scenarios }o--|| tenant_users : "activated by"
+   tenant_rules ||--o{ tenant_rule_thresholds : "has"
+   tenant_rules ||--o{ alerts : "fires"
+   tenant_rules }o--|| tenant_users : "created by"
+   alerts }o--|| tenant_scenarios : "under"
+   tenant_users ||--o{ user_sessions : "has"
+   tenant_users ||--o{ tenant_audit_log : "logged in"
+   tenant_users ||--o{ case_alert_links : "linked by"
+   tenant_users ||--o{ case_assignments : "assigned"
+   tenant_users ||--o{ case_notes : "authors"
+   tenant_users ||--o{ case_audit_trail : "acts in"
+   tenant_users ||--o{ case_escalations : "escalates"
+   tenant_users ||--o{ str_filings : "files"
+   tenant_users }o--o| cases : "manages"
+   tenant_users }o--o| tenant_users : "created by"

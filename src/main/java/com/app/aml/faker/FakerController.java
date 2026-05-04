@@ -54,7 +54,6 @@ public class FakerController {
         List<FakeCustomer> accountPool;
 
         if (withAccounts) {
-            // Fetch real DB profiles and map them to the FakeCustomer DTO format
             List<CustomerProfile> dbProfiles = customerProfileRepository.findAll();
             if (!dbProfiles.isEmpty()) {
                 accountPool = dbProfiles.stream()
@@ -80,10 +79,8 @@ public class FakerController {
         return new ResponseEntity<>(csvBytes, headers, HttpStatus.OK);
     }
 
-    /**
-     * NEW: Generates both CSVs perfectly synced together and downloads as a ZIP.
-     * http://localhost:8080/api/v1/dev/faker/dataset?customerCount=100&txnCount=1000
-     */
+     //http://localhost:8080/api/v1/dev/faker/dataset?customerCount=100&txnCount=1000
+
     @GetMapping(value = "/dataset", produces = "application/zip")
     public ResponseEntity<byte[]> generateCohesiveDataset(
             @RequestParam(defaultValue = "100") int customerCount,

@@ -47,7 +47,7 @@ public class RbacAuthorizationFilter extends OncePerRequestFilter {
         PATH_PERMISSION_MAP.put("PUT:/api/v1/cases/**", Permission.CASE_INVESTIGATE);
         PATH_PERMISSION_MAP.put("GET:/api/v1/cases/**", Permission.CASE_INVESTIGATE);
 
-        PATH_PERMISSION_MAP.put("PUT:/api/v1/alerts/*/process", Permission.CASE_INVESTIGATE); // Matrix puts investigation on COs
+        PATH_PERMISSION_MAP.put("PUT:/api/v1/alerts/*/process", Permission.CASE_INVESTIGATE);
         PATH_PERMISSION_MAP.put("GET:/api/v1/alerts/**", Permission.ALERT_READ);
 
         PATH_PERMISSION_MAP.put("GET:/api/v1/transactions/**", Permission.TRANSACTION_READ);
