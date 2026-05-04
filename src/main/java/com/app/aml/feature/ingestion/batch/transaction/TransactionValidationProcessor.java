@@ -1,7 +1,7 @@
 package com.app.aml.feature.ingestion.batch.transaction;
 
 import com.app.aml.enums.Channel;
-import com.app.aml.enums.TransactionStatus; // Added import
+import com.app.aml.enums.TransactionStatus;
 import com.app.aml.enums.TransactionType;
 import com.app.aml.feature.ingestion.batch.ValidationException;
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
@@ -18,7 +18,11 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.app.aml.feature.ingestion.batch.util.BatchValidationUtils.*;
 
@@ -32,6 +36,8 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
     private final TransactionBatchRepository batchRepository;
 
     private TransactionBatch currentBatch;
+    private Set<String> existingTransactionRefs;
+    private Map<String, CustomerProfile> accountToCustomerCache;
 
     @BeforeStep
     public void beforeStep(StepExecution stepExecution) {
@@ -40,6 +46,19 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
             this.currentBatch = batchRepository.findById(UUID.fromString(batchIdStr))
                     .orElseThrow(() -> new IllegalStateException("Batch not found for ID: " + batchIdStr));
         }
+
+        // Pre-load all existing refs into memory — eliminates per-row SELECT
+        this.existingTransactionRefs = new HashSet<>(
+                transactionRepository.findAllTransactionRefs()
+        );
+
+        this.accountToCustomerCache = customerRepository.findAll()
+                .stream()
+                .collect(Collectors.toMap(
+                        CustomerProfile::getAccountNumber,
+                        c -> c,
+                        (a, b) -> a
+                ));
     }
 
     @Override
@@ -50,9 +69,10 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
         txn.setBatch(currentBatch);
 
         String ref = require(dto.getTransactionRef(), line, "transactionRef", 100);
-        if (transactionRepository.existsByTransactionRef(ref)) {
+        if (existingTransactionRefs.contains(ref)) {
             throw new ValidationException(line, "transactionRef", "Duplicate transaction reference found in system");
         }
+        existingTransactionRefs.add(ref);
         txn.setTransactionRef(ref);
 
         BigDecimal amount = parseBigDecimal(dto.getAmount(), line, "amount");
@@ -62,10 +82,8 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
         txn.setAmount(amount);
 
         txn.setTransactionTimestamp(parseInstant(dto.getTransactionTimestamp(), line, "transactionTimestamp"));
-
         txn.setTransactionType(parseEnum(TransactionType.class, dto.getTransactionType(), line, "transactionType", TransactionType.TRANSFER));
         txn.setChannel(parseEnum(Channel.class, dto.getChannel(), line, "channel", Channel.ONLINE));
-
         txn.setCurrencyCode(require(dto.getCurrencyCode(), line, "currencyCode", 3));
         txn.setOriginatorAccountNo(safe(dto.getOriginatorAccountNo(), 50));
         txn.setOriginatorName(safe(dto.getOriginatorName(), 255));
@@ -82,7 +100,7 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
         CustomerProfile primaryCustomer = null;
 
         if (txn.getOriginatorAccountNo() != null) {
-            CustomerProfile origProfile = customerRepository.findByAccountNumber(txn.getOriginatorAccountNo()).orElse(null);
+            CustomerProfile origProfile = accountToCustomerCache.get(txn.getOriginatorAccountNo());
             if (origProfile != null) {
                 isOriginatorInternal = true;
                 primaryCustomer = origProfile;
@@ -90,7 +108,7 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
         }
 
         if (txn.getBeneficiaryAccountNo() != null) {
-            CustomerProfile benProfile = customerRepository.findByAccountNumber(txn.getBeneficiaryAccountNo()).orElse(null);
+            CustomerProfile benProfile = accountToCustomerCache.get(txn.getBeneficiaryAccountNo());
             if (benProfile != null) {
                 isBeneficiaryInternal = true;
                 if (primaryCustomer == null) {
@@ -111,7 +129,6 @@ public class TransactionValidationProcessor implements ItemProcessor<Transaction
         }
 
         txn.setCustomer(primaryCustomer);
-
 
         if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
             try {

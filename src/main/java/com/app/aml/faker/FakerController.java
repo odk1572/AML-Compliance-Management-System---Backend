@@ -2,6 +2,7 @@ package com.app.aml.faker;
 
 import com.app.aml.feature.ingestion.entity.CustomerProfile;
 import com.app.aml.feature.ingestion.repository.CustomerProfileRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -46,78 +47,72 @@ public class FakerController {
     }
 
     @GetMapping(value = "/transactions", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<byte[]> generateTransactions(
+    public void generateTransactions(
             @RequestParam(defaultValue = "500") int count,
-            @RequestParam(defaultValue = "true") boolean withAccounts) {
+            @RequestParam(defaultValue = "true") boolean withAccounts,
+            HttpServletResponse response) throws IOException {
 
-        log.info("Generating Faker CSV for {} transactions. withAccounts={}", count, withAccounts);
-        List<FakeCustomer> accountPool;
+        log.info("Generating {} transactions. withAccounts={}", count, withAccounts);
 
-        if (withAccounts) {
-            // Fetch real DB profiles and map them to the FakeCustomer DTO format
-            List<CustomerProfile> dbProfiles = customerProfileRepository.findAll();
-            if (!dbProfiles.isEmpty()) {
-                accountPool = dbProfiles.stream()
-                        .map(p -> FakeCustomer.builder()
-                                .accountNumber(p.getAccountNumber())
-                                .customerName(p.getCustomerName()) // Adjust to match your entity getter
-                                .countryOfResidence(p.getCountryOfResidence() != null ? p.getCountryOfResidence() : "IND")
-                                .build())
-                        .collect(Collectors.toList());
-            } else {
-                accountPool = customerCsvGenerator.generateCustomerList(20);
-            }
-        } else {
-            accountPool = customerCsvGenerator.generateCustomerList(20);
-        }
+        List<FakeCustomer> accountPool = resolveAccountPool(withAccounts);
 
-        byte[] csvBytes = transactionCsvGenerator.generate(count, accountPool);
+        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"faker_transactions_" + count + ".csv\"");
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"faker_transactions_" + count + ".csv\"");
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-
-        return new ResponseEntity<>(csvBytes, headers, HttpStatus.OK);
+        // ✅ Stream directly to response — no byte[] in memory regardless of count
+        transactionCsvGenerator.streamGenerate(count, accountPool, response.getOutputStream());
     }
-
     /**
      * NEW: Generates both CSVs perfectly synced together and downloads as a ZIP.
      * http://localhost:8080/api/v1/dev/faker/dataset?customerCount=100&txnCount=1000
      */
+
     @GetMapping(value = "/dataset", produces = "application/zip")
-    public ResponseEntity<byte[]> generateCohesiveDataset(
+    public void generateCohesiveDataset(
             @RequestParam(defaultValue = "100") int customerCount,
-            @RequestParam(defaultValue = "1000") int txnCount) throws IOException {
+            @RequestParam(defaultValue = "1000") int txnCount,
+            HttpServletResponse response) throws IOException {
 
-        log.info("Generating Cohesive ZIP Dataset: {} customers, {} transactions", customerCount, txnCount);
+        log.info("Generating ZIP Dataset: {} customers, {} transactions", customerCount, txnCount);
 
-        // 1. Generate the shared memory pool
         List<FakeCustomer> sharedCustomers = customerCsvGenerator.generateCustomerList(customerCount);
-
-        // 2. Generate both CSV byte arrays from the EXACT same pool
         byte[] customerCsvBytes = customerCsvGenerator.generateCsvBytes(sharedCustomers);
-        byte[] transactionCsvBytes = transactionCsvGenerator.generate(txnCount, sharedCustomers);
 
-        // 3. Zip them together
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
-            // Add Customers CSV
-            ZipEntry customerEntry = new ZipEntry("faker_customers.csv");
-            zos.putNextEntry(customerEntry);
+        response.setContentType("application/zip");
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"aml_dataset_" + System.currentTimeMillis() + ".zip\"");
+
+        try (ZipOutputStream zos = new ZipOutputStream(response.getOutputStream())) {
+            // Customers (small — fine as byte[])
+            zos.putNextEntry(new ZipEntry("faker_customers.csv"));
             zos.write(customerCsvBytes);
             zos.closeEntry();
 
-            // Add Transactions CSV
-            ZipEntry txnEntry = new ZipEntry("faker_transactions.csv");
-            zos.putNextEntry(txnEntry);
-            zos.write(transactionCsvBytes);
+            // Transactions — stream directly into zip
+            zos.putNextEntry(new ZipEntry("faker_transactions.csv"));
+            transactionCsvGenerator.streamGenerate(txnCount, sharedCustomers, zos);
             zos.closeEntry();
         }
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"aml_dataset_" + System.currentTimeMillis() + ".zip\"");
-        headers.setContentType(MediaType.valueOf("application/zip"));
-
-        return new ResponseEntity<>(baos.toByteArray(), headers, HttpStatus.OK);
     }
+
+    // Extract helper to avoid duplication
+    private List<FakeCustomer> resolveAccountPool(boolean withAccounts) {
+        if (withAccounts) {
+            List<CustomerProfile> dbProfiles = customerProfileRepository.findAll();
+            if (!dbProfiles.isEmpty()) {
+                return dbProfiles.stream()
+                        .map(p -> FakeCustomer.builder()
+                                .accountNumber(p.getAccountNumber())
+                                .customerName(p.getCustomerName())
+                                .countryOfResidence(p.getCountryOfResidence() != null
+                                        ? p.getCountryOfResidence() : "IND")
+                                .build())
+                        .collect(Collectors.toList());
+            }
+        }
+        return customerCsvGenerator.generateCustomerList(20);
+    }
+
+
 }

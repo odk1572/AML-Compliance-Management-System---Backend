@@ -15,6 +15,9 @@ import java.util.UUID;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
     boolean existsByTransactionRef(String ref);
+
+    @Query("SELECT t.transactionRef FROM Transaction t")
+    List<String> findAllTransactionRefs();
     Page<Transaction> findByOriginatorAccountNoOrBeneficiaryAccountNo(String originatorAccountNo, String beneficiaryAccountNo, Pageable pageable);
 
     @Query(value =

@@ -12,6 +12,7 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.listener.StepExecutionListenerSupport;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.data.RepositoryItemWriter;
 import org.springframework.batch.item.data.builder.RepositoryItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -25,12 +26,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
+
+import javax.sql.DataSource;
+import java.util.concurrent.atomic.AtomicInteger;
+
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class TransactionIngestionBatchConfig {
 
-    private static final int CHUNK_SIZE = 1000;
+    private static final int CHUNK_SIZE = 2000;
     private static final int MAX_SKIP_LIMIT = Integer.MAX_VALUE;
 
     private final JobRepository jobRepository;
@@ -38,6 +43,7 @@ public class TransactionIngestionBatchConfig {
     private final TransactionRepository repository;
     private final TransactionValidationProcessor processor;
     private final TransactionValidationSkipListener skipListener;
+    private final DataSource dataSource;
 
     @Qualifier("batchTaskExecutor")
     private final TaskExecutor batchTaskExecutor;
@@ -80,6 +86,13 @@ public class TransactionIngestionBatchConfig {
         return new StepBuilder("transactionValidationStep", jobRepository)
                 .<TransactionCsvDto, Transaction>chunk(CHUNK_SIZE, transactionManager)
                 .reader(transactionReader(null))
+                .listener(new ItemReadListener<TransactionCsvDto>() {
+                    private final AtomicInteger lineCounter = new AtomicInteger(2); // starts after header
+                    @Override
+                    public void afterRead(TransactionCsvDto item) {
+                        item.setLineNumber(lineCounter.getAndIncrement());
+                    }
+                })
                 .processor(processor)
                 .writer(items -> { /* Just validation, no DB write yet */ })
                 .faultTolerant()
@@ -99,6 +112,13 @@ public class TransactionIngestionBatchConfig {
                 .reader(new SynchronizedItemStreamReaderBuilder<TransactionCsvDto>()
                         .delegate(transactionReader(null))
                         .build())
+                .listener(new ItemReadListener<TransactionCsvDto>() {
+                    private final AtomicInteger lineCounter = new AtomicInteger(2); // starts after header
+                    @Override
+                    public void afterRead(TransactionCsvDto item) {
+                        item.setLineNumber(lineCounter.getAndIncrement());
+                    }
+                })
                 .processor(processor)
                 .writer(transactionWriter())
                 .taskExecutor(batchTaskExecutor)
@@ -145,11 +165,9 @@ public class TransactionIngestionBatchConfig {
                 .build();
     }
 
+
     @Bean
-    public RepositoryItemWriter<Transaction> transactionWriter() {
-        return new RepositoryItemWriterBuilder<Transaction>()
-                .repository(repository)
-                .methodName("save")
-                .build();
+    public ItemWriter<Transaction> transactionWriter() {
+        return new TransactionBulkJdbcWriter(dataSource);
     }
 }
