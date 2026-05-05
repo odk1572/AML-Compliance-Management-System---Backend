@@ -12,14 +12,21 @@ import com.app.aml.feature.casemanagement.repository.CaseEscalationRepository;
 import com.app.aml.feature.casemanagement.repository.CaseRecordRepository;
 import com.app.aml.feature.notification.event.CaseEscalatedEvent;
 import com.app.aml.annotation.AuditAction;
+import com.app.aml.feature.platformuser.entity.PlatformUser;
+import com.app.aml.feature.tenantuser.entity.TenantUser;
+import com.app.aml.feature.tenantuser.repository.TenantUserRepository;
 import com.app.aml.utils.SecurityUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -30,6 +37,9 @@ public class CaseEscalationServiceImpl implements CaseEscalationService {
     private final CaseRecordRepository caseRepo;
     private final CaseAuditTrailRepository trailRepo;
     private final ApplicationEventPublisher eventPublisher;
+    private final TenantUserRepository userRepository;
+    private final ObjectMapper objectMapper;
+
 
     @Override
     @Transactional
@@ -57,14 +67,25 @@ public class CaseEscalationServiceImpl implements CaseEscalationService {
         trail.setActorId(escalatedById);
         trail.setIpAddress(ip);
         trail.setEventType("ESCALATED");
-        trail.setEventMetadata("{\"escalatedTo\": \"" + dto.getEscalatedTo() + "\", \"reason\": \"" + dto.getEscalationReason() + "\"}");
+        Map<String, Object> metaMap = Map.of(
+                "escalatedTo", dto.getEscalatedTo(),
+                "reason", dto.getEscalationReason()
+        );
+        try {
+            trail.setEventMetadata(objectMapper.writeValueAsString(metaMap));
+        } catch (JsonProcessingException e) {
+            trail.setEventMetadata("{}");
+        }
         trailRepo.save(trail);
 
         String adminEmail = resolveUserEmail(dto.getEscalatedTo());
-        eventPublisher.publishEvent(new CaseEscalatedEvent(this, caseRecord.getCaseReference(), adminEmail, dto.getEscalationReason()));
+        eventPublisher.publishEvent(new CaseEscalatedEvent(SecurityUtils.getCurrentUserEmail(), caseRecord.getCaseReference(), adminEmail, dto.getEscalationReason()));
     }
 
     private String resolveUserEmail(UUID userId) {
-        return SecurityUtils.getCurrentUserEmail();
+        return userRepository.findById(userId)
+                .map(TenantUser::getEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Assignee email not found"));
     }
+
 }
